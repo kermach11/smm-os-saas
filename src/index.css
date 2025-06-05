@@ -1,0 +1,561 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Basic styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Simple transitions */
+.smooth-transition {
+  transition: all 0.3s ease;
+}
+
+.carousel-smooth {
+  transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1), 
+              opacity 0.5s cubic-bezier(0.4, 0.0, 0.2, 1),
+              z-index 0s linear 0.25s;
+}
+
+/* Динамічна швидкість анімації каруселі */
+.carousel-smooth-enhanced {
+  transition: transform var(--animation-duration, 0.5s) cubic-bezier(0.4, 0.0, 0.2, 1), 
+              opacity var(--animation-duration, 0.5s) cubic-bezier(0.4, 0.0, 0.2, 1),
+              z-index 0s linear calc(var(--animation-duration, 0.5s) / 2);
+}
+
+/* Basic 3D perspective */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+/* San Francisco Pro Text Font Faces */
+@font-face {
+  font-family: 'SF Pro Text';
+  src: url('./fonts/San Francisco Pro Text/SFProText-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Text';
+  src: url('./fonts/San Francisco Pro Text/SFProText-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Text';
+  src: url('./fonts/San Francisco Pro Text/SFProText-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Text';
+  src: url('./fonts/San Francisco Pro Text/SFProText-Semibold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Text';
+  src: url('./fonts/San Francisco Pro Text/SFProText-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Base styles with SF Pro Text */
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Simple animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { transform: scale(0.97); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.7s ease-out forwards;
+}
+
+/* SF Pro Text classes */
+.sf-text {
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.sf-heading {
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.sf-body {
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+}
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 243.4 75.4% 58.6%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --accent: 243.4 75.4% 58.6%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 243.4 75.4% 58.6%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  button, a {
+    @apply transition-all duration-300;
+  }
+
+  button:focus-visible, a:focus-visible {
+    @apply outline-none ring-2 ring-[#6366f1] ring-opacity-30;
+  }
+}
+
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  
+  .glass-effect {
+    @apply bg-white/90 backdrop-blur-md backdrop-saturate-150 border border-[#e0e0e0] shadow-sm;
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+  
+  .premium-card {
+    @apply bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+  
+  .premium-button {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-md hover:shadow-lg;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.7s ease-out forwards;
+  }
+  
+  /* Кастомні позиції для заголовка */
+  .top-18 {
+    top: 4.5rem; /* 72px */
+  }
+  
+  .top-22 {
+    top: 5.5rem; /* 88px */
+  }
+  
+  /* Кастомні відступи для великих екранів */
+  .pt-88 {
+    padding-top: 22rem; /* 352px */
+  }
+  
+  .pt-96 {
+    padding-top: 24rem; /* 384px */
+  }
+
+  /* Desktop optimization utilities */
+  .desktop-container {
+    @apply max-w-7xl mx-auto px-4 lg:px-8 xl:px-12;
+  }
+
+  .desktop-centered {
+    @apply flex flex-col items-center justify-center min-h-screen;
+  }
+
+  .desktop-text-scale {
+    @apply text-4xl sm:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl;
+  }
+
+  .desktop-subtitle-scale {
+    @apply text-xl sm:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl;
+  }
+
+  /* Improved responsive breakpoints */
+  @screen lg {
+    .lg-optimal-spacing {
+      @apply py-16 px-8;
+    }
+  }
+
+  @screen xl {
+    .xl-optimal-spacing {
+      @apply py-20 px-12;
+    }
+  }
+
+  @screen 2xl {
+    .xxl-optimal-spacing {
+      @apply py-24 px-16;
+    }
+  }
+
+  /* Better carousel sizing for desktop */
+  .carousel-desktop-height {
+    @apply h-[400px] sm:h-[500px] lg:h-[600px] xl:h-[700px] 2xl:h-[800px];
+  }
+
+  /* Покращена симетрія для контейнерів */
+  .symmetric-container {
+    @apply mx-auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Ідеальне центрування каруселі з flexbox */
+  .carousel-perfect-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Додаткове центрування для 3D каруселі */
+  .carousel-3d-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-style: preserve-3d;
+  }
+
+  /* Центрування з grid для більшої точності */
+  .carousel-grid-center {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Покращена симетрія для навігаційних стрілок */
+  .carousel-nav-symmetric {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  .carousel-nav-arrow {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+  }
+
+  .carousel-content-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 0; /* Важливо для flex-елементів */
+  }
+
+  /* Consistent visual hierarchy */
+  .visual-hierarchy-1 {
+    @apply text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold;
+  }
+
+  .visual-hierarchy-2 {
+    @apply text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-medium;
+  }
+
+  .visual-hierarchy-3 {
+    @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl font-normal;
+  }
+
+  /* Покращена симетрія карточок каруселі */
+  .carousel-card-symmetric {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-origin: center center;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+  }
+
+  .carousel-3d-perspective {
+    perspective: 1200px;
+    perspective-origin: center center;
+  }
+
+  /* Стилі для слайдерів */
+  .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .slider::-webkit-slider-track {
+    background: #e5e7eb;
+    height: 8px;
+    border-radius: 4px;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background: #8b5cf6;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+  }
+
+  .slider::-webkit-slider-thumb:hover {
+    background: #7c3aed;
+    transform: scale(1.1);
+  }
+
+  .slider::-moz-range-track {
+    background: #e5e7eb;
+    height: 8px;
+    border-radius: 4px;
+    border: none;
+  }
+
+  .slider::-moz-range-thumb {
+    background: #8b5cf6;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+  }
+
+  .slider::-moz-range-thumb:hover {
+    background: #7c3aed;
+    transform: scale(1.1);
+  }
+
+  .slider:focus {
+    outline: none;
+  }
+
+  .slider:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+  }
+
+  .slider:focus::-moz-range-thumb {
+    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.3);
+  }
+
+  /* Modern slider styles */
+  .modern-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #10b981, #059669);
+    outline: none;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+
+  .modern-slider:hover {
+    opacity: 1;
+  }
+
+  .modern-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffffff, #f1f5f9);
+    border: 3px solid #10b981;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  .modern-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    border-color: #059669;
+  }
+
+  .modern-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffffff, #f1f5f9);
+    border: 3px solid #10b981;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  .modern-slider::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    border-color: #059669;
+  }
+
+  .modern-slider:focus {
+    outline: none;
+  }
+
+  .modern-slider:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2), 0 6px 20px rgba(16, 185, 129, 0.4);
+  }
+
+  .modern-slider:focus::-moz-range-thumb {
+    border-color: #3b82f6;
+    background: #1d4ed8;
+  }
+}
+
+/* Custom Scrollbar Styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(99 102 241) rgb(229 231 235);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgb(229 231 235);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(99 102 241);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgb(79 70 229);
+}
+
+/* Scrollbar utilities for different colors */
+.scrollbar-thumb-blue-500::-webkit-scrollbar-thumb {
+  background: rgb(59 130 246);
+}
+
+.scrollbar-thumb-blue-600::-webkit-scrollbar-thumb {
+  background: rgb(37 99 235);
+}
+
+.scrollbar-track-gray-200::-webkit-scrollbar-track {
+  background: rgb(229 231 235);
+}
+
+.hover\:scrollbar-thumb-blue-600:hover::-webkit-scrollbar-thumb {
+  background: rgb(37 99 235);
+}

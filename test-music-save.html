@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Тест збереження музики</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        .button:hover { background: #0056b3; }
+        .button.success { background: #28a745; }
+        .button.danger { background: #dc3545; }
+        #log { 
+            background: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 10px; 
+            height: 400px; 
+            overflow-y: auto; 
+            font-family: monospace; 
+            font-size: 12px; 
+            white-space: pre-wrap; 
+            margin-top: 20px;
+        }
+        .status { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+        }
+        .status.success { 
+            background: #d4edda; 
+            border: 1px solid #c3e6cb; 
+            color: #155724; 
+        }
+        .status.error { 
+            background: #f8d7da; 
+            border: 1px solid #f5c6cb; 
+            color: #721c24; 
+        }
+        .status.warning { 
+            background: #fff3cd; 
+            border: 1px solid #ffeaa7; 
+            color: #856404; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Тест збереження музики в конструкторі</h1>
+        
+        <div>
+            <button class="button" onclick="testCurrentState()">🔍 Перевірити поточний стан</button>
+            <button class="button" onclick="simulateMusicUpload()">📁 Симулювати завантаження музики</button>
+            <button class="button" onclick="testSaveFunction()">💾 Тест функції збереження</button>
+            <button class="button success" onclick="openConstructor()">🏗️ Відкрити конструктор</button>
+            <button class="button danger" onclick="clearData()">🗑️ Очистити дані</button>
+        </div>
+
+        <div id="results"></div>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            logDiv.innerHTML += `[${timestamp}] ${prefix} ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`${prefix} ${message}`);
+        }
+
+        function showStatus(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+            resultsDiv.appendChild(statusDiv);
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function testCurrentState() {
+            log('🔍 Перевіряємо поточний стан збереження музики...', 'info');
+            clearLog();
+            
+            try {
+                // Перевіряємо localStorage
+                const mainPageData = localStorage.getItem('mainPageSettings');
+                if (!mainPageData) {
+                    log('⚠️ mainPageSettings не знайдено', 'warning');
+                    showStatus('⚠️ Налаштування головної сторінки не знайдено', 'warning');
+                    return;
+                }
+                
+                const settings = JSON.parse(mainPageData);
+                log('✅ Налаштування головної сторінки знайдено', 'success');
+                
+                if (settings.audioSettings && settings.audioSettings.backgroundMusic) {
+                    const music = settings.audioSettings.backgroundMusic;
+                    log(`📋 Фонова музика в localStorage:`, 'info');
+                    log(`  - Увімкнена: ${music.enabled}`, 'info');
+                    log(`  - Має URL: ${music.url ? 'так' : 'ні'}`, 'info');
+                    log(`  - Довжина URL: ${music.url ? music.url.length : 0}`, 'info');
+                    log(`  - Автозапуск: ${music.autoPlay}`, 'info');
+                    log(`  - Гучність: ${music.volume}`, 'info');
+                    log(`  - Зациклення: ${music.loop}`, 'info');
+                    
+                    if (music.url) {
+                        const urlSize = music.url.length;
+                        log(`  - Розмір URL: ${(urlSize / 1024 / 1024).toFixed(2)} MB`, 'info');
+                        
+                        if (urlSize > 2 * 1024 * 1024) {
+                            log('⚠️ URL дуже великий - може бути проблема при збереженні', 'warning');
+                            showStatus('⚠️ Знайдено великий URL музики в localStorage', 'warning');
+                        } else {
+                            log('✅ URL нормального розміру', 'success');
+                            showStatus('✅ Музика збережена правильно', 'success');
+                        }
+                    } else {
+                        if (music.enabled) {
+                            log('⚠️ Музика увімкнена але немає URL', 'warning');
+                            showStatus('⚠️ Музика увімкнена але URL відсутній', 'warning');
+                        } else {
+                            log('ℹ️ Музика вимкнена', 'info');
+                            showStatus('ℹ️ Музика вимкнена', 'info');
+                        }
+                    }
+                } else {
+                    log('⚠️ Аудіо налаштування не знайдено', 'warning');
+                    showStatus('⚠️ Аудіо налаштування відсутні', 'warning');
+                }
+                
+                showStatus('✅ Перевірка стану завершена', 'success');
+                
+            } catch (error) {
+                log(`❌ Помилка перевірки: ${error.message}`, 'error');
+                showStatus(`❌ Помилка: ${error.message}`, 'error');
+            }
+        }
+
+        function simulateMusicUpload() {
+            log('📁 Симулюємо завантаження музики в конструкторі...', 'info');
+            
+            try {
+                // Створюємо симуляцію музичного файлу
+                const musicData = "data:audio/mp3;base64," + "x".repeat(1 * 1024 * 1024); // 1MB
+                
+                // Симулюємо поточні налаштування
+                const currentSettings = {
+                    headerTitle: "Тест",
+                    audioSettings: {
+                        backgroundMusic: {
+                            enabled: false,
+                            url: "",
+                            volume: 0.5,
+                            loop: true,
+                            autoPlay: true
+                        }
+                    }
+                };
+                
+                log('💾 Симулюємо оновлення налаштувань музики...', 'info');
+                
+                // Симулюємо логіку updateSettings
+                const updatedSettings = {
+                    ...currentSettings,
+                    audioSettings: {
+                        ...currentSettings.audioSettings,
+                        backgroundMusic: {
+                            ...currentSettings.audioSettings.backgroundMusic,
+                            url: musicData,
+                            enabled: true
+                        }
+                    }
+                };
+                
+                log('✅ Налаштування оновлено в пам\'яті', 'success');
+                log(`🎵 Нова музика: enabled=${updatedSettings.audioSettings.backgroundMusic.enabled}, url_length=${updatedSettings.audioSettings.backgroundMusic.url.length}`, 'info');
+                
+                // Симулюємо збереження (БЕЗ обробки processAudioUrl)
+                localStorage.setItem('mainPageSettings', JSON.stringify(updatedSettings));
+                
+                log('✅ Симуляція завершена успішно', 'success');
+                showStatus('✅ Музика симульована та збережена', 'success');
+                
+            } catch (error) {
+                log(`❌ Помилка симуляції: ${error.message}`, 'error');
+                showStatus(`❌ Помилка симуляції: ${error.message}`, 'error');
+            }
+        }
+
+        function testSaveFunction() {
+            log('💾 Тестуємо функцію збереження...', 'info');
+            
+            try {
+                const mainPageData = localStorage.getItem('mainPageSettings');
+                if (!mainPageData) {
+                    log('❌ Немає даних для тестування', 'error');
+                    return;
+                }
+                
+                const settings = JSON.parse(mainPageData);
+                log('📋 Поточні налаштування завантажено', 'info');
+                
+                if (settings.audioSettings && settings.audioSettings.backgroundMusic) {
+                    const music = settings.audioSettings.backgroundMusic;
+                    log(`🎵 Тестуємо збереження музики:`, 'info');
+                    log(`  - URL довжина: ${music.url.length}`, 'info');
+                    log(`  - Enabled: ${music.enabled}`, 'info');
+                    
+                    // Симулюємо логіку processAudioUrl з saveSettings
+                    const processAudioUrl = (url) => {
+                        if (!url) return url;
+                        
+                        if (url.startsWith('data:audio/') && url.length > 2 * 1024 * 1024) {
+                            log(`🔄 URL буде видалено при збереженні (розмір: ${(url.length / 1024 / 1024).toFixed(2)} MB)`, 'warning');
+                            return '';
+                        }
+                        
+                        log(`✅ URL залишиться при збереженні (розмір: ${(url.length / 1024 / 1024).toFixed(2)} MB)`, 'success');
+                        return url;
+                    };
+                    
+                    const processedUrl = processAudioUrl(music.url);
+                    
+                    if (processedUrl !== music.url) {
+                        log('⚠️ URL буде видалено при збереженні проекту', 'warning');
+                        showStatus('⚠️ Великий файл - URL буде видалено при збереженні', 'warning');
+                    } else {
+                        log('✅ URL залишиться при збереженні проекту', 'success');
+                        showStatus('✅ Файл збережеться правильно', 'success');
+                    }
+                } else {
+                    log('❌ Аудіо налаштування не знайдено', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Помилка тестування: ${error.message}`, 'error');
+                showStatus(`❌ Помилка тестування: ${error.message}`, 'error');
+            }
+        }
+
+        function openConstructor() {
+            window.open('http://localhost:3000/constructor', '_blank');
+        }
+
+        function clearData() {
+            if (confirm('Очистити всі дані?')) {
+                localStorage.removeItem('mainPageSettings');
+                localStorage.removeItem('contentManagerFiles');
+                localStorage.removeItem('immersiveExperienceData');
+                
+                log('✅ Всі дані очищено', 'success');
+                showStatus('✅ Всі дані очищено', 'success');
+                clearLog();
+            }
+        }
+
+        // Автоматичний запуск
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🚀 Тест готовий до роботи', 'info');
+            showStatus('Натисніть "Перевірити поточний стан" для початку', 'info');
+        });
+    </script>
+</body>
+</html> 

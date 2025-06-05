@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Діагностика головної сторінки</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .button:hover { background: #0056b3; }
+        #log { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; height: 400px; overflow-y: auto; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .status.success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .status.error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .status.warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Діагностика головної сторінки</h1>
+        
+        <div>
+            <button class="button" onclick="testMainScreenLogic()">Тестувати логіку MainScreen</button>
+            <button class="button" onclick="fixAndTestMusic()">Виправити і тестувати музику</button>
+            <button class="button" onclick="clearLog()">Очистити лог</button>
+        </div>
+
+        <div id="results"></div>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            logDiv.innerHTML += `[${timestamp}] ${prefix} ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`${prefix} ${message}`);
+        }
+
+        function showStatus(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+            resultsDiv.appendChild(statusDiv);
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testMainScreenLogic() {
+            log('🔍 Тестування логіки MainScreen...');
+            
+            try {
+                // Крок 1: Завантаження налаштувань
+                const mainPageData = localStorage.getItem('mainPageSettings');
+                if (!mainPageData) {
+                    log('❌ mainPageSettings не знайдено', 'error');
+                    return;
+                }
+                
+                const settings = JSON.parse(mainPageData);
+                log('✅ Налаштування завантажено', 'success');
+                
+                // Крок 2: Перевірка аудіо налаштувань
+                if (!settings.audioSettings) {
+                    log('❌ audioSettings не знайдено', 'error');
+                    return;
+                }
+                
+                const audioSettings = settings.audioSettings;
+                log('📂 Аудіо налаштування знайдено:', 'success');
+                log(`  - backgroundMusic.enabled: ${audioSettings.backgroundMusic?.enabled}`, 'info');
+                log(`  - backgroundMusic.url: ${audioSettings.backgroundMusic?.url ? 'є' : 'немає'}`, 'info');
+                
+                // Крок 3: Перевірка умови завантаження
+                const needsHeavyAudioLoad = (
+                    (audioSettings.backgroundMusic?.enabled && !audioSettings.backgroundMusic?.url) ||
+                    (audioSettings.hoverSounds?.enabled && !audioSettings.hoverSounds?.url) ||
+                    (audioSettings.clickSounds?.enabled && !audioSettings.clickSounds?.url)
+                );
+                
+                log(`🔍 Потрібно завантажити важкі аудіо файли: ${needsHeavyAudioLoad}`, needsHeavyAudioLoad ? 'warning' : 'info');
+                
+                if (!needsHeavyAudioLoad) {
+                    log('ℹ️ Завантаження не потрібно - логіка зупиняється тут', 'info');
+                    showStatus('Логіка MainScreen зупиняється - завантаження не потрібно', 'warning');
+                    return;
+                }
+                
+                // Крок 4: Перевірка ContentManager файлів
+                const contentManagerFiles = localStorage.getItem('contentManagerFiles');
+                if (!contentManagerFiles) {
+                    log('❌ contentManagerFiles не знайдено', 'error');
+                    return;
+                }
+                
+                const files = JSON.parse(contentManagerFiles);
+                const heavyAudioFiles = files.filter(file => 
+                    file.type === 'audio' && !file.url && file.size > 2 * 1024 * 1024
+                );
+                
+                log(`📂 Важких аудіо файлів без URL: ${heavyAudioFiles.length}`, 'info');
+                
+                if (heavyAudioFiles.length === 0) {
+                    log('ℹ️ Важких файлів немає - логіка зупиняється тут', 'info');
+                    showStatus('Логіка MainScreen зупиняється - важких файлів немає', 'warning');
+                    return;
+                }
+                
+                // Крок 5: Тестування IndexedDB
+                log('🔄 Тестування завантаження з IndexedDB...', 'info');
+                const result = await testIndexedDBLoad(audioSettings);
+                
+                if (result) {
+                    log('✅ Логіка MainScreen працює правильно!', 'success');
+                    showStatus('✅ Логіка MainScreen працює правильно!', 'success');
+                } else {
+                    log('❌ Проблема в логіці IndexedDB', 'error');
+                    showStatus('❌ Проблема в логіці IndexedDB', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Помилка тестування: ${error.message}`, 'error');
+                showStatus(`❌ Помилка тестування: ${error.message}`, 'error');
+            }
+        }
+
+        async function testIndexedDBLoad(audioSettings) {
+            return new Promise((resolve) => {
+                const request = indexedDB.open('ContentManagerDB', 2);
+                
+                request.onsuccess = (event) => {
+                    const db = event.target.result;
+                    
+                    if (!db.objectStoreNames.contains('files')) {
+                        log('❌ Об\'єкт-сховище "files" не існує', 'error');
+                        db.close();
+                        resolve(false);
+                        return;
+                    }
+                    
+                    const transaction = db.transaction(['files'], 'readonly');
+                    const store = transaction.objectStore('files');
+                    const getAllRequest = store.getAll();
+                    
+                    getAllRequest.onsuccess = () => {
+                        const indexedDBFiles = getAllRequest.result;
+                        log(`📂 Файлів в IndexedDB: ${indexedDBFiles.length}`, 'info');
+                        
+                        const audioFiles = indexedDBFiles.filter(file => file.type === 'audio');
+                        log(`🎵 Аудіо файлів в IndexedDB: ${audioFiles.length}`, 'info');
+                        
+                        audioFiles.forEach((file, index) => {
+                            log(`  ${index + 1}. ${file.name} (${file.url ? 'має URL' : 'без URL'})`, 'info');
+                        });
+                        
+                        // Перевіряємо чи можемо знайти файл для фонової музики
+                        if (audioSettings.backgroundMusic?.enabled && !audioSettings.backgroundMusic?.url) {
+                            const backgroundMusicFile = indexedDBFiles.find(file => 
+                                file.type === 'audio' && file.url
+                            );
+                            
+                            if (backgroundMusicFile) {
+                                log(`✅ Знайдено файл для фонової музики: ${backgroundMusicFile.name}`, 'success');
+                                resolve(true);
+                            } else {
+                                log('❌ Файл для фонової музики не знайдено', 'error');
+                                resolve(false);
+                            }
+                        } else {
+                            log('ℹ️ Фонова музика не потребує завантаження', 'info');
+                            resolve(true);
+                        }
+                        
+                        db.close();
+                    };
+                    
+                    getAllRequest.onerror = () => {
+                        log('❌ Помилка завантаження файлів з IndexedDB', 'error');
+                        db.close();
+                        resolve(false);
+                    };
+                };
+                
+                request.onerror = () => {
+                    log('❌ Помилка відкриття IndexedDB', 'error');
+                    resolve(false);
+                };
+            });
+        }
+
+        async function fixAndTestMusic() {
+            log('🔧 Виправлення і тестування музики...');
+            
+            try {
+                // Завантажуємо налаштування
+                const mainPageData = localStorage.getItem('mainPageSettings');
+                if (!mainPageData) {
+                    log('❌ Налаштування не знайдено', 'error');
+                    return;
+                }
+                
+                const settings = JSON.parse(mainPageData);
+                
+                // Якщо фонова музика увімкнена але немає URL
+                if (settings.audioSettings?.backgroundMusic?.enabled && !settings.audioSettings.backgroundMusic.url) {
+                    log('🔄 Завантажуємо музику з IndexedDB...', 'info');
+                    
+                    const musicUrl = await loadMusicFromIndexedDB();
+                    if (musicUrl) {
+                        // Оновлюємо налаштування
+                        settings.audioSettings.backgroundMusic.url = musicUrl;
+                        localStorage.setItem('mainPageSettings', JSON.stringify(settings));
+                        
+                        log('✅ URL музики оновлено в localStorage', 'success');
+                        
+                        // Тестуємо відтворення
+                        const audio = new Audio(musicUrl);
+                        audio.volume = 0.1;
+                        
+                        try {
+                            await audio.play();
+                            log('✅ Музика відтворюється успішно!', 'success');
+                            showStatus('✅ Музика виправлена і працює!', 'success');
+                            
+                            setTimeout(() => {
+                                audio.pause();
+                                log('⏹️ Тест завершено', 'info');
+                            }, 3000);
+                        } catch (error) {
+                            log(`❌ Помилка відтворення: ${error.message}`, 'error');
+                        }
+                    } else {
+                        log('❌ Не вдалося завантажити музику з IndexedDB', 'error');
+                        showStatus('❌ Не вдалося завантажити музику з IndexedDB', 'error');
+                    }
+                } else {
+                    log('ℹ️ Музика вже має URL або вимкнена', 'info');
+                    showStatus('ℹ️ Музика вже має URL або вимкнена', 'info');
+                }
+                
+            } catch (error) {
+                log(`❌ Помилка виправлення: ${error.message}`, 'error');
+                showStatus(`❌ Помилка виправлення: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadMusicFromIndexedDB() {
+            return new Promise((resolve) => {
+                const request = indexedDB.open('ContentManagerDB', 2);
+                
+                request.onsuccess = (event) => {
+                    const db = event.target.result;
+                    
+                    if (!db.objectStoreNames.contains('files')) {
+                        log('❌ Об\'єкт-сховище "files" не існує', 'error');
+                        db.close();
+                        resolve(null);
+                        return;
+                    }
+                    
+                    const transaction = db.transaction(['files'], 'readonly');
+                    const store = transaction.objectStore('files');
+                    const getAllRequest = store.getAll();
+                    
+                    getAllRequest.onsuccess = () => {
+                        const files = getAllRequest.result;
+                        const audioFile = files.find(file => file.type === 'audio' && file.url);
+                        
+                        if (audioFile) {
+                            log(`✅ Знайдено аудіо файл: ${audioFile.name}`, 'success');
+                            resolve(audioFile.url);
+                        } else {
+                            log('❌ Аудіо файл не знайдено в IndexedDB', 'error');
+                            resolve(null);
+                        }
+                        
+                        db.close();
+                    };
+                    
+                    getAllRequest.onerror = () => {
+                        log('❌ Помилка завантаження файлів з IndexedDB', 'error');
+                        db.close();
+                        resolve(null);
+                    };
+                };
+                
+                request.onerror = () => {
+                    log('❌ Помилка відкриття IndexedDB', 'error');
+                    resolve(null);
+                };
+            });
+        }
+
+        // Автоматичний запуск
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🚀 Діагностика готова');
+            showStatus('Натисніть "Тестувати логіку MainScreen" для діагностики', 'info');
+        });
+    </script>
+</body>
+</html> 

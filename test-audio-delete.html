@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест видалення аудіо файлів</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        h2 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .test-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        .test-item .icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #007bff, #6610f2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+        .test-item .content {
+            flex: 1;
+        }
+        .test-item .title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .test-item .description {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .delete-btn {
+            padding: 8px 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .delete-btn:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        .instructions ul {
+            color: #856404;
+            margin: 0;
+            padding-left: 20px;
+        }
+        .test-storage {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 6px;
+        }
+        .test-storage h4 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        .storage-info {
+            font-family: monospace;
+            font-size: 12px;
+            color: #6c757d;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Тест системи видалення аудіо з блоків</h1>
+        
+        <div class="instructions">
+            <h3>📋 Інструкції для тестування:</h3>
+            <ul>
+                <li>Відкрийте адміністративну панель сайту</li>
+                <li>Перейдіть у розділ "Конструктор головної сторінки"</li>
+                <li>Відкрийте вкладку "Звук"</li>
+                <li>Завантажте один аудіо файл у кілька різних блоків</li>
+                <li>Спробуйте видалити файл з одного блоку за допомогою червоного хрестика ✕</li>
+                <li>Переконайтесь, що файл видалився тільки з цього блоку</li>
+                <li>Перевірте, що той самий файл все ще доступний в медіа-бібліотеці</li>
+                <li>Завантажте той самий файл знову в будь-який блок</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Блоки звуків для тестування</h2>
+            
+            <div class="test-item">
+                <div class="icon">🎵</div>
+                <div class="content">
+                    <div class="title">Фонова музика</div>
+                    <div class="description">Тестуйте завантаження та видалення фонової музики</div>
+                </div>
+                <button class="delete-btn" onclick="testDelete('backgroundMusic')">✕ Видалити</button>
+            </div>
+
+            <div class="test-item">
+                <div class="icon">👆</div>
+                <div class="content">
+                    <div class="title">Звуки наведення</div>
+                    <div class="description">Тестуйте завантаження та видалення звуків наведення</div>
+                </div>
+                <button class="delete-btn" onclick="testDelete('hoverSound')">✕ Видалити</button>
+            </div>
+
+            <div class="test-item">
+                <div class="icon">🖱️</div>
+                <div class="content">
+                    <div class="title">Звуки кліків</div>
+                    <div class="description">Тестуйте завантаження та видалення звуків кліків</div>
+                </div>
+                <button class="delete-btn" onclick="testDelete('clickSound')">✕ Видалити</button>
+            </div>
+
+            <div class="test-item">
+                <div class="icon">🔄</div>
+                <div class="content">
+                    <div class="title">Звук переходу каруселі</div>
+                    <div class="description">Тестуйте завантаження та видалення звуків переходу</div>
+                </div>
+                <button class="delete-btn" onclick="testDelete('carouselTransition')">✕ Видалити</button>
+            </div>
+
+            <div class="test-item">
+                <div class="icon">👆</div>
+                <div class="content">
+                    <div class="title">Звук наведення каруселі</div>
+                    <div class="description">Тестуйте завантаження та видалення звуків наведення каруселі</div>
+                </div>
+                <button class="delete-btn" onclick="testDelete('carouselHover')">✕ Видалити</button>
+            </div>
+
+            <div class="test-item">
+                <div class="icon">🎯</div>
+                <div class="content">
+                    <div class="title">Звук кліку каруселі</div>
+                    <div class="description">Тестуйте завантаження та видалення звуків кліку каруселі</div>
+                </div>
+                <button class="delete-btn" onclick="testDelete('carouselClick')">✕ Видалити</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Стан системи збереження</h2>
+            <button onclick="checkStorage()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">🔍 Перевірити стан</button>
+            
+            <div class="test-storage">
+                <h4>📂 localStorage (smartContentManager_v2):</h4>
+                <div id="localStorage-info" class="storage-info">Натисніть "Перевірити стан" для отримання інформації</div>
+            </div>
+            
+            <div class="test-storage">
+                <h4>💾 IndexedDB (SmartContentManagerDB):</h4>
+                <div id="indexeddb-info" class="storage-info">Натисніть "Перевірити стан" для отримання інформації</div>
+            </div>
+        </div>
+
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        function testDelete(audioType) {
+            const resultsDiv = document.getElementById('test-results');
+            
+            resultsDiv.innerHTML = `
+                <div class="status info">
+                    🔄 Симуляція видалення аудіо з блоку: <strong>${audioType}</strong><br>
+                    ℹ️ Файл буде видалено тільки з цього блоку, але залишиться в медіа-бібліотеці<br>
+                    ⚠️ Цей тест тільки симулює процес. Перейдіть в адміністративну панель для реального тестування.
+                </div>
+            `;
+
+            // Симуляція логіки видалення
+            setTimeout(() => {
+                console.log(`🗑️ Видалення аудіо з блоку: ${audioType}`);
+                
+                resultsDiv.innerHTML = `
+                    <div class="status success">
+                        ✅ Симуляція видалення завершена для блоку: <strong>${audioType}</strong><br>
+                        📝 Файл видалено з блоку, але залишається в медіа-бібліотеці<br>
+                        🔄 Тепер той самий файл можна завантажити в будь-який інший блок<br>
+                        📋 Перевірте консоль браузера для детальних логів
+                    </div>
+                `;
+            }, 1000);
+        }
+
+        async function checkStorage() {
+            const localStorageDiv = document.getElementById('localStorage-info');
+            const indexedDBDiv = document.getElementById('indexeddb-info');
+
+            // Перевіряємо localStorage
+            try {
+                const localData = localStorage.getItem('smartContentManager_v2');
+                if (localData) {
+                    const parsedData = JSON.parse(localData);
+                    const audioFiles = parsedData.filter(file => file.type === 'audio');
+                    localStorageDiv.innerHTML = `
+                        <strong>Знайдено файлів:</strong> ${parsedData.length}<br>
+                        <strong>Аудіо файлів:</strong> ${audioFiles.length}<br>
+                        <strong>Розмір даних:</strong> ${(localData.length / 1024).toFixed(2)} KB<br>
+                        <br><strong>Аудіо файли:</strong><br>
+                        ${audioFiles.map(file => `- ${file.name} (ID: ${file.id}, hasUrl: ${!!file.url})`).join('<br>')}
+                    `;
+                } else {
+                    localStorageDiv.innerHTML = '<em>Немає даних у localStorage</em>';
+                }
+            } catch (error) {
+                localStorageDiv.innerHTML = `<em style="color: red;">Помилка читання localStorage: ${error.message}</em>`;
+            }
+
+            // Перевіряємо IndexedDB
+            try {
+                const dbRequest = indexedDB.open('SmartContentManagerDB', 2);
+                
+                dbRequest.onsuccess = (event) => {
+                    const db = event.target.result;
+                    
+                    if (!db.objectStoreNames.contains('files')) {
+                        indexedDBDiv.innerHTML = '<em>Об\'єкт-сховище "files" не існує</em>';
+                        db.close();
+                        return;
+                    }
+
+                    const transaction = db.transaction(['files'], 'readonly');
+                    const store = transaction.objectStore('files');
+                    const getAllRequest = store.getAll();
+
+                    getAllRequest.onsuccess = () => {
+                        const allFiles = getAllRequest.result;
+                        const audioFiles = allFiles.filter(file => file.type === 'audio');
+                        
+                        indexedDBDiv.innerHTML = `
+                            <strong>Знайдено файлів:</strong> ${allFiles.length}<br>
+                            <strong>Аудіо файлів:</strong> ${audioFiles.length}<br>
+                            <br><strong>Аудіо файли:</strong><br>
+                            ${audioFiles.map(file => `- ${file.name} (ID: ${file.id}, size: ${(file.size / 1024).toFixed(2)} KB)`).join('<br>')}
+                        `;
+                        
+                        db.close();
+                    };
+
+                    getAllRequest.onerror = () => {
+                        indexedDBDiv.innerHTML = '<em style="color: red;">Помилка читання файлів з IndexedDB</em>';
+                        db.close();
+                    };
+                };
+
+                dbRequest.onerror = () => {
+                    indexedDBDiv.innerHTML = '<em style="color: red;">Помилка відкриття IndexedDB</em>';
+                };
+            } catch (error) {
+                indexedDBDiv.innerHTML = `<em style="color: red;">Помилка роботи з IndexedDB: ${error.message}</em>`;
+            }
+        }
+
+        // Автоматична перевірка при завантаженні сторінки
+        window.addEventListener('load', () => {
+            setTimeout(checkStorage, 500);
+        });
+
+        // Логування для відстеження
+        console.log('🎵 Тестова сторінка завантажена');
+        console.log('📋 Інструкції:');
+        console.log('1. Відкрийте адміністративну панель');
+        console.log('2. Перейдіть у "Конструктор головної сторінки" > "Звук"');
+        console.log('3. Завантажте аудіо файл у кілька блоків');
+        console.log('4. Видаліть файл з одного блоку червоним хрестиком (файл залишиться в медіа-бібліотеці)');
+        console.log('5. Завантажте той самий файл знову в будь-який блок');
+    </script>
+</body>
+</html> 

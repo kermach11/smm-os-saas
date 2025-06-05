@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Швидкий тест важких файлів</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Швидкий тест важких файлів</h1>
+        
+        <div>
+            <button onclick="clearAll()">🗑️ Очистити все</button>
+            <button onclick="checkStorage()">📊 Перевірити сховище</button>
+            <button onclick="testHeavyFile()">🎵 Тест важкого файлу</button>
+        </div>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function clearAll() {
+            localStorage.removeItem('contentManagerFiles');
+            const request = indexedDB.deleteDatabase('ContentManagerDB');
+            request.onsuccess = () => {
+                log('✅ Все сховище очищено');
+                document.getElementById('log').innerHTML = '';
+            };
+            request.onerror = () => {
+                log('❌ Помилка очищення IndexedDB');
+            };
+        }
+
+        function checkStorage() {
+            log('🔍 Перевірка сховища...');
+            
+            // localStorage
+            const localData = localStorage.getItem('contentManagerFiles');
+            if (localData) {
+                const files = JSON.parse(localData);
+                log(`📂 localStorage: ${files.length} файлів`);
+                files.forEach((file, i) => {
+                    log(`  ${i+1}. ${file.name} (${file.type}, URL: ${file.url ? 'є' : 'немає'})`);
+                });
+            } else {
+                log('📂 localStorage порожній');
+            }
+
+            // IndexedDB
+            const request = indexedDB.open('ContentManagerDB', 1);
+            request.onsuccess = (event) => {
+                const db = event.target.result;
+                if (db.objectStoreNames.contains('files')) {
+                    const transaction = db.transaction(['files'], 'readonly');
+                    const store = transaction.objectStore('files');
+                    const getAllRequest = store.getAll();
+                    
+                    getAllRequest.onsuccess = () => {
+                        const files = getAllRequest.result;
+                        log(`💾 IndexedDB: ${files.length} файлів`);
+                        files.forEach((file, i) => {
+                            log(`  ${i+1}. ${file.name} (${file.type}, ${(file.size/1024/1024).toFixed(2)} MB)`);
+                        });
+                        db.close();
+                    };
+                } else {
+                    log('💾 IndexedDB: об\'єкт-сховище не існує');
+                    db.close();
+                }
+            };
+            request.onerror = () => {
+                log('❌ Помилка відкриття IndexedDB');
+            };
+        }
+
+        function testHeavyFile() {
+            log('🎵 Створення важкого тестового файлу...');
+            
+            // Створюємо фейковий важкий файл (5MB)
+            const size = 5 * 1024 * 1024; // 5MB
+            const data = new Array(size).fill('a').join('');
+            const base64 = btoa(data);
+            const dataUrl = `data:audio/wav;base64,${base64}`;
+            
+            const heavyFile = {
+                id: `test-heavy-${Date.now()}`,
+                name: 'Тестовий важкий файл',
+                type: 'audio',
+                url: dataUrl,
+                originalName: 'test-heavy.wav',
+                size: dataUrl.length,
+                uploadDate: new Date().toISOString(),
+                optimized: false
+            };
+            
+            log(`✅ Створено файл: ${(heavyFile.size / 1024 / 1024).toFixed(2)} MB`);
+            
+            // Тестуємо збереження
+            const files = [heavyFile];
+            const dataToSave = JSON.stringify(files);
+            const sizeInMB = (new Blob([dataToSave]).size / 1024 / 1024).toFixed(2);
+            
+            log(`📊 Розмір даних для збереження: ${sizeInMB} MB`);
+            
+            if (new Blob([dataToSave]).size > 4.5 * 1024 * 1024) {
+                log('⚠️ Дані занадто великі для localStorage, використовуємо IndexedDB...');
+                
+                // Зберігаємо в IndexedDB
+                const request = indexedDB.open('ContentManagerDB', 1);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('files')) {
+                        db.createObjectStore('files', { keyPath: 'id' });
+                        log('✅ Створено об\'єкт-сховище');
+                    }
+                };
+                
+                request.onsuccess = (event) => {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['files'], 'readwrite');
+                    const store = transaction.objectStore('files');
+                    
+                    store.clear();
+                    const addRequest = store.add(heavyFile);
+                    
+                    addRequest.onsuccess = () => {
+                        log('✅ Файл збережено в IndexedDB');
+                        
+                        // Зберігаємо метадані в localStorage
+                        const metadata = [{
+                            ...heavyFile,
+                            url: '' // Видаляємо URL для аудіо
+                        }];
+                        localStorage.setItem('contentManagerFiles', JSON.stringify(metadata));
+                        log('✅ Метадані збережено в localStorage');
+                        
+                        db.close();
+                        
+                        // Перевіряємо результат
+                        setTimeout(() => {
+                            log('🔍 Перевірка результату...');
+                            checkStorage();
+                        }, 500);
+                    };
+                    
+                    addRequest.onerror = () => {
+                        log('❌ Помилка збереження в IndexedDB');
+                        db.close();
+                    };
+                };
+                
+                request.onerror = () => {
+                    log('❌ Помилка відкриття IndexedDB');
+                };
+            } else {
+                localStorage.setItem('contentManagerFiles', dataToSave);
+                log('✅ Файл збережено в localStorage');
+            }
+        }
+
+        // Ініціалізація
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🚀 Швидкий тест готовий');
+        });
+    </script>
+</body>
+</html> 
