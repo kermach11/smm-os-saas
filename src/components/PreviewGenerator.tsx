@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Code, Share2, Globe, Copy, Check, Eye } from 'lucide-react';
+import { Download, Code, Share2, Globe, Copy, Check, Eye, Rocket, Server, Settings } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { useToast } from './ui/use-toast';
 import indexedDBService from '../services/IndexedDBService';
+
 
 interface PreviewGeneratorProps {
   className?: string;
@@ -21,11 +22,48 @@ interface GeneratedPreview {
   embedCode: string;
 }
 
+// Нові інтерфейси для генерації проектів
+interface ProjectOrder {
+  clientName: string;
+  projectName: string;
+  domain?: string;
+  subdomain: string;
+  template: string;
+  features: string[];
+  customizations?: Record<string, any>;
+}
+
+interface GeneratedProject {
+  id: string;
+  name: string;
+  subdomain: string;
+  domain?: string;
+  status: 'generating' | 'deploying' | 'ready' | 'error';
+  createdAt: string;
+  deploymentUrl?: string;
+  error?: string;
+}
+
 const PreviewGenerator: React.FC<PreviewGeneratorProps> = ({ className }) => {
   const [previews, setPreviews] = useState<GeneratedPreview[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewName, setPreviewName] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  
+  // Новий стейт для генерації проектів
+  const [projects, setProjects] = useState<GeneratedProject[]>([]);
+  const [activeTab, setActiveTab] = useState<'previews' | 'projects'>('previews');
+  const [isGeneratingProject, setIsGeneratingProject] = useState(false);
+  const [projectForm, setProjectForm] = useState<ProjectOrder>({
+    clientName: '',
+    projectName: '',
+    domain: '',
+    subdomain: '',
+    template: 'smm-os-standard',
+    features: ['intro', 'preview', 'main', 'admin'],
+    customizations: {}
+  });
+  
   const { toast } = useToast();
 
   const generatePreview = async () => {
@@ -646,18 +684,172 @@ const PreviewGenerator: React.FC<PreviewGeneratorProps> = ({ className }) => {
     });
   };
 
+  // ===== НОВІ ФУНКЦІЇ ДЛЯ ГЕНЕРАЦІЇ ПРОЕКТІВ =====
+
+  const generateProject = async () => {
+    if (!projectForm.clientName.trim() || !projectForm.projectName.trim() || !projectForm.subdomain.trim()) {
+      toast({
+        title: "Помилка",
+        description: "Заповніть усі обов'язкові поля",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Перевірка унікальності субдомену
+    const existingProject = projects.find(p => p.subdomain === projectForm.subdomain);
+    if (existingProject) {
+      toast({
+        title: "Помилка", 
+        description: "Субдомен вже зайнятий",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGeneratingProject(true);
+
+    try {
+      // Симуляція створення проекту
+      const newProject: GeneratedProject = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: projectForm.projectName,
+        subdomain: projectForm.subdomain,
+        domain: projectForm.domain || undefined,
+        status: 'generating',
+        createdAt: new Date().toISOString()
+      };
+
+      setProjects(prev => [newProject, ...prev]);
+
+      toast({
+        title: "Генерація розпочата",
+        description: `Проект "${projectForm.projectName}" знаходиться в черзі`,
+      });
+
+      // Симуляція процесу генерації
+      setTimeout(() => {
+        setProjects(prev => prev.map(p => 
+          p.id === newProject.id 
+            ? { ...p, status: 'deploying' }
+            : p
+        ));
+      }, 2000);
+
+      setTimeout(() => {
+        setProjects(prev => prev.map(p => 
+          p.id === newProject.id 
+            ? { 
+                ...p, 
+                status: 'ready',
+                deploymentUrl: `https://${newProject.subdomain}.vercel.app`
+              }
+            : p
+        ));
+
+        toast({
+          title: "Проект готовий!",
+          description: `${projectForm.projectName} успішно розгорнуто`,
+        });
+      }, 8000);
+
+      // Очищення форми
+      setProjectForm({
+        clientName: '',
+        projectName: '',
+        domain: '',
+        subdomain: '',
+        template: 'smm-os-standard',
+        features: ['intro', 'preview', 'main', 'admin'],
+        customizations: {}
+      });
+
+    } catch (error) {
+      toast({
+        title: "Помилка",
+        description: "Не вдалося створити проект",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingProject(false);
+    }
+  };
+
+  const deleteProject = (id: string) => {
+    setProjects(prev => prev.filter(p => p.id !== id));
+    toast({
+      title: "Проект видалено",
+      description: "Проект успішно видалено з системи",
+    });
+  };
+
+  const generateSubdomain = () => {
+    const randomStr = Math.random().toString(36).substr(2, 8);
+    const subdomain = `${projectForm.projectName.toLowerCase().replace(/\s+/g, '-')}-${randomStr}`;
+    setProjectForm(prev => ({ ...prev, subdomain }));
+  };
+
+  const getStatusColor = (status: GeneratedProject['status']) => {
+    switch (status) {
+      case 'generating': return 'text-yellow-600 bg-yellow-50';
+      case 'deploying': return 'text-blue-600 bg-blue-50';
+      case 'ready': return 'text-green-600 bg-green-50';
+      case 'error': return 'text-red-600 bg-red-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const getStatusText = (status: GeneratedProject['status']) => {
+    switch (status) {
+      case 'generating': return 'Генерація...';
+      case 'deploying': return 'Розгортання...';
+      case 'ready': return 'Готовий';
+      case 'error': return 'Помилка';
+      default: return 'Невідомо';
+    }
+  };
+
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold">Генератор превью</h2>
+        <h2 className="text-2xl font-bold">Генератор</h2>
         <p className="text-muted-foreground">
-          Створюйте та керуйте готовими превью для ваших клієнтів
+          Створюйте превью та повноцінні проекти для клієнтів
         </p>
       </div>
 
-      {/* Generate New Preview */}
-      <Card>
+      {/* Tabs Navigation */}
+      <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        <button
+          onClick={() => setActiveTab('previews')}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'previews'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Eye className="w-4 h-4 mr-2 inline" />
+          Превью
+        </button>
+        <button
+          onClick={() => setActiveTab('projects')}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'projects'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Rocket className="w-4 h-4 mr-2 inline" />
+          Проекти
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'previews' && (
+        <>
+          {/* Generate New Preview */}
+          <Card>
         <CardHeader>
           <CardTitle>Створити нове превью</CardTitle>
           <CardDescription>
@@ -819,6 +1011,259 @@ const PreviewGenerator: React.FC<PreviewGeneratorProps> = ({ className }) => {
           </div>
         )}
       </div>
+        </>
+      )}
+
+      {/* Projects Tab Content */}
+      {activeTab === 'projects' && (
+        <>
+          {/* Generate New Project */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Rocket className="w-5 h-5" />
+                Створити новий проект
+              </CardTitle>
+              <CardDescription>
+                Згенеруйте повноцінний проект з адмін-панеллю та конструкторами
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Ім'я клієнта *</label>
+                  <Input
+                    value={projectForm.clientName}
+                    onChange={(e) => setProjectForm(prev => ({ ...prev, clientName: e.target.value }))}
+                    placeholder="Іван Петренко"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Назва проекту *</label>
+                  <Input
+                    value={projectForm.projectName}
+                    onChange={(e) => setProjectForm(prev => ({ ...prev, projectName: e.target.value }))}
+                    placeholder="Ресторан 'Смачно'"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Субдомен *</label>
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      value={projectForm.subdomain}
+                      onChange={(e) => setProjectForm(prev => ({ ...prev, subdomain: e.target.value }))}
+                      placeholder="my-restaurant"
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={generateSubdomain}
+                      disabled={!projectForm.projectName}
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {projectForm.subdomain ? `${projectForm.subdomain}.vercel.app` : 'your-subdomain.vercel.app'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Власний домен (опційно)</label>
+                  <Input
+                    value={projectForm.domain}
+                    onChange={(e) => setProjectForm(prev => ({ ...prev, domain: e.target.value }))}
+                    placeholder="myrestaurant.com"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Шаблон проекту</label>
+                <select
+                  value={projectForm.template}
+                  onChange={(e) => setProjectForm(prev => ({ ...prev, template: e.target.value }))}
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="smm-os-standard">SMM OS Стандарт</option>
+                  <option value="smm-os-premium">SMM OS Преміум</option>
+                  <option value="smm-os-enterprise">SMM OS Корпоратив</option>
+                </select>
+              </div>
+
+              <Button 
+                onClick={generateProject} 
+                disabled={isGeneratingProject}
+                className="w-full"
+              >
+                {isGeneratingProject ? (
+                  <>
+                    <motion.div
+                      className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    />
+                    Створення проекту...
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="w-4 h-4 mr-2" />
+                    Створити проект
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Generated Projects List */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Згенеровані проекти ({projects.length})</h3>
+            
+            {projects.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <Rocket className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    Ще немає згенерованих проектів. Створіть перший!
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {projects.map((project) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="text-lg">{project.name}</CardTitle>
+                            <CardDescription>
+                              Субдомен: {project.subdomain} • 
+                              Створено: {new Date(project.createdAt).toLocaleDateString('uk-UA')}
+                            </CardDescription>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                              {getStatusText(project.status)}
+                            </span>
+                            {project.status === 'ready' && (
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(project.deploymentUrl, '_blank')}
+                                >
+                                  <Globe className="w-4 h-4 mr-2" />
+                                  Відкрити
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => deleteProject(project.id)}
+                                >
+                                  Видалити
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      
+                      {project.status === 'ready' && (
+                        <CardContent className="space-y-4">
+                          <div>
+                            <label className="text-sm font-medium">URL проекту</label>
+                            <div className="flex gap-2 mt-1">
+                              <Input
+                                value={project.deploymentUrl || ''}
+                                readOnly
+                                className="flex-1"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => copyToClipboard(project.deploymentUrl || '', `project-url-${project.id}`)}
+                              >
+                                {copiedId === `project-url-${project.id}` ? (
+                                  <Check className="w-4 h-4" />
+                                ) : (
+                                  <Copy className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {project.domain && (
+                            <div>
+                              <label className="text-sm font-medium">Власний домен</label>
+                              <div className="flex gap-2 mt-1">
+                                <Input
+                                  value={`https://${project.domain}`}
+                                  readOnly
+                                  className="flex-1"
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(`https://${project.domain}`, '_blank')}
+                                >
+                                  <Globe className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 className="font-medium text-blue-900 mb-2">Доступи для клієнта:</h4>
+                            <div className="space-y-2 text-sm text-blue-800">
+                              <div>• Головна сторінка: <code>{project.deploymentUrl}</code></div>
+                              <div>• Адмін панель: <code>{project.deploymentUrl}/admin</code></div>
+                              <div>• Превью сторінка: <code>{project.deploymentUrl}/preview</code></div>
+                              <div>• Інтро сторінка: <code>{project.deploymentUrl}/intro</code></div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      )}
+
+                      {(project.status === 'generating' || project.status === 'deploying') && (
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <motion.div
+                                className="bg-blue-600 h-2 rounded-full"
+                                initial={{ width: 0 }}
+                                animate={{ 
+                                  width: project.status === 'generating' ? '30%' : '70%' 
+                                }}
+                                transition={{ duration: 0.5 }}
+                              />
+                            </div>
+                            <p className="text-sm text-muted-foreground text-center">
+                              {project.status === 'generating' ? 
+                                'Клонування файлів проекту...' : 
+                                'Розгортання на Vercel...'}
+                            </p>
+                          </div>
+                        </CardContent>
+                      )}
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
