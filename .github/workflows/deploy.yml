@@ -1,0 +1,64 @@
+name: 🚀 Deploy SMM OS to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Дозволити тільки один одночасний деплой
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: 🌐 Build and Deploy
+    runs-on: ubuntu-latest
+    
+    # Налаштування GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: main/package-lock.json
+        
+    - name: ⚡ Install dependencies
+      run: |
+        cd main
+        npm ci
+        
+    - name: 🔧 Build project
+      run: |
+        cd main
+        npm run build
+      env:
+        # Supabase credentials з GitHub Secrets
+        VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+        VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        
+    - name: 📋 Setup Pages
+      uses: actions/configure-pages@v3
+      
+    - name: 📤 Upload artifact
+      uses: actions/upload-pages-artifact@v2
+      with:
+        path: './main/dist'
+        
+    - name: 🚀 Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v2 
