@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileItem } from '../types/contentManager';
 import indexedDBService from '../services/IndexedDBService';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface MediaSelectorProps {
   isOpen: boolean;
@@ -17,14 +18,19 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
   onClose,
   onSelect,
   allowedTypes = ['image', 'audio', 'video'],
-  title = 'Вибрати медіа файл',
-  description = 'Оберіть файл з вашої медіа-бібліотеки'
+  title,
+  description
 }) => {
+  const { t } = useTranslation();
   const [files, setFiles] = useState<FileItem[]>([]);
   const [selectedType, setSelectedType] = useState<'all' | 'image' | 'audio' | 'video'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingFileId, setLoadingFileId] = useState<string | null>(null);
+  
+  // Використовуємо переклади якщо не передані пропси
+  const modalTitle = title || t('media.selector.title');
+  const modalDescription = description || t('media.selector.description');
 
   // Завантаження файлів з localStorage
   useEffect(() => {
@@ -714,204 +720,210 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-1 lg:p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+          className="bg-white rounded-lg lg:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] lg:max-h-[90vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Заголовок */}
-          <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-6 text-white">
+          {/* 📚 Заголовок - MOBILE OPTIMIZED */}
+          <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 lg:p-6 text-white">
             <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">{title}</h2>
-                <p className="text-blue-100 mt-1">{description}</p>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg lg:text-2xl font-bold truncate">{modalTitle}</h2>
+                <p className="text-blue-100 mt-1 text-xs lg:text-base hidden lg:block">{modalDescription}</p>
               </div>
               <button
                 onClick={onClose}
-                className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"
+                className="w-8 h-8 lg:w-10 lg:h-10 bg-white/20 hover:bg-white/30 rounded-lg lg:rounded-xl flex items-center justify-center transition-colors touch-manipulation ml-2"
               >
-                <span className="text-xl">✕</span>
+                <span className="text-lg lg:text-xl">✕</span>
               </button>
             </div>
           </div>
 
-          {/* Фільтри та пошук */}
-          <div className="p-6 border-b border-slate-200">
-            <div className="flex flex-col sm:flex-row gap-4">
+          {/* 🔍 Фільтри та пошук - MOBILE OPTIMIZED */}
+          <div className="p-2 lg:p-6 border-b border-slate-200">
+            <div className="flex flex-col gap-2 lg:gap-4">
               {/* Пошук */}
               <div className="flex-1">
                 <input
                   type="text"
-                  placeholder="Пошук файлів..."
+                  placeholder={t('media.selector.search.placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-3 py-2 lg:px-4 lg:py-3 bg-slate-50 border border-slate-200 rounded-lg lg:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-xs lg:text-base min-h-[36px] touch-manipulation"
                 />
               </div>
 
-              {/* Фільтри за типом */}
-              <div className="flex gap-2">
+              {/* Фільтри за типом - MOBILE GRID */}
+              <div className="grid grid-cols-2 lg:flex gap-1 lg:gap-2">
                 {['all', ...allowedTypes].map((type) => (
                   <button
                     key={type}
                     onClick={() => setSelectedType(type as any)}
-                    className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 whitespace-nowrap ${
+                    className={`px-2 py-2 lg:px-4 lg:py-3 rounded-lg lg:rounded-xl font-medium transition-all duration-200 whitespace-nowrap text-xs lg:text-sm min-h-[36px] touch-manipulation ${
                       selectedType === type
                         ? 'bg-blue-500 text-white shadow-md'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    {type === 'all' ? '🗂️ Всі' : 
-                     type === 'image' ? '🖼️ Зображення' :
-                     type === 'audio' ? '🎵 Аудіо' : '🎬 Відео'}
+                    {type === 'all' ? `🗂️ ${t('media.selector.filter.all')}` : 
+                     type === 'image' ? `🖼️ ${t('media.selector.filter.images')}` :
+                     type === 'audio' ? `🎵 ${t('media.selector.filter.audio')}` : `🎬 ${t('media.selector.filter.video')}`}
                   </button>
                 ))}
-                
-                {/* Кнопка виправлення файлів */}
-                <button
-                  onClick={async () => {
-                    console.log('🔧 Ручне виправлення файлів...');
-                    setIsLoading(true);
-                    try {
-                      const correctedFiles = await fixIncorrectFileTypes(files);
-                      setFiles(correctedFiles);
-                      console.log('✅ Ручне виправлення завершено');
-                    } catch (error) {
-                      console.error('❌ Помилка ручного виправлення:', error);
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  }}
-                  className="px-4 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-all duration-200 whitespace-nowrap font-medium shadow-md hover:shadow-lg"
-                  title="Виправити неправильно збережені файли"
-                >
-                  🔧 Виправити
-                </button>
               </div>
+              
+              {/* Кнопка виправлення файлів - MOBILE OPTIMIZED */}
+              <button
+                onClick={async () => {
+                  console.log('🔧 Ручне виправлення файлів...');
+                  setIsLoading(true);
+                  try {
+                    const correctedFiles = await fixIncorrectFileTypes(files);
+                    setFiles(correctedFiles);
+                    console.log('✅ Ручне виправлення завершено');
+                  } catch (error) {
+                    console.error('❌ Помилка ручного виправлення:', error);
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                className="px-2 lg:px-4 py-2 lg:py-3 bg-orange-500 text-white rounded-lg lg:rounded-xl hover:bg-orange-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg text-xs lg:text-base min-h-[36px] touch-manipulation"
+                title={t('media.selector.fix.tooltip')}
+              >
+                🔧 <span className="hidden lg:inline">{t('media.selector.fix.button')}</span>
+                <span className="lg:hidden">Виправити</span>
+              </button>
             </div>
 
-            {/* Статистика */}
-            <div className="flex flex-wrap gap-4 mt-4 text-sm">
-              <span className="text-slate-600">Знайдено: <span className="font-medium text-slate-800">{filteredFiles.length}</span></span>
-              <span className="text-slate-400">•</span>
-              <span className="text-slate-600">Всього: <span className="font-medium text-slate-800">{files.length}</span></span>
-              
-              {/* Статистика проблемних файлів */}
-              {(() => {
-                const problematicFiles = files.filter(file => {
-                  if (!file.url || !file.url.startsWith('data:')) return false;
-                  const mimeType = file.url.split(';')[0].replace('data:', '');
-                  const isVideoExtension = file.originalName && /\.(mp4|mov|avi|webm|mkv|wmv|flv|m4v)$/i.test(file.originalName);
-                  
-                  // Файли з неправильним типом
-                  if (file.type === 'video' && mimeType.startsWith('image/') && !isVideoExtension) return true;
-                  if (file.type === 'image' && mimeType.startsWith('video/')) return true;
-                  if (file.type === 'audio' && (mimeType.startsWith('image/') || mimeType.startsWith('video/'))) return true;
-                  
-                  // SVG placeholder замість відео
-                  if (file.type === 'video' && file.url.includes('data:image/svg+xml') && file.url.includes('🎬')) return true;
-                  
-                  return false;
-                });
+            {/* 📊 Статистика - MOBILE COMPACT */}
+            <div className="mt-2 lg:mt-4">
+              {/* Основна статистика - завжди видима */}
+              <div className="flex items-center gap-1 lg:gap-4 text-xs lg:text-sm">
+                <span className="text-slate-600">{t('media.selector.stats.found')} <span className="font-medium text-slate-800">{filteredFiles.length}</span></span>
+                <span className="text-slate-400">•</span>
+                <span className="text-slate-600">{t('media.selector.stats.total')} <span className="font-medium text-slate-800">{files.length}</span></span>
                 
-                if (problematicFiles.length > 0) {
-                  return (
-                    <>
-                      <span className="text-slate-400">•</span>
-                      <span className="text-orange-600">
-                        ⚠️ {problematicFiles.length} потребують виправлення
-                      </span>
-                    </>
-                  );
-                }
-                return null;
-              })()}
-              
-              {/* Статистика по типах файлів */}
-              {files.length > 0 && (
-                <>
-                  <span className="text-slate-400">•</span>
-                  {allowedTypes.map(type => {
-                    const count = files.filter(f => f.type === type).length;
-                    if (count === 0) return null;
+                {/* Статистика проблемних файлів - мобільно компактна */}
+                {(() => {
+                  const problematicFiles = files.filter(file => {
+                    if (!file.url || !file.url.startsWith('data:')) return false;
+                    const mimeType = file.url.split(';')[0].replace('data:', '');
+                    const isVideoExtension = file.originalName && /\.(mp4|mov|avi|webm|mkv|wmv|flv|m4v)$/i.test(file.originalName);
+                    
+                    // Файли з неправильним типом
+                    if (file.type === 'video' && mimeType.startsWith('image/') && !isVideoExtension) return true;
+                    if (file.type === 'image' && mimeType.startsWith('video/')) return true;
+                    if (file.type === 'audio' && (mimeType.startsWith('image/') || mimeType.startsWith('video/'))) return true;
+                    
+                    // SVG placeholder замість відео
+                    if (file.type === 'video' && file.url.includes('data:image/svg+xml') && file.url.includes('🎬')) return true;
+                    
+                    return false;
+                  });
+                  
+                  if (problematicFiles.length > 0) {
                     return (
-                      <span key={type} className="text-slate-600">
-                        {type === 'image' ? '🖼️' : type === 'audio' ? '🎵' : '🎬'} {count}
-                      </span>
+                      <>
+                        <span className="text-slate-400">•</span>
+                        <span className="text-orange-600">
+                          ⚠️ {problematicFiles.length} <span className="hidden lg:inline">{t('media.selector.stats.need.fix')}</span>
+                        </span>
+                      </>
                     );
-                  })}
-                </>
-              )}
+                  }
+                  return null;
+                })()}
+              </div>
               
-              {/* Спеціальна інформація для аудіо файлів */}
-              {allowedTypes.includes('audio') && files.filter(f => f.type === 'audio').length > 0 && (
-                <>
-                  <span className="text-slate-400">•</span>
-                  <span className="text-blue-600">
-                    💾 {files.filter(f => f.type === 'audio' && !f.url && f.size > 2 * 1024 * 1024).length} в розширеному сховищі
-                  </span>
-                </>
-              )}
+              {/* Детальна статистика - тільки на десктопі */}
+              <div className="hidden lg:flex flex-wrap gap-4 mt-2 text-sm">
+                {/* Статистика по типах файлів */}
+                {files.length > 0 && (
+                  <>
+                    {allowedTypes.map(type => {
+                      const count = files.filter(f => f.type === type).length;
+                      if (count === 0) return null;
+                      return (
+                        <span key={type} className="text-slate-600">
+                          {type === 'image' ? '🖼️' : type === 'audio' ? '🎵' : '🎬'} {count}
+                        </span>
+                      );
+                    })}
+                  </>
+                )}
+                
+                {/* Спеціальна інформація для аудіо файлів */}
+                {allowedTypes.includes('audio') && files.filter(f => f.type === 'audio').length > 0 && (
+                  <>
+                    <span className="text-slate-400">•</span>
+                    <span className="text-blue-600">
+                      💾 {files.filter(f => f.type === 'audio' && !f.url && f.size > 2 * 1024 * 1024).length} {t('media.selector.stats.extended.storage')}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Список файлів */}
-          <div className="p-6 overflow-y-auto max-h-96">
+          {/* 📁 Список файлів - MOBILE OPTIMIZED */}
+          <div className="p-2 lg:p-6 overflow-y-auto max-h-[50vh] lg:max-h-96">
             {isLoading ? (
-              <div className="text-center py-12">
-                <div className="text-4xl mb-4">⏳</div>
-                <div className="text-lg font-medium text-slate-600">
-                  Завантаження файлів...
+              <div className="text-center py-8 lg:py-12">
+                <div className="text-2xl lg:text-4xl mb-2 lg:mb-4">⏳</div>
+                <div className="text-sm lg:text-lg font-medium text-slate-600">
+                  {t('media.selector.loading')}
                 </div>
-                <div className="text-sm text-slate-500 mt-2">
-                  Завантажуємо аудіо файли з розширеного сховища
+                <div className="text-xs lg:text-sm text-slate-500 mt-1 lg:mt-2">
+                  {t('media.selector.loading.extended')}
                 </div>
               </div>
             ) : filteredFiles.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📭</div>
-                <div className="text-xl font-medium text-slate-600 mb-2">
-                  {files.length === 0 ? 'Медіа-бібліотека порожня' : 'Файлів не знайдено'}
+              <div className="text-center py-8 lg:py-12">
+                <div className="text-4xl lg:text-6xl mb-2 lg:mb-4">📭</div>
+                <div className="text-base lg:text-xl font-medium text-slate-600 mb-2">
+                  {files.length === 0 ? t('media.selector.empty.title') : t('media.selector.not.found.title')}
                 </div>
-                <div className="text-slate-500 mb-4">
+                <div className="text-sm lg:text-base text-slate-500 mb-4">
                   {files.length === 0 
-                    ? 'Завантажте файли через Smart Content Manager' 
-                    : 'Спробуйте змінити фільтри або пошуковий запит'
+                    ? t('media.selector.empty.description') 
+                    : t('media.selector.not.found.description')
                   }
                 </div>
                 {files.length === 0 && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 max-w-md mx-auto">
-                    <div className="text-sm text-blue-700">
-                      <div className="font-medium mb-2">📚 Як додати файли:</div>
-                      <ol className="text-left space-y-1">
-                        <li>1. Перейдіть в Smart Content Manager</li>
-                        <li>2. Завантажте аудіо файли</li>
-                        <li>3. Поверніться сюди та оберіть файл</li>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg lg:rounded-xl p-3 lg:p-4 max-w-md mx-auto">
+                    <div className="text-xs lg:text-sm text-blue-700">
+                      <div className="font-medium mb-2">📚 {t('media.selector.how.to.add')}</div>
+                      <ol className="text-left space-y-1 text-xs lg:text-sm">
+                        <li>{t('media.selector.how.to.add.step1')}</li>
+                        <li>{t('media.selector.how.to.add.step2')}</li>
+                        <li>{t('media.selector.how.to.add.step3')}</li>
                       </ol>
                     </div>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-4">
                 {filteredFiles.map((file) => (
                   <motion.div
                     key={file.id}
                     layout
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className={`bg-slate-50 rounded-xl p-4 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 cursor-pointer group ${
+                    className={`bg-slate-50 rounded-lg lg:rounded-xl p-2 lg:p-4 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 cursor-pointer group touch-manipulation ${
                       file.type === 'audio' && !file.url ? 'opacity-50' : ''
                     } ${loadingFileId === file.id ? 'pointer-events-none' : ''}`}
                     onClick={() => handleSelect(file)}
                   >
-                    {/* Превью файлу */}
-                    <div className="aspect-square bg-white rounded-lg mb-3 overflow-hidden relative">
+                    {/* 🖼️ Превью файлу - MOBILE OPTIMIZED */}
+                    <div className="aspect-square bg-white rounded-md lg:rounded-lg mb-2 lg:mb-3 overflow-hidden relative">
                       {file.type === 'image' ? (
                         <img
                           src={file.url}
@@ -920,56 +932,73 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-4xl">{getFileIcon(file.type)}</span>
+                          <span className="text-xl lg:text-4xl">{getFileIcon(file.type)}</span>
                           {file.type === 'audio' && !file.url && file.size > 2 * 1024 * 1024 && loadingFileId !== file.id && (
-                            <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                              Розширене сховище
+                            <div className="absolute top-1 right-1 lg:top-2 lg:right-2 bg-blue-500 text-white text-xs px-1 py-0.5 lg:px-2 lg:py-1 rounded">
+                              <span className="hidden lg:inline">{t('media.selector.extended.storage')}</span>
+                              <span className="lg:hidden">💾</span>
                             </div>
                           )}
                           {loadingFileId === file.id && (
                             <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                              <div className="bg-white/90 px-3 py-2 rounded-lg font-medium text-blue-600">
-                                ⏳ Завантаження...
+                              <div className="bg-white/90 px-2 py-1 lg:px-3 lg:py-2 rounded-md lg:rounded-lg font-medium text-blue-600 text-xs lg:text-sm">
+                                ⏳ <span className="hidden lg:inline">{t('media.selector.loading.file')}</span>
                               </div>
                             </div>
                           )}
                         </div>
                       )}
                       
-                      {/* Оверлей при ховері */}
+                      {/* Оверлей при ховері - MOBILE OPTIMIZED */}
                       {loadingFileId !== file.id && (
                         <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                          <div className="bg-white/90 px-3 py-2 rounded-lg font-medium text-blue-600">
-                            {file.type === 'audio' && !file.url && file.size > 2 * 1024 * 1024 ? 'Завантажити' : 'Вибрати'}
+                          <div className="bg-white/90 px-2 py-1 lg:px-3 lg:py-2 rounded-md lg:rounded-lg font-medium text-blue-600 text-xs lg:text-sm">
+                            <span className="hidden lg:inline">
+                              {file.type === 'audio' && !file.url && file.size > 2 * 1024 * 1024 ? t('media.selector.download.file') : t('media.selector.select.file')}
+                            </span>
+                            <span className="lg:hidden">Вибрати</span>
                           </div>
                         </div>
                       )}
                     </div>
 
-                    {/* Інформація про файл */}
-                    <div className="space-y-2">
-                      <div className="font-medium text-slate-800 truncate" title={file.name}>
+                    {/* ℹ️ Інформація про файл - MOBILE COMPACT */}
+                    <div className="space-y-1 lg:space-y-2">
+                      <div className="font-medium text-slate-800 truncate text-xs lg:text-base" title={file.name}>
                         {file.name}
                       </div>
-                      <div className="text-sm text-slate-500 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span>{getFileIcon(file.type)}</span>
+                      <div className="text-xs lg:text-sm text-slate-500 space-y-1">
+                        <div className="flex items-center gap-1 lg:gap-2">
+                          <span className="text-xs lg:text-base">{getFileIcon(file.type)}</span>
                           <span className="capitalize">{file.type}</span>
-                          {file.optimized && <span className="text-green-500" title="Оптимізовано">✨</span>}
+                          {file.optimized && <span className="text-green-500" title={t('media.selector.optimized')}>✨</span>}
                           {file.type === 'audio' && !file.url && file.size > 2 * 1024 * 1024 && (
-                            <span className="text-blue-500" title="Збережено в розширеному сховищі">💾</span>
+                            <span className="text-blue-500" title={t('media.selector.extended.storage')}>💾</span>
                           )}
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-xs lg:text-sm">
                           <span>{formatFileSize(file.size)}</span>
-                          <span>{new Date(file.uploadDate).toLocaleDateString()}</span>
+                          <span className="hidden lg:inline">{new Date(file.uploadDate).toLocaleDateString()}</span>
+                          <span className="lg:hidden">{new Date(file.uploadDate).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' })}</span>
                         </div>
                         {file.type === 'audio' && !file.url && file.size > 2 * 1024 * 1024 && (
-                          <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                            Розширене сховище
+                          <div className="text-xs text-blue-600 bg-blue-50 px-1 lg:px-2 py-0.5 lg:py-1 rounded hidden lg:block">
+                            {t('media.selector.extended.storage')}
                           </div>
                         )}
                       </div>
+                      
+                      {/* 📱 Мобільна кнопка вибору - ТІЛЬКИ НА МОБІЛЬНОМУ */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelect(file);
+                        }}
+                        className="lg:hidden w-full mt-2 px-2 py-1.5 bg-blue-500 text-white rounded-md text-xs font-medium touch-manipulation"
+                        disabled={loadingFileId === file.id}
+                      >
+                        {loadingFileId === file.id ? '⏳' : 'Вибрати'}
+                      </button>
                     </div>
                   </motion.div>
                 ))}
@@ -977,17 +1006,20 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
             )}
           </div>
 
-          {/* Футер */}
-          <div className="p-6 border-t border-slate-200 bg-slate-50">
+          {/* 🔽 Футер - MOBILE COMPACT */}
+          <div className="p-2 lg:p-6 border-t border-slate-200 bg-slate-50">
             <div className="flex justify-between items-center">
-              <div className="text-sm text-slate-600">
-                Файли зберігаються в вашій медіа-бібліотеці
+              <div className="text-xs lg:text-sm text-slate-600 hidden lg:block">
+                {t('media.selector.footer.info')}
+              </div>
+              <div className="text-xs lg:text-sm text-slate-600 lg:hidden">
+                📚 Файли зберігаються в вашій медіа-бібліотеці
               </div>
               <button
                 onClick={onClose}
-                className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-colors font-medium"
+                className="px-3 py-2 lg:px-6 lg:py-3 bg-slate-200 text-slate-700 rounded-lg lg:rounded-xl hover:bg-slate-300 transition-colors font-medium text-xs lg:text-base min-h-[36px] touch-manipulation"
               >
-                Скасувати
+                {t('media.selector.cancel')}
               </button>
             </div>
           </div>

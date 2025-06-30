@@ -78,7 +78,6 @@ const Carousel3D = ({
     const hasNewImages = [...currentImageUrls].some(url => !loadedImageUrls.has(url));
     
     if (hasNewImages) {
-      console.log('🔄 Carousel3D: Виявлено нові зображення, оновлюємо стан завантаження');
       // Зберігаємо вже завантажені зображення, які все ще присутні
       const stillRelevantImages = new Set([...loadedImages].filter(url => currentImageUrls.has(url)));
       setLoadedImages(stillRelevantImages);
@@ -388,16 +387,30 @@ const Carousel3D = ({
   }, [items, activeIndex]);
 
   const goToNext = useCallback(() => {
-    setActiveIndex((prevIndex) => (prevIndex + 1) % items.length);
+    const newIndex = (activeIndex + 1) % items.length;
+    setActiveIndex(newIndex);
     setExpandedCard(null);
     onTransitionSound?.();
-  }, [items.length, onTransitionSound]);
+    
+    // Відстежуємо навігацію каруселі
+    const nextItem = items[newIndex];
+    if (nextItem) {
+      trackClick('#carousel-next', `Next to ${nextItem.title} - Navigation`);
+    }
+  }, [activeIndex, items, onTransitionSound, trackClick]);
 
   const goToPrev = useCallback(() => {
-    setActiveIndex((prevIndex) => (prevIndex - 1 + items.length) % items.length);
+    const newIndex = (activeIndex - 1 + items.length) % items.length;
+    setActiveIndex(newIndex);
     setExpandedCard(null);
     onTransitionSound?.();
-  }, [items.length, onTransitionSound]);
+    
+    // Відстежуємо навігацію каруселі
+    const prevItem = items[newIndex];
+    if (prevItem) {
+      trackClick('#carousel-prev', `Previous to ${prevItem.title} - Navigation`);
+    }
+  }, [activeIndex, items, onTransitionSound, trackClick]);
 
   const handleItemClick = useCallback((index: number) => {
     // Don't handle click if we were dragging
@@ -406,6 +419,15 @@ const Carousel3D = ({
     // Play click sound
     onClickSound?.();
     
+    // Відстежуємо клік по карточці каруселі
+    const item = items[index];
+    if (item) {
+      trackClick(
+        item.url || `#carousel-item-${item.title.toLowerCase()}`, 
+        `${item.title} - Carousel Card Click`
+      );
+    }
+    
     if (index === activeIndex) {
       // Toggle expanded state for active card
       setExpandedCard(expandedCard === index ? null : index);
@@ -413,7 +435,7 @@ const Carousel3D = ({
       setActiveIndex(index);
       setExpandedCard(null);
     }
-  }, [activeIndex, expandedCard, isDragging, onClickSound]);
+  }, [activeIndex, expandedCard, isDragging, onClickSound, items, trackClick]);
 
   const handleCTAClick = useCallback((item: CarouselItem, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -466,8 +488,12 @@ const Carousel3D = ({
     const isRightSwipe = distance < -minSwipeDistance;
 
     if (isLeftSwipe) {
+      // Додаємо окремий трекінг для свайпів
+      trackClick('#carousel-swipe-left', 'Carousel Swipe Left - Touch');
       goToNext();
     } else if (isRightSwipe) {
+      // Додаємо окремий трекінг для свайпів
+      trackClick('#carousel-swipe-right', 'Carousel Swipe Right - Touch');
       goToPrev();
     }
     
@@ -501,8 +527,12 @@ const Carousel3D = ({
     const isRightDrag = distance < -minSwipeDistance;
 
     if (isLeftDrag) {
+      // Додаємо окремий трекінг для драгу мишею
+      trackClick('#carousel-drag-left', 'Carousel Drag Left - Mouse');
       goToNext();
     } else if (isRightDrag) {
+      // Додаємо окремий трекінг для драгу мишею
+      trackClick('#carousel-drag-right', 'Carousel Drag Right - Mouse');
       goToPrev();
     }
     

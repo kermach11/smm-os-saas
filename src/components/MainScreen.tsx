@@ -11,6 +11,8 @@ import AdminPanel from './AdminPanel';
 import indexedDBService from '../services/IndexedDBService';
 import syncService from '../services/SyncService';
 import domainSyncService from '../services/DomainSyncService';
+import SplineAnimation from './SplineAnimation';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 // Простий хук для визначення типу пристрою
 const useDeviceType = () => {
@@ -240,6 +242,20 @@ const MainScreen = () => {
     }
   });
 
+  // Додаємо стан для 3D налаштувань
+  const [splineSettings, setSplineSettings] = useState({
+    enabled: false,
+    sceneUrl: "",
+    embedCode: "",
+    localFile: "",
+    position: 'background' as 'background' | 'foreground' | 'overlay',
+    opacity: 1,
+    scale: 1,
+    autoplay: true,
+    controls: false,
+    method: 'component' as 'iframe' | 'component' | 'local'
+  });
+
   // Додаємо флаг для відстеження завантаження
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
@@ -253,6 +269,9 @@ const MainScreen = () => {
     shouldShowAdminButton,
     checkAdminUrlParameter
   } = useSimpleAdminSession();
+  
+  // Аналітика
+  const { trackClick, cleanupRemovedCarouselItems } = useAnalytics();
   
   // Локальне стан для фонової музики
   const [isBackgroundMusicPlaying, setIsBackgroundMusicPlaying] = useState(true);
@@ -488,6 +507,15 @@ const MainScreen = () => {
             ...(settings.audioSettings as typeof audioSettings)
           }));
         }
+
+        // Завантажуємо 3D налаштування
+        if (settings.splineSettings && typeof settings.splineSettings === 'object') {
+          console.log('🌐 MainScreen: Завантажуємо 3D налаштування з IndexedDB:', settings.splineSettings);
+          setSplineSettings(prev => ({
+            ...prev,
+            ...(settings.splineSettings as typeof splineSettings)
+          }));
+        }
         
         // Завантажуємо елементи каруселі
         if (settings.carouselItems !== undefined && Array.isArray(settings.carouselItems)) {
@@ -519,15 +547,13 @@ const MainScreen = () => {
   }, []);
 
   const handleAdminButtonClick = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasAdminParam = urlParams.has('admin');
+    console.log('🔧 Admin button clicked:', { isAdmin, hasAdminParam: checkAdminUrlParameter() });
     
-    if (isAdmin || hasAdminParam) {
-      if (!isAdmin && hasAdminParam) {
-        login();
-      }
+    if (isAdmin) {
+      // Якщо вже залогінений - показуємо панель
       setShowAdminPanel(true);
     } else {
+      // Якщо не залогінений - показуємо форму логіну
       setShowAdminLogin(true);
     }
   };
@@ -708,6 +734,15 @@ const MainScreen = () => {
         }));
       }
 
+      // Оновлюємо 3D налаштування
+      if (settings.splineSettings) {
+        console.log('🌐 MainScreen: Оновлюємо 3D налаштування з конструктора:', settings.splineSettings);
+        setSplineSettings(prev => ({
+          ...prev,
+          ...(settings.splineSettings as typeof splineSettings)
+        }));
+      }
+
       // Оновлюємо елементи каруселі
       if (settings.carouselItems && Array.isArray(settings.carouselItems)) {
         console.log('🔄 MainScreen: Оновлюємо елементи каруселі з конструктора:', settings.carouselItems.length, 'елементів');
@@ -775,6 +810,16 @@ const MainScreen = () => {
     }
   }, [isDataLoaded, carouselItems.length, isConstructorUpdate]); // Додаємо isConstructorUpdate до залежностей
 
+  // Автоматичне очищення аналітики при зміні елементів каруселі
+  useEffect(() => {
+    if (carouselItems.length > 0) {
+      const wasCleanedUp = cleanupRemovedCarouselItems(carouselItems);
+      if (wasCleanedUp) {
+        console.log('✅ MainScreen: Аналітика автоматично очищена від видалених елементів каруселі');
+      }
+    }
+  }, [carouselItems, cleanupRemovedCarouselItems]);
+
   // Видалено складну логіку валідації відео - тепер використовуємо просту реалізацію як у IntroScreen
 
   // Функція для генерації стилів фону
@@ -824,6 +869,21 @@ const MainScreen = () => {
           <source src={backgroundSettings.backgroundVideo} type="video/mp4" />
         </video>
       )}
+
+      {/* 3D Анімація Spline */}
+      {splineSettings.enabled && (
+        <SplineAnimation
+          sceneUrl={splineSettings.sceneUrl}
+          embedCode={splineSettings.embedCode}
+          localFile={splineSettings.localFile}
+          position={splineSettings.position}
+          opacity={splineSettings.opacity}
+          scale={splineSettings.scale}
+          autoplay={splineSettings.autoplay}
+          controls={splineSettings.controls}
+          method={splineSettings.method}
+        />
+      )}
       
       <motion.div
         initial={{ opacity: 0 }}
@@ -832,8 +892,8 @@ const MainScreen = () => {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative w-full h-full z-10"
       >
-        {/* Background pattern overlay - показуємо тільки для градієнтів */}
-        {(backgroundSettings.backgroundType === 'gradient' || backgroundSettings.backgroundType === 'color') && (
+        {/* Background pattern overlay - ВІДКЛЮЧЕНО для чистого фону */}
+        {false && (backgroundSettings.backgroundType === 'gradient' || backgroundSettings.backgroundType === 'color') && (
           <div className="absolute inset-0 overflow-hidden">
             <motion.div 
               className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VlZSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIiAvPjwvc3ZnPg==')] opacity-[0.08]"
@@ -899,7 +959,10 @@ const MainScreen = () => {
             </div>
             <SoundToggle 
               isOn={isBackgroundMusicPlaying} 
-              onToggle={toggleBackgroundMusic} 
+              onToggle={() => {
+                toggleBackgroundMusic();
+                trackClick('#sound-toggle', `Sound Toggle: ${!isBackgroundMusicPlaying ? 'On' : 'Off'}`);
+              }} 
               isLoaded={true}
               onMouseEnter={playHoverSound}
               onClick={playClickSound}
@@ -938,6 +1001,7 @@ const MainScreen = () => {
                 textShadow: `0 2px 4px rgba(0,0,0,${headerTextSettings.headerTitleShadowIntensity})`
               }}
               onMouseEnter={playHoverSound}
+              onClick={() => trackClick('#main-title', `Main Title Click: ${headerTitle}`)}
               whileHover={{ 
                 scale: 1.025,
                 transition: { duration: 0.15, ease: "easeOut" }
@@ -968,6 +1032,7 @@ const MainScreen = () => {
                              adaptiveSettings.desktop.headerSubtitleMarginBottom
               }}
               onMouseEnter={playHoverSound}
+              onClick={() => trackClick('#main-subtitle', `Main Subtitle Click: ${headerSubtitle}`)}
               whileHover={{ 
                 scale: 1.03,
                 transition: { duration: 0.15, ease: "easeOut" }
@@ -997,6 +1062,7 @@ const MainScreen = () => {
                 textShadow: `0 1px 2px rgba(0,0,0,${headerTextSettings.headerDescriptionShadowIntensity})`
               }}
               onMouseEnter={playHoverSound}
+              onClick={() => trackClick('#main-description', `Main Description Click: ${headerDescription}`)}
               whileHover={{ 
                 scale: 1.015,
                 transition: { duration: 0.15, ease: "easeOut" }
@@ -1038,6 +1104,7 @@ const MainScreen = () => {
             onClick={(e) => {
               handleAdminButtonClick();
               playClickSound();
+              trackClick('#admin-panel-button', 'Admin Panel Access');
             }}
             onMouseEnter={playHoverSound}
             className="fixed bottom-6 right-6 w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center z-30 transition-colors"

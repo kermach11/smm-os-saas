@@ -49,10 +49,10 @@ const SimpleAdminPanel: React.FC<SimpleAdminPanelProps> = ({ isVisible, onClose 
   ]);
 
   const [introSettings, setIntroSettings] = useState({
-    titleTop: "За межами",
-    titleMiddle: "Реальності", 
-    description: "Подорожуйте крізь час і простір у захоплюючому всесвіті майбутнього.",
-    buttonText: "Розпочати подорож"
+          titleTop: "Beyond",
+          titleMiddle: "Reality", 
+          description: "Travel through time and space in the exciting universe of the future.",
+    buttonText: "Start Journey"
   });
 
   const [adminSettings, setAdminSettings] = useState({

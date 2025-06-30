@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import indexedDBService from '../services/IndexedDBService';
+import SplineAnimation from './SplineAnimation';
 
 interface WelcomeScreenProps {
   onComplete: () => void;
   isAudioLoaded: boolean;
+  settings?: WelcomeSettings;
 }
 
 interface WelcomeSettings {
@@ -33,45 +35,110 @@ interface WelcomeSettings {
   showParticles: boolean;
   particleColor: string;
   animationSpeed: 'slow' | 'normal' | 'fast';
+  // Typography settings
+  titleFontSize?: number;
+  subtitleFontSize?: number;
+  descriptionFontSize?: number;
+  titleFontFamily?: string;
+  subtitleFontFamily?: string;
+  descriptionFontFamily?: string;
+  titleFontWeight?: number;
+  subtitleFontWeight?: number;
+  descriptionFontWeight?: number;
+  titleFontStyle?: string;
+  subtitleFontStyle?: string;
+  descriptionFontStyle?: string;
+  splineSettings?: {
+    enabled: boolean;
+    sceneUrl: string;
+    embedCode: string;
+    localFile: string;
+    position: 'background' | 'foreground' | 'overlay';
+    opacity: number;
+    scale: number;
+    autoplay: boolean;
+    controls: boolean;
+    method: 'iframe' | 'component' | 'local';
+  };
 }
 
-const defaultSettings: WelcomeSettings = {
-  title: "SMM OS",
-  subtitle: "Ласкаво просимо",
-  description: "Усе що треба для твого SMM\nв одному місці",
-  buttonText: "Увійти",
-  hintText: "Тапніть щоб увійти та запустити музику",
-  backgroundType: 'gradient',
-  backgroundColor: '#f9fafb',
-  gradientFrom: '#f9fafb',
-  gradientTo: '#f7f8fa',
+// Мінімальні дефолтні налаштування тільки для темного фону під час завантаження
+const minimalDefaultSettings: WelcomeSettings = {
+  title: "",
+  subtitle: "",
+  description: "",
+  buttonText: "",
+  hintText: "",
+  backgroundType: 'color',
+  backgroundColor: '#000000',
+  gradientFrom: '#000000',
+  gradientTo: '#000000',
   backgroundImage: '',
   backgroundVideo: '',
-  textColor: '#111111',
-  subtitleColor: '#333333',
-  descriptionColor: '#666666',
-  buttonColor: '#4a4b57',
+  textColor: '#ffffff',
+  subtitleColor: '#ffffff',
+  descriptionColor: '#ffffff',
+  buttonColor: '#000000',
   buttonTextColor: '#ffffff',
   logoUrl: '',
-  showLogo: true,
+  showLogo: false,
   hasMusic: false,
   musicUrl: '',
   musicVolume: 0.5,
-  autoPlay: true,
+  autoPlay: false,
   showParticles: false,
   particleColor: '#ffffff',
-  animationSpeed: 'normal'
+  animationSpeed: 'normal',
+  // Default typography settings
+  titleFontSize: 32,
+  subtitleFontSize: 20,
+  descriptionFontSize: 14,
+  titleFontFamily: 'Inter',
+  subtitleFontFamily: 'Inter',
+  descriptionFontFamily: 'Inter',
+  titleFontWeight: 300,
+  subtitleFontWeight: 300,
+  descriptionFontWeight: 400,
+  titleFontStyle: 'normal',
+  subtitleFontStyle: 'normal',
+  descriptionFontStyle: 'normal',
+  splineSettings: {
+    enabled: false,
+    sceneUrl: "",
+    embedCode: "",
+    localFile: "",
+    position: 'background',
+    opacity: 1,
+    scale: 1,
+    autoplay: false,
+    controls: false,
+    method: 'component'
+  }
 };
 
-const WelcomeScreen = ({ onComplete, isAudioLoaded }: WelcomeScreenProps) => {
+const WelcomeScreen = ({ onComplete, isAudioLoaded, settings: propsSettings }: WelcomeScreenProps) => {
   const [isPressed, setIsPressed] = useState(false);
-  const [settings, setSettings] = useState<WelcomeSettings>(defaultSettings);
+  const [settings, setSettings] = useState<WelcomeSettings>(propsSettings || minimalDefaultSettings);
   const [customMusicLoaded, setCustomMusicLoaded] = useState(false);
+  const [isSettingsLoaded, setIsSettingsLoaded] = useState(!!propsSettings);
   
   const musicRef = useRef<HTMLAudioElement>(null);
 
-  // Завантаження налаштувань через IndexedDB
+  // Використовуємо налаштування з props якщо є, інакше завантажуємо
   useEffect(() => {
+    if (propsSettings) {
+      const safeSettings = {
+        ...minimalDefaultSettings,
+        ...propsSettings,
+        splineSettings: {
+          ...minimalDefaultSettings.splineSettings,
+          ...(propsSettings.splineSettings || {})
+        }
+      };
+      setSettings(safeSettings);
+      return;
+    }
+
     const loadSettings = async () => {
       try {
         console.log('🔄 WelcomeScreen: Завантаження налаштувань через IndexedDBService...');
@@ -81,7 +148,15 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded }: WelcomeScreenProps) => {
         
         if (indexedDBSettings) {
           console.log('✅ WelcomeScreen: Налаштування завантажено з IndexedDB');
-          setSettings(prev => ({ ...prev, ...indexedDBSettings }));
+          const safeSettings = {
+            ...minimalDefaultSettings,
+            ...indexedDBSettings,
+            splineSettings: {
+              ...minimalDefaultSettings.splineSettings,
+              ...(indexedDBSettings.splineSettings || {})
+            }
+          };
+          setSettings(safeSettings);
         } else {
           // Якщо IndexedDB порожній, пробуємо localStorage як резерв
           console.log('ℹ️ WelcomeScreen: Налаштування не знайдено в IndexedDB, перевіряємо localStorage...');
@@ -89,16 +164,33 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded }: WelcomeScreenProps) => {
           if (savedSettings) {
             const parsed = JSON.parse(savedSettings);
             console.log('✅ WelcomeScreen: Налаштування завантажено з localStorage');
-            setSettings(prev => ({ ...prev, ...parsed }));
+            const safeSettings = {
+              ...minimalDefaultSettings,
+              ...parsed,
+              splineSettings: {
+                ...minimalDefaultSettings.splineSettings,
+                ...(parsed.splineSettings || {})
+              }
+            };
+            setSettings(safeSettings);
             
             // Мігруємо в IndexedDB
             console.log('🔄 WelcomeScreen: Міграція налаштувань в IndexedDB...');
-            await indexedDBService.saveSettings('welcomeSettings', parsed, 'project');
+            await indexedDBService.saveSettings('welcomeSettings', safeSettings, 'project');
             console.log('✅ WelcomeScreen: Міграція завершена');
+          } else {
+            console.log('ℹ️ WelcomeScreen: Використовуємо мінімальні налаштування за замовчуванням');
+            setSettings(minimalDefaultSettings);
           }
         }
+        
+        // Завжди встановлюємо isSettingsLoaded в true після спроби завантаження
+        setIsSettingsLoaded(true);
       } catch (error) {
         console.error('❌ WelcomeScreen: Помилка завантаження налаштувань:', error);
+        // Навіть у випадку помилки, встановлюємо налаштування за замовчуванням
+        setSettings(minimalDefaultSettings);
+        setIsSettingsLoaded(true);
       }
     };
 
@@ -106,7 +198,28 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded }: WelcomeScreenProps) => {
 
     // Слухаємо оновлення налаштувань
     const handleSettingsUpdate = (event: CustomEvent) => {
-      setSettings(prev => ({ ...prev, ...event.detail }));
+      console.log('🔄 WelcomeScreen: Отримано оновлення налаштувань:', {
+        splineSettings: event.detail.splineSettings,
+        titleFontSize: event.detail.titleFontSize,
+        titleFontFamily: event.detail.titleFontFamily,
+        titleFontWeight: event.detail.titleFontWeight,
+        title: event.detail.title
+      });
+      const safeSettings = {
+        ...minimalDefaultSettings,
+        ...event.detail,
+        splineSettings: {
+          ...minimalDefaultSettings.splineSettings,
+          ...(event.detail.splineSettings || {})
+        }
+      };
+      console.log('🔄 WelcomeScreen: Фінальні налаштування:', {
+        titleFontSize: safeSettings.titleFontSize,
+        titleFontFamily: safeSettings.titleFontFamily,
+        titleFontWeight: safeSettings.titleFontWeight,
+        title: safeSettings.title
+      });
+      setSettings(safeSettings);
     };
 
     window.addEventListener('welcomeSettingsUpdated', handleSettingsUpdate as EventListener);
@@ -114,7 +227,7 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded }: WelcomeScreenProps) => {
     return () => {
       window.removeEventListener('welcomeSettingsUpdated', handleSettingsUpdate as EventListener);
     };
-  }, []);
+  }, [propsSettings]);
 
   // Ефект для керування власною музикою
   useEffect(() => {
@@ -185,9 +298,9 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded }: WelcomeScreenProps) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      animate={{ opacity: isSettingsLoaded ? 1 : 0 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.6 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
       className="fixed inset-0 flex items-center justify-center z-50"
       style={getBackgroundStyle()}
     >
@@ -203,10 +316,26 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded }: WelcomeScreenProps) => {
         </video>
       )}
 
+      {/* Spline 3D Animation */}
+      {settings.splineSettings?.enabled && (
+        <SplineAnimation
+          sceneUrl={settings.splineSettings.sceneUrl}
+          embedCode={settings.splineSettings.embedCode}
+          localFile={settings.splineSettings.localFile}
+          position={settings.splineSettings.position}
+          opacity={settings.splineSettings.opacity}
+          scale={settings.splineSettings.scale}
+          autoplay={settings.splineSettings.autoplay}
+          controls={settings.splineSettings.controls}
+          method={settings.splineSettings.method}
+          className="absolute inset-0"
+        />
+      )}
+
       {/* Background pattern */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div 
-          className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VlZSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIiAvPjwvc3ZnPg==')] opacity-[0.05]"
+                        className="absolute inset-0 opacity-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.05 }}
           transition={{ duration: 1.5, delay: 0.3 }}
@@ -214,50 +343,78 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded }: WelcomeScreenProps) => {
       </div>
 
       <div className="relative text-center px-6 max-w-md mx-auto z-10">
-        {/* Logo */}
-        {settings.showLogo && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mb-8"
-          >
+        {/* Logo and Title */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isSettingsLoaded ? 1 : 0 }}
+          transition={{ 
+            duration: 1.2, 
+            delay: isSettingsLoaded ? 0.3 : 0, 
+            ease: "easeOut"
+          }}
+          className="mb-8"
+        >
+          {/* Logo - only if logoUrl exists */}
+          {settings.logoUrl && (
             <div className="flex items-center justify-center mb-4">
-              {settings.logoUrl ? (
-                <img 
-                  src={settings.logoUrl} 
-                  alt="Logo" 
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              ) : (
-                <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{
-                    background: 'linear-gradient(135deg, #4a4b57 0%, #303142 100%)',
-                    boxShadow: '0 4px 12px rgba(48,49,66,0.3)'
-                  }}
-                >
-                  <div className="w-5 h-5 rounded-full bg-white"></div>
-                </div>
-              )}
+              <img 
+                src={settings.logoUrl} 
+                alt="Logo" 
+                className="w-12 h-12 rounded-full object-cover"
+              />
             </div>
-            <h1 className="text-3xl font-light sf-text" style={{ color: settings.textColor }}>
+          )}
+          
+          {/* Title - always show if exists */}
+          {settings.title && (
+            <h1 
+              className="sf-text" 
+              style={{ 
+                color: settings.textColor,
+                fontSize: `${settings.titleFontSize || 32}px`,
+                fontFamily: settings.titleFontFamily || 'Inter',
+                fontWeight: settings.titleFontWeight || 300,
+                fontStyle: settings.titleFontStyle || 'normal'
+              }}
+            >
               {settings.title}
             </h1>
-          </motion.div>
-        )}
+          )}
+        </motion.div>
 
         {/* Welcome text */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isSettingsLoaded ? 1 : 0 }}
+          transition={{ 
+            duration: 1.2, 
+            delay: isSettingsLoaded ? 0.8 : 0, 
+            ease: "easeOut"
+          }}
           className="mb-12"
         >
-          <h2 className="text-xl font-light mb-3 sf-heading" style={{ color: settings.subtitleColor }}>
+          <h2 
+            className="mb-3 sf-heading" 
+            style={{ 
+              color: settings.subtitleColor,
+              fontSize: `${settings.subtitleFontSize || 20}px`,
+              fontFamily: settings.subtitleFontFamily || 'Inter',
+              fontWeight: settings.subtitleFontWeight || 300,
+              fontStyle: settings.subtitleFontStyle || 'normal'
+            }}
+          >
             {settings.subtitle}
           </h2>
-          <p className="text-sm leading-relaxed sf-body" style={{ color: settings.descriptionColor }}>
+          <p 
+            className="leading-relaxed sf-body" 
+            style={{ 
+              color: settings.descriptionColor,
+              fontSize: `${settings.descriptionFontSize || 14}px`,
+              fontFamily: settings.descriptionFontFamily || 'Inter',
+              fontWeight: settings.descriptionFontWeight || 400,
+              fontStyle: settings.descriptionFontStyle || 'normal'
+            }}
+          >
             {settings.description.split('\n').map((line, index) => (
               <span key={index}>
                 {line}
@@ -269,9 +426,13 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded }: WelcomeScreenProps) => {
 
         {/* Enter button */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isSettingsLoaded ? 1 : 0 }}
+          transition={{ 
+            duration: 1.2, 
+            delay: isSettingsLoaded ? 1.5 : 0, 
+            ease: "easeOut"
+          }}
         >
           <button
             onClick={handleEnter}
@@ -306,12 +467,19 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded }: WelcomeScreenProps) => {
 
         {/* Hint text */}
         {isReady && (
-          <motion.p
+                    <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1 }}
+            animate={{ opacity: isSettingsLoaded ? 1 : 0 }}
+            transition={{ 
+              duration: 1.2, 
+              delay: isSettingsLoaded ? 2.2 : 0, 
+              ease: "easeOut"
+            }}
             className="text-xs mt-6 sf-body"
-            style={{ color: settings.descriptionColor, opacity: 0.7 }}
+            style={{ 
+              color: settings.descriptionColor, 
+              opacity: isSettingsLoaded ? 0.7 : 0
+            }}
           >
             {settings.hintText}
           </motion.p>

@@ -5,6 +5,64 @@ import indexedDBService from '../services/IndexedDBService';
 import syncService from '../services/SyncService';
 import domainSyncService from '../services/DomainSyncService';
 
+// 🚀 Global Spline Preloader для миттєвого завантаження
+const SPLINE_SCENE_URL = "https://prod.spline.design/Li0xtQwxHAu6qXGd/scene.splinecode";
+
+// Глобальний preload для Spline сцени
+const preloadSplineScene = async () => {
+  try {
+    console.log('🚀 Index: Запуск preload для Spline сцени...');
+    
+    // Preconnect для швидшого з'єднання
+    const preconnectLink = document.createElement('link');
+    preconnectLink.rel = 'preconnect';
+    preconnectLink.href = 'https://prod.spline.design';
+    document.head.appendChild(preconnectLink);
+    
+    // Prefetch самої сцени
+    const prefetchLink = document.createElement('link');
+    prefetchLink.rel = 'prefetch';
+    prefetchLink.href = SPLINE_SCENE_URL;
+    document.head.appendChild(prefetchLink);
+    
+    // Додатковий fetch для кешування
+    fetch(SPLINE_SCENE_URL, { 
+      method: 'GET',
+      mode: 'cors',
+      cache: 'force-cache'
+    }).then(() => {
+      console.log('✅ Index: Spline сцена preload завершено');
+    }).catch(() => {
+      console.log('⚠️ Index: Spline preload не вдався (нормально)');
+    });
+
+    // 🚀 Повідомляємо Service Worker про prefetch
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'PREFETCH_SPLINE',
+        urls: [SPLINE_SCENE_URL]
+      });
+    }
+
+    // 🎯 WebGL Context Warmup для швидшого старту 3D
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+      if (gl) {
+        // Ініціалізуємо основні WebGL ресурси
+        const shader = gl.createShader(gl.VERTEX_SHADER);
+        gl.deleteShader(shader);
+        console.log('✅ Index: WebGL context підготовлено');
+      }
+    } catch (error) {
+      console.log('⚠️ Index: WebGL warmup не вдався:', error);
+    }
+    
+  } catch (error) {
+    console.log('⚠️ Index: Помилка Spline preload:', error);
+  }
+};
+
 // Screen components
 import IntroScreen from "../components/IntroScreen";
 import MainScreen from "../components/MainScreen";
@@ -45,6 +103,14 @@ const Index = () => {
   // Global audio management with auto-play disabled
   const { isPlaying, isLoaded, canAutoPlay, toggle, play } = useGlobalAudio();
 
+  // 🚀 Запускаємо preload Spline сцени асинхронно (без блокування UI)
+  useEffect(() => {
+    // Запускаємо preload в мікротаску щоб не блокувати початковий рендер
+    Promise.resolve().then(() => {
+      preloadSplineScene();
+    });
+  }, []);
+
   // Завантаження налаштувань превю через IndexedDB
   useEffect(() => {
     const loadWelcomeSettings = async () => {
@@ -80,6 +146,8 @@ const Index = () => {
         }
       } catch (error) {
         console.error('❌ Index: Помилка завантаження налаштувань Welcome:', error);
+      } finally {
+        // Початкове завантаження завершено
       }
     };
 
@@ -162,13 +230,16 @@ const Index = () => {
 
   return (
     <AudioContext.Provider value={audioContextValue}>
-      <div className="w-full h-screen overflow-hidden bg-gradient-to-b from-[#f9fafb] to-[#f7f8fa]">
+      <div className="w-full h-screen overflow-hidden bg-black">
+
+        
         <AnimatePresence mode="wait" initial={false}>
           {screenState === 'welcome' && !hasInitialLoadCompleted && (
             <WelcomeScreen 
               key="welcome" 
               onComplete={handleWelcomeComplete}
               isAudioLoaded={isLoaded}
+              settings={welcomeSettings}
             />
           )}
           

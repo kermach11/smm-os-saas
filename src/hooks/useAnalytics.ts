@@ -254,6 +254,42 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     });
   }, []);
 
+  // Нова функція для очищення аналітики від видалених елементів каруселі
+  const cleanupRemovedCarouselItems = useCallback((currentItems: Array<{title: string, url?: string}>) => {
+    try {
+      const clicks = getStoredClicks();
+      const currentItemTitles = new Set(currentItems.map(item => item.title));
+      const currentItemUrls = new Set(currentItems.map(item => item.url).filter(Boolean));
+      
+      // Фільтруємо кліки, залишаючи тільки ті, що відносяться до поточних елементів каруселі
+      // або до системних елементів (навігація, звук, тощо)
+      const filteredClicks = clicks.filter(click => {
+        const isSystemClick = click.url.startsWith('#') && !click.url.includes('carousel-item-');
+        const isCurrentCarouselItem = currentItemTitles.has(click.title.split(' - ')[0]);
+        const isCurrentUrl = click.url && currentItemUrls.has(click.url);
+        
+        return isSystemClick || isCurrentCarouselItem || isCurrentUrl;
+      });
+      
+      // Якщо є зміни, оновлюємо localStorage
+      if (filteredClicks.length !== clicks.length) {
+        localStorage.setItem('analyticsClicks', JSON.stringify(filteredClicks));
+        
+        // Оновлюємо аналітику з новими даними
+        updateAnalyticsAfterClick(filteredClicks);
+        
+        console.log(`🧹 Очищено аналітику: видалено ${clicks.length - filteredClicks.length} кліків по видалених елементах`);
+        
+        return true; // Повертаємо true, якщо були зміни
+      }
+      
+      return false; // Повертаємо false, якщо змін не було
+    } catch (error) {
+      console.error('Помилка при очищенні аналітики:', error);
+      return false;
+    }
+  }, [getStoredClicks, updateAnalyticsAfterClick]);
+
   const exportAnalytics = useCallback(() => {
     const data = {
       analytics: analyticsData,
@@ -278,6 +314,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     },
     trackClick,
     clearAnalytics,
+    cleanupRemovedCarouselItems,
     exportAnalytics,
     currentSession
   };

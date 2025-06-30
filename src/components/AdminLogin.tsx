@@ -16,6 +16,7 @@ interface AdminLoginProps {
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLogin }) => {
   const { toast } = useToast();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginDuration, setLoginDuration] = useState('30');
@@ -25,29 +26,38 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLogin }) => 
   // Очищення форми при відкритті/закритті
   useEffect(() => {
     if (isOpen) {
+      setUsername('');
       setPassword('');
       setError('');
       setShowPassword(false);
     }
   }, [isOpen]);
 
-  const getAdminPassword = (): string => {
+  const getAdminCredentials = (): { login: string; password: string } => {
     try {
       const savedData = localStorage.getItem('immersiveExperienceData');
       if (savedData) {
         const data = JSON.parse(savedData);
-        if (data.adminSettings?.password) {
-          return data.adminSettings.password;
+        if (data.adminSettings) {
+          return {
+            login: data.adminSettings.login || 'admin',
+            password: data.adminSettings.password || 'admin123'
+          };
         }
       }
     } catch (error) {
-      console.error('Помилка при зчитуванні пароля:', error);
+      console.error('Помилка при зчитуванні даних:', error);
     }
-    return 'admin123'; // Пароль за замовчуванням
+    return { login: 'admin', password: 'admin123' }; // Дані за замовчуванням
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!username.trim()) {
+      setError('Введіть логін!');
+      return;
+    }
     
     if (!password.trim()) {
       setError('Введіть пароль!');
@@ -57,11 +67,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLogin }) => 
     setIsLoading(true);
     setError('');
 
-    // Імітуємо затримку для перевірки пароля
+    // Імітуємо затримку для перевірки даних
     setTimeout(() => {
-      const correctPassword = getAdminPassword();
+      const credentials = getAdminCredentials();
       
-      if (password === correctPassword) {
+      if (username === credentials.login && password === credentials.password) {
         const duration = parseInt(loginDuration);
         
         // Зберігаємо сесію
@@ -82,9 +92,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLogin }) => 
         });
         
         onLogin(duration);
+        setUsername('');
         setPassword('');
       } else {
-        setError('Невірний пароль. Спробуйте ще раз.');
+        setError('Невірний логін або пароль. Спробуйте ще раз.');
       }
       
       setIsLoading(false);
@@ -130,6 +141,18 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLogin }) => 
             
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Логін адміністратора</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Введіть логін"
+                    disabled={isLoading}
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="password">Пароль адміністратора</Label>
                   <div className="relative">
@@ -215,7 +238,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onLogin }) => 
 
               <div className="mt-6 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
                 <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
-                  Стандартний пароль: <code className="font-mono bg-gray-200 dark:bg-gray-700 px-1 rounded">admin123</code>
+                  Стандартні дані: логін <code className="font-mono bg-gray-200 dark:bg-gray-700 px-1 rounded">admin</code>, 
+                  пароль <code className="font-mono bg-gray-200 dark:bg-gray-700 px-1 rounded">admin123</code>
                 </p>
               </div>
             </CardContent>

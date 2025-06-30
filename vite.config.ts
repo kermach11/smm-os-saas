@@ -7,7 +7,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' && process.env.GITHUB_ACTIONS ? '/smm-os/' : '/',
   server: {
-    host: "::",
+    host: "192.168.1.49",
     port: 8080,
   },
   plugins: [

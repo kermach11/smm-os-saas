@@ -47,14 +47,17 @@ export const useSimpleAdminSession = () => {
     // Перевіряємо URL параметр
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('admin')) {
+      console.log('🔧 Admin button: Показую через URL параметр ?admin');
       return true;
     }
     
+    // Перевіряємо налаштування в localStorage
     try {
       const savedData = localStorage.getItem('immersiveExperienceData');
       if (savedData) {
         const data = JSON.parse(savedData);
         if (data.adminSettings?.showAdminButton) {
+          console.log('🔧 Admin button: Показую через налаштування showAdminButton');
           return true;
         }
       }
@@ -62,7 +65,14 @@ export const useSimpleAdminSession = () => {
       console.error('Помилка завантаження налаштувань:', error);
     }
     
-    return isAdmin; // Показуємо кнопку тільки якщо користувач авторизований
+    // Показуємо якщо користувач авторизований
+    if (isAdmin) {
+      console.log('🔧 Admin button: Показую бо користувач авторизований');
+      return true;
+    }
+    
+    console.log('🔧 Admin button: Приховую - немає підстав для показу');
+    return false;
   }, [isAdmin]);
 
   return {

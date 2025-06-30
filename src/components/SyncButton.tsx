@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import domainSyncService from '../services/DomainSyncService';
+import { useTranslation, useLanguage } from '../hooks/useTranslation';
 
 interface SyncButtonProps {
   className?: string;
 }
 
 const SyncButton: React.FC<SyncButtonProps> = ({ className = '' }) => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [syncResult, setSyncResult] = useState<'success' | 'error' | null>(null);
@@ -62,34 +65,34 @@ const SyncButton: React.FC<SyncButtonProps> = ({ className = '' }) => {
         onClick={handleSync}
         disabled={isSyncing}
         className={`sync-button ${isSyncing ? 'syncing' : ''} ${syncResult ? syncResult : ''}`}
-        title={isSyncing ? 'Синхронізація...' : 'Синхронізувати зміни з публічним сайтом'}
+        title={isSyncing ? t('sync.button.syncing') : t('sync.button.tooltip')}
       >
         {isSyncing ? (
           <>
             <div className="sync-spinner" />
-            <span>Синхронізація...</span>
+            <span>{t('sync.button.syncing')}</span>
           </>
         ) : syncResult === 'success' ? (
           <>
             <span className="sync-icon">✅</span>
-            <span>Синхронізовано!</span>
+            <span>{t('sync.button.success')}</span>
           </>
         ) : syncResult === 'error' ? (
           <>
             <span className="sync-icon">❌</span>
-            <span>Помилка синхронізації</span>
+            <span>{t('sync.button.error')}</span>
           </>
         ) : (
           <>
             <span className="sync-icon">🔄</span>
-            <span>Синхронізувати зміни</span>
+            <span>{t('sync.button.changes')}</span>
           </>
         )}
       </button>
       
       {lastSyncTime && !isSyncing && (
         <div className="last-sync-info">
-          Остання синхронізація: {lastSyncTime.toLocaleTimeString('uk-UA')}
+          {t('sync.button.last')} {lastSyncTime.toLocaleTimeString(language === 'en' ? 'en-US' : language === 'ru' ? 'ru-RU' : 'uk-UA')}
         </div>
       )}
 
@@ -101,6 +104,7 @@ const SyncButton: React.FC<SyncButtonProps> = ({ className = '' }) => {
           align-items: center;
           gap: 8px;
           margin: 16px 0;
+          width: 100%;
         }
 
         .sync-button {
@@ -117,7 +121,7 @@ const SyncButton: React.FC<SyncButtonProps> = ({ className = '' }) => {
           cursor: pointer;
           transition: all 0.3s ease;
           box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-          min-width: 200px;
+          width: 100%;
           justify-content: center;
         }
 
@@ -171,15 +175,38 @@ const SyncButton: React.FC<SyncButtonProps> = ({ className = '' }) => {
           100% { transform: rotate(360deg); }
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+          .sync-button-container {
+            margin: 8px 0 !important;
+            gap: 4px !important;
+          }
+          
           .sync-button {
-            min-width: 180px !important;
-            padding: 10px 20px !important;
+            min-width: 100% !important;
+            padding: 8px 16px !important;
+            font-size: 12px !important;
+            border-radius: 6px !important;
+            gap: 6px !important;
+            min-height: 44px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+          }
+          
+          .sync-button:hover:not(:disabled) {
+            transform: none !important;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4) !important;
+          }
+          
+          .sync-spinner {
+            width: 12px !important;
+            height: 12px !important;
+          }
+          
+          .sync-icon {
             font-size: 14px !important;
           }
           
           .last-sync-info {
-            font-size: 11px !important;
+            font-size: 10px !important;
           }
         }
         `

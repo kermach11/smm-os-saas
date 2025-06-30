@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface SimpleAdminLoginProps {
   isVisible: boolean;
@@ -8,44 +9,70 @@ interface SimpleAdminLoginProps {
 }
 
 const SimpleAdminLogin: React.FC<SimpleAdminLoginProps> = ({ isVisible, onClose, onLogin }) => {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  const { t } = useTranslation();
 
-  const getAdminPassword = (): string => {
+  const getAdminCredentials = (): { login: string; password: string } => {
     try {
       const savedData = localStorage.getItem('immersiveExperienceData');
       if (savedData) {
         const data = JSON.parse(savedData);
-        if (data.adminSettings?.password) {
-          return data.adminSettings.password;
+        if (data.adminSettings) {
+          return {
+            login: data.adminSettings.login || 'admin',
+            password: data.adminSettings.password || 'admin123'
+          };
         }
       }
     } catch (error) {
-      console.error('Помилка при зчитуванні пароля:', error);
+      console.error('Помилка при зчитуванні даних:', error);
     }
-    return 'admin123'; // Пароль за замовчуванням
+    return { login: 'admin', password: 'admin123' }; // Дані за замовчуванням
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!username.trim()) {
+      setError(t('login.error.username'));
+      return;
+    }
+    
     if (!password.trim()) {
-      setError('Введіть пароль!');
+      setError(t('login.error.password'));
       return;
     }
 
     setIsLoading(true);
     setError('');
 
-    // Імітуємо затримку для перевірки пароля
+    // Імітуємо затримку для перевірки даних
     setTimeout(() => {
-      const correctPassword = getAdminPassword();
+      const credentials = getAdminCredentials();
       
-      if (password === correctPassword) {
-        // Зберігаємо сесію
+      // Перевіряємо і логін і пароль
+      if (username === credentials.login && password === credentials.password) {
+        // Зберігаємо сесію з налаштуваннями
+        const savedData = localStorage.getItem('immersiveExperienceData');
+        let sessionDuration = 30; // За замовчуванням 30 хвилин
+        
+        if (savedData) {
+          try {
+            const data = JSON.parse(savedData);
+            if (data.adminSettings?.sessionDuration) {
+              sessionDuration = data.adminSettings.sessionDuration;
+            }
+          } catch (error) {
+            console.error('Помилка читання налаштувань сесії:', error);
+          }
+        }
+        
         const now = new Date().getTime();
-        const expiry = now + 30 * 60 * 1000; // 30 хвилин
+        const expiry = now + sessionDuration * 60 * 1000; // Використовуємо налаштування
         
         const sessionData = {
           timestamp: now,
@@ -55,9 +82,10 @@ const SimpleAdminLogin: React.FC<SimpleAdminLoginProps> = ({ isVisible, onClose,
         localStorage.setItem('adminSession', JSON.stringify(sessionData));
         
         onLogin();
+        setUsername('');
         setPassword('');
       } else {
-        setError('Невірний пароль. Спробуйте ще раз.');
+        setError(t('login.error.invalid'));
       }
       
       setIsLoading(false);
@@ -72,36 +100,51 @@ const SimpleAdminLogin: React.FC<SimpleAdminLoginProps> = ({ isVisible, onClose,
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 lg:p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md p-6"
+          className="bg-white dark:bg-gray-900 rounded-md lg:rounded-lg shadow-xl w-full max-w-sm lg:max-w-md p-3 lg:p-6"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="text-center mb-6">
-            <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-4">
-              <span className="text-2xl">⚙️</span>
+          <div className="text-center mb-3 lg:mb-6">
+            <div className="mx-auto w-10 h-10 lg:w-16 lg:h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-2 lg:mb-4">
+              <span className="text-lg lg:text-2xl">⚙️</span>
             </div>
-            <h2 className="text-xl font-semibold">Вхід в панель адміністратора</h2>
-            <p className="text-gray-600 mt-2">Введіть пароль для доступу до налаштувань</p>
+            <h2 className="text-base lg:text-xl font-semibold">{t('admin.title')}</h2>
+            <p className="text-xs lg:text-sm text-gray-600 mt-1 lg:mt-2 hidden lg:block">{t('security.description')}</p>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-2 lg:space-y-4">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1">
-                Пароль адміністратора
+              <label htmlFor="username" className="block text-xs lg:text-sm font-medium mb-1 lg:mb-2">
+                {t('security.admin.login')}
+              </label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder={t('security.admin.login.placeholder')}
+                className="w-full px-2 lg:px-3 py-2 lg:py-3 border rounded-md lg:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base min-h-[36px] touch-manipulation"
+                disabled={isLoading}
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-xs lg:text-sm font-medium mb-1 lg:mb-2">
+                {t('security.admin.password')}
               </label>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Введіть пароль"
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder={t('security.admin.password.placeholder')}
+                className="w-full px-2 lg:px-3 py-2 lg:py-3 border rounded-md lg:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base min-h-[36px] touch-manipulation"
                 disabled={isLoading}
               />
             </div>
@@ -110,43 +153,37 @@ const SimpleAdminLogin: React.FC<SimpleAdminLoginProps> = ({ isVisible, onClose,
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800"
+                className="p-2 lg:p-3 text-xs lg:text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-md lg:rounded-lg border border-red-200 dark:border-red-800"
               >
                 {error}
               </motion.div>
             )}
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-2 lg:gap-3 pt-2 lg:pt-4">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-3 lg:px-4 py-2 border border-gray-300 rounded-md lg:rounded-lg hover:bg-gray-50 transition-colors text-xs lg:text-sm min-h-[36px] touch-manipulation"
               >
-                Скасувати
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-3 lg:px-4 py-2 bg-blue-500 text-white rounded-md lg:rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-1 lg:gap-2 text-xs lg:text-sm min-h-[36px] touch-manipulation"
               >
                 {isLoading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Перевірка...
+                    <div className="w-3 h-3 lg:w-4 lg:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="hidden lg:inline">{t('common.loading')}</span>
                   </>
                 ) : (
-                  'Увійти'
+                  t('admin.login')
                 )}
               </button>
             </div>
           </form>
-
-          <div className="mt-6 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
-              Стандартний пароль: <code className="font-mono bg-gray-200 dark:bg-gray-700 px-1 rounded">admin123</code>
-            </p>
-          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>

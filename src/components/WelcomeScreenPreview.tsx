@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
+import SplineAnimation from './SplineAnimation';
+import indexedDBService from '../services/IndexedDBService';
 
 interface WelcomeScreenPreviewProps {
   className?: string;
@@ -31,14 +33,39 @@ interface WelcomeSettings {
   showParticles: boolean;
   particleColor: string;
   animationSpeed: 'slow' | 'normal' | 'fast';
+  // Typography settings
+  titleFontSize?: number;
+  subtitleFontSize?: number;
+  descriptionFontSize?: number;
+  titleFontFamily?: string;
+  subtitleFontFamily?: string;
+  descriptionFontFamily?: string;
+  titleFontWeight?: number;
+  subtitleFontWeight?: number;
+  descriptionFontWeight?: number;
+  titleFontStyle?: string;
+  subtitleFontStyle?: string;
+  descriptionFontStyle?: string;
+  splineSettings?: {
+    enabled: boolean;
+    sceneUrl: string;
+    embedCode: string;
+    localFile: string;
+    position: 'background' | 'foreground' | 'overlay';
+    opacity: number;
+    scale: number;
+    autoplay: boolean;
+    controls: boolean;
+    method: 'iframe' | 'component' | 'local';
+  };
 }
 
 const defaultSettings: WelcomeSettings = {
   title: "SMM OS",
-  subtitle: "Ласкаво просимо",
-  description: "Усе що треба для твого SMM\nв одному місці",
-  buttonText: "Увійти",
-  hintText: "Тапніть щоб увійти та запустити музику",
+  subtitle: "Welcome",
+  description: "Everything you need for your SMM\nin one place",
+  buttonText: "Enter",
+  hintText: "Tap to enter and start music",
   backgroundType: 'gradient',
   backgroundColor: '#f9fafb',
   gradientFrom: '#f9fafb',
@@ -58,27 +85,62 @@ const defaultSettings: WelcomeSettings = {
   autoPlay: true,
   showParticles: false,
   particleColor: '#ffffff',
-  animationSpeed: 'normal'
+  animationSpeed: 'normal',
+  // Default typography settings
+  titleFontSize: 32,
+  subtitleFontSize: 20,
+  descriptionFontSize: 14,
+  titleFontFamily: 'Inter',
+  subtitleFontFamily: 'Inter',
+  descriptionFontFamily: 'Inter',
+  titleFontWeight: 300,
+  subtitleFontWeight: 300,
+  descriptionFontWeight: 400,
+  titleFontStyle: 'normal',
+  subtitleFontStyle: 'normal',
+  descriptionFontStyle: 'normal',
+  splineSettings: {
+    enabled: true,
+    sceneUrl: "https://prod.spline.design/Li0xtQwxHAu6qXGd/scene.splinecode",
+    embedCode: "",
+    localFile: "",
+    position: 'background',
+    opacity: 1,
+    scale: 1,
+    autoplay: true,
+    controls: false,
+    method: 'component'
+  }
 };
 
 const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
+  console.log('🎬 WelcomeScreenPreview: Component rendering');
   const [settings, setSettings] = useState<WelcomeSettings>(defaultSettings);
   
-  // Завантаження налаштувань з localStorage
+  // Завантаження налаштувань
   useEffect(() => {
-    const savedSettings = localStorage.getItem('welcomeSettings');
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        setSettings(prev => ({ ...prev, ...parsed }));
-      } catch (error) {
-        console.error('Помилка завантаження налаштувань превю:', error);
-      }
-    }
+    console.log('🔄 WelcomeScreenPreview: useEffect triggered, loading settings...');
+    loadWelcomeSettings();
 
     // Слухаємо оновлення налаштувань
     const handleSettingsUpdate = (event: CustomEvent) => {
-      setSettings(prev => ({ ...prev, ...event.detail }));
+      console.log('🔄 WelcomeScreenPreview: Отримано оновлення налаштувань:', {
+        titleFontSize: event.detail.titleFontSize,
+        titleFontFamily: event.detail.titleFontFamily,
+        titleFontWeight: event.detail.titleFontWeight,
+        titleText: event.detail.title,
+        fullDetail: event.detail
+      });
+      setSettings(prev => {
+        const newSettings = { ...prev, ...event.detail };
+        console.log('🔄 WelcomeScreenPreview: Нові налаштування після мержингу:', {
+          titleFontSize: newSettings.titleFontSize,
+          titleFontFamily: newSettings.titleFontFamily,
+          titleFontWeight: newSettings.titleFontWeight,
+          title: newSettings.title
+        });
+        return newSettings;
+      });
     };
 
     window.addEventListener('welcomeSettingsUpdated', handleSettingsUpdate as EventListener);
@@ -87,6 +149,54 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
       window.removeEventListener('welcomeSettingsUpdated', handleSettingsUpdate as EventListener);
     };
   }, []);
+
+  const loadWelcomeSettings = async () => {
+    console.log('📥 WelcomeScreenPreview: loadWelcomeSettings called');
+    try {
+      // Load from IndexedDB first
+      const indexedDBSettings = await indexedDBService.loadSettings('welcomeSettings');
+      console.log('📂 WelcomeScreenPreview: IndexedDB result:', indexedDBSettings);
+      
+      if (indexedDBSettings) {
+        console.log('✅ WelcomeScreenPreview: Settings found in IndexedDB');
+        const safeSettings = {
+          ...defaultSettings,
+          ...indexedDBSettings,
+          splineSettings: {
+            ...defaultSettings.splineSettings,
+            ...(indexedDBSettings.splineSettings || {})
+          }
+        };
+        
+        console.log('🔧 WelcomeScreenPreview: Merged settings:', safeSettings.splineSettings);
+        setSettings(safeSettings);
+        return;
+      }
+      
+      // Fallback to localStorage
+      const savedSettings = localStorage.getItem('welcomeSettings');
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        
+        const safeSettings = {
+          ...defaultSettings,
+          ...parsed,
+          splineSettings: {
+            ...defaultSettings.splineSettings,
+            ...(parsed.splineSettings || {})
+          }
+        };
+        
+        setSettings(safeSettings);
+        
+        // Migrate to IndexedDB
+        await indexedDBService.saveSettings('welcomeSettings', safeSettings, 'project');
+      }
+    } catch (error) {
+      console.error('❌ WelcomeScreenPreview: Помилка завантаження налаштувань:', error);
+      setSettings(defaultSettings);
+    }
+  };
 
   const getBackgroundStyle = () => {
     switch (settings.backgroundType) {
@@ -111,6 +221,8 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
     }
   };
 
+  console.log('🎨 WelcomeScreenPreview: Rendering with settings:', settings.splineSettings);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -132,10 +244,35 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
         </video>
       )}
 
+      {/* Spline 3D Animation */}
+      {(() => {
+        console.log('🔍 WelcomeScreenPreview: Spline debug:', {
+          hasSplineSettings: !!settings.splineSettings,
+          enabled: settings.splineSettings?.enabled,
+          sceneUrl: settings.splineSettings?.sceneUrl,
+          fullSettings: settings.splineSettings
+        });
+        
+        return settings.splineSettings?.enabled && (
+          <SplineAnimation
+            sceneUrl={settings.splineSettings.sceneUrl}
+            embedCode={settings.splineSettings.embedCode}
+            localFile={settings.splineSettings.localFile}
+            position={settings.splineSettings.position}
+            opacity={settings.splineSettings.opacity}
+            scale={settings.splineSettings.scale}
+            autoplay={settings.splineSettings.autoplay}
+            controls={settings.splineSettings.controls}
+            method={settings.splineSettings.method}
+            className="absolute inset-0"
+          />
+        );
+      })()}
+
       {/* Background pattern */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden z-1">
         <motion.div 
-          className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VlZSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIiAvPjwvc3ZnPg==')] opacity-[0.05]"
+                        className="absolute inset-0 opacity-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.05 }}
           transition={{ duration: 1.5, delay: 0.3 }}
@@ -143,38 +280,40 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
       </div>
 
       <div className="relative text-center px-6 max-w-md mx-auto z-10">
-        {/* Logo */}
-        {settings.showLogo && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mb-8"
-          >
+        {/* Logo and Title */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-8"
+        >
+          {/* Logo - only if logoUrl exists */}
+          {settings.logoUrl && (
             <div className="flex items-center justify-center mb-4">
-              {settings.logoUrl ? (
-                <img 
-                  src={settings.logoUrl} 
-                  alt="Logo" 
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              ) : (
-                <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{
-                    background: 'linear-gradient(135deg, #4a4b57 0%, #303142 100%)',
-                    boxShadow: '0 4px 12px rgba(48,49,66,0.3)'
-                  }}
-                >
-                  <div className="w-5 h-5 rounded-full bg-white"></div>
-                </div>
-              )}
+              <img 
+                src={settings.logoUrl} 
+                alt="Logo" 
+                className="w-12 h-12 rounded-full object-cover"
+              />
             </div>
-            <h1 className="text-3xl font-light sf-text" style={{ color: settings.textColor }}>
+          )}
+          
+          {/* Title - always show if exists */}
+          {settings.title && (
+            <h1 
+              className="sf-text" 
+              style={{ 
+                color: settings.textColor,
+                fontSize: `${settings.titleFontSize || 32}px`,
+                fontFamily: settings.titleFontFamily || 'Inter',
+                fontWeight: settings.titleFontWeight || 300,
+                fontStyle: settings.titleFontStyle || 'normal'
+              }}
+            >
               {settings.title}
             </h1>
-          </motion.div>
-        )}
+          )}
+        </motion.div>
 
         {/* Welcome text */}
         <motion.div
@@ -183,10 +322,28 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="mb-12"
         >
-          <h2 className="text-xl font-light mb-3 sf-heading" style={{ color: settings.subtitleColor }}>
+          <h2 
+            className="mb-3 sf-heading" 
+            style={{ 
+              color: settings.subtitleColor,
+              fontSize: `${settings.subtitleFontSize || 20}px`,
+              fontFamily: settings.subtitleFontFamily || 'Inter',
+              fontWeight: settings.subtitleFontWeight || 300,
+              fontStyle: settings.subtitleFontStyle || 'normal'
+            }}
+          >
             {settings.subtitle}
           </h2>
-          <p className="text-sm leading-relaxed sf-body" style={{ color: settings.descriptionColor }}>
+          <p 
+            className="leading-relaxed sf-body" 
+            style={{ 
+              color: settings.descriptionColor,
+              fontSize: `${settings.descriptionFontSize || 14}px`,
+              fontFamily: settings.descriptionFontFamily || 'Inter',
+              fontWeight: settings.descriptionFontWeight || 400,
+              fontStyle: settings.descriptionFontStyle || 'normal'
+            }}
+          >
             {settings.description.split('\n').map((line, index) => (
               <span key={index}>
                 {line}

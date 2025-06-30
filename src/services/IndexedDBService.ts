@@ -443,8 +443,23 @@ class IndexedDBService {
 
   // === НАЛАШТУВАННЯ ===
 
-  // Збереження налаштувань
+  // Збереження налаштувань (з інтеграцією backend)
   async saveSettings(settingsKey: string, data: SettingsData, type: string = 'project'): Promise<void> {
+    console.log(`🔄 IndexedDBService: Збереження ${settingsKey}, спочатку локально...`);
+    
+    // Спочатку зберігаємо локально (швидко)
+    await this.saveSettingsLocal(settingsKey, data, type);
+    
+    console.log(`☁️ IndexedDBService: Локальне збереження завершено, починаємо синхронізацію з сервером...`);
+    
+    // Потім намагаємося зберегти на сервері (асинхронно)
+    this.saveSettingsToBackend(settingsKey, data).catch(error => {
+      console.warn(`⚠️ IndexedDBService: Не вдалося зберегти ${settingsKey} на сервері:`, error);
+    });
+  }
+
+  // Локальне збереження налаштувань
+  private async saveSettingsLocal(settingsKey: string, data: SettingsData, type: string = 'project'): Promise<void> {
     // Очікуємо ініціалізації бази даних
     await this.waitForInit();
     
@@ -456,7 +471,10 @@ class IndexedDBService {
 
       const settingsData = {
         settingsKey,
-        data,
+        data: {
+          ...data,
+          lastModified: new Date().toISOString()
+        },
         timestamp: Date.now(),
         type
       };
@@ -466,7 +484,7 @@ class IndexedDBService {
       const request = store.put(settingsData);
 
       request.onsuccess = () => {
-        console.log(`💾 IndexedDBService: Налаштування збережено: ${settingsKey}`);
+        console.log(`💾 IndexedDBService: Налаштування збережено локально: ${settingsKey}`);
         resolve();
       };
 
@@ -477,8 +495,60 @@ class IndexedDBService {
     });
   }
 
-  // Завантаження налаштувань
+  // Збереження на сервері через Backend Service
+  private async saveSettingsToBackend(settingsKey: string, data: SettingsData): Promise<void> {
+    try {
+      console.log(`🌐 IndexedDBService: Починаємо збереження ${settingsKey} на сервері...`);
+      
+      // Динамічно імпортуємо BackendService
+      console.log(`📦 IndexedDBService: Імпортуємо BackendService...`);
+      const { backendService } = await import('./BackendService');
+      console.log(`✅ IndexedDBService: BackendService імпортовано успішно`);
+      
+      // Перевіряємо доступність backend
+      console.log(`🔗 IndexedDBService: Перевіряємо з'єднання з backend...`);
+      const isBackendAvailable = await backendService.checkConnection();
+      console.log(`🔗 IndexedDBService: Backend доступний: ${isBackendAvailable}`);
+      
+      if (isBackendAvailable) {
+        console.log(`💾 IndexedDBService: Викликаємо backendService.saveSettings для ${settingsKey}...`);
+        const success = await backendService.saveSettings(settingsKey, data);
+        if (success) {
+          console.log(`☁️ IndexedDBService: ${settingsKey} збережено на сервері`);
+        } else {
+          throw new Error('Backend повернув помилку');
+        }
+      } else {
+        console.log(`📱 IndexedDBService: Backend недоступний, використовуємо тільки локальне зберігання`);
+      }
+    } catch (error) {
+      console.warn(`⚠️ IndexedDBService: Помилка збереження на сервері:`, error);
+      // Не перериваємо роботу - локальне зберігання вже виконане
+    }
+  }
+
+  // Завантаження налаштувань (з перевіркою backend)
   async loadSettings(settingsKey: string): Promise<SettingsData | null> {
+    try {
+      // Спочатку пробуємо завантажити з сервера
+      const serverData = await this.loadSettingsFromBackend(settingsKey);
+      
+      if (serverData) {
+        // Якщо є серверні дані, зберігаємо їх локально і повертаємо
+        await this.saveSettingsLocal(settingsKey, serverData);
+        console.log(`☁️ IndexedDBService: ${settingsKey} завантажено з сервера`);
+        return serverData;
+      }
+    } catch (error) {
+      console.warn(`⚠️ IndexedDBService: Не вдалося завантажити ${settingsKey} з сервера:`, error);
+    }
+
+    // Якщо сервер недоступний або немає даних, завантажуємо локально
+    return await this.loadSettingsLocal(settingsKey);
+  }
+
+  // Локальне завантаження налаштувань
+  private async loadSettingsLocal(settingsKey: string): Promise<SettingsData | null> {
     // Очікуємо ініціалізації бази даних
     await this.waitForInit();
     
@@ -494,10 +564,10 @@ class IndexedDBService {
 
       request.onsuccess = () => {
         if (request.result) {
-          console.log(`📂 IndexedDBService: Налаштування завантажено: ${settingsKey}`);
+          console.log(`📂 IndexedDBService: ${settingsKey} завантажено локально`);
           resolve(request.result.data);
         } else {
-          console.log(`📂 IndexedDBService: Налаштування не знайдено: ${settingsKey}`);
+          console.log(`📂 IndexedDBService: ${settingsKey} не знайдено локально`);
           resolve(null);
         }
       };
@@ -507,6 +577,44 @@ class IndexedDBService {
         reject(new Error(`Помилка завантаження налаштувань: ${settingsKey}`));
       };
     });
+  }
+
+  // Завантаження з сервера через Backend Service
+  private async loadSettingsFromBackend(settingsKey: string): Promise<SettingsData | null> {
+    try {
+      // Динамічно імпортуємо BackendService
+      const { backendService } = await import('./BackendService');
+      
+      // Перевіряємо доступність backend
+      const isBackendAvailable = await backendService.checkConnection();
+      
+      if (isBackendAvailable) {
+        const data = await backendService.loadSettings(settingsKey);
+        return data;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.warn(`⚠️ IndexedDBService: Помилка завантаження з сервера:`, error);
+      return null;
+    }
+  }
+
+  // Синхронізація локальних та серверних даних
+  async syncSettingsWithBackend(settingsKey: string): Promise<SettingsData | null> {
+    try {
+      const { backendService } = await import('./BackendService');
+      const localData = await this.loadSettingsLocal(settingsKey);
+      
+      if (localData) {
+        return await backendService.syncWithServer(settingsKey, localData);
+      } else {
+        return await this.loadSettingsFromBackend(settingsKey);
+      }
+    } catch (error) {
+      console.error(`❌ IndexedDBService: Помилка синхронізації ${settingsKey}:`, error);
+      return await this.loadSettingsLocal(settingsKey);
+    }
   }
 
   // === АДМІН ДАНІ ===

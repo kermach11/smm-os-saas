@@ -115,6 +115,28 @@ a {
   to { transform: scale(1); opacity: 1; }
 }
 
+/* 🚀 3D Placeholder Animations для швидкого старту */
+@keyframes spin {
+  from { transform: rotateX(45deg) rotateY(45deg) rotateZ(0deg); }
+  to { transform: rotateX(45deg) rotateY(45deg) rotateZ(360deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(34, 211, 238, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.6); }
+}
+
+@keyframes fade-in-smooth {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.95) rotateX(45deg) rotateY(45deg);
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) rotateX(45deg) rotateY(45deg);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.6s ease-out forwards;
 }
@@ -167,6 +189,28 @@ a {
     --input: 220 13% 91%;
     --ring: 243.4 75.4% 58.6%;
     --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 243.4 75.4% 58.6%;
+    --primary-foreground: 224 71.4% 4.1%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 243.4 75.4% 58.6%;
+    --accent-foreground: 224 71.4% 4.1%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 243.4 75.4% 58.6%;
   }
 
   * {
@@ -559,3 +603,45 @@ a {
 .hover\:scrollbar-thumb-blue-600:hover::-webkit-scrollbar-thumb {
   background: rgb(37 99 235);
 }
+
+/* Кастомні стилі для генератора проектів */
+.project-generator-scroll {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.project-generator-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.project-generator-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.project-generator-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.project-generator-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.project-generator-scroll::-webkit-scrollbar-thumb:active {
+  background: #64748b;
+}
+
+/* Mobile-optimized hidden scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+

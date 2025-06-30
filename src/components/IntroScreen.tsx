@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import DynamicBackground from "./DynamicBackground";
+import SplineAnimation from "./SplineAnimation";
 import indexedDBService from '../services/IndexedDBService';
 import syncService from '../services/SyncService';
 import domainSyncService from '../services/DomainSyncService';
@@ -30,13 +31,27 @@ interface IntroSettings {
   animationStyle: 'fade' | 'slide' | 'zoom' | 'bounce';
   showParticles: boolean;
   particleColor: string;
+  
+  // 3D Анімації (Spline)
+  splineSettings?: {
+    enabled: boolean;
+    sceneUrl: string;
+    embedCode: string;
+    localFile: string; // Локальний файл .spline
+    position: 'background' | 'foreground' | 'overlay';
+    opacity: number;
+    scale: number;
+    autoplay: boolean;
+    controls: boolean;
+    method: 'iframe' | 'component' | 'local';
+  };
 }
 
 const defaultSettings: IntroSettings = {
-  title: "За межами",
-  subtitle: "Реальності",
-  description: "Подорожуйте крізь час і простір у захоплюючому всесвіті майбутнього.",
-  buttonText: "Розпочати подорож",
+  title: "Beyond",
+  subtitle: "Reality",
+  description: "Travel through time and space in the exciting universe of the future.",
+  buttonText: "Start Journey",
   buttonUrl: "#start",
   brandColor: "#4a4b57",
   accentColor: "#3b82f6",
@@ -52,7 +67,21 @@ const defaultSettings: IntroSettings = {
   musicUrl: "",
   animationStyle: 'fade',
   showParticles: false,
-  particleColor: "#ffffff"
+  particleColor: "#ffffff",
+  
+  // 3D Анімації (Spline)
+  splineSettings: {
+    enabled: false,
+    sceneUrl: "",
+    embedCode: "",
+    localFile: "",
+    position: 'background',
+    opacity: 80,
+    scale: 100,
+    autoplay: true,
+    controls: false,
+    method: 'component'
+  }
 };
 
 const IntroScreen = ({ onComplete }: IntroScreenProps) => {
@@ -66,6 +95,8 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
     
     // Слухач для оновлення даних з конструктора інтро
     const handleIntroSettingsUpdate = (event: CustomEvent) => {
+      console.log('🔄 IntroScreen: Отримано оновлення з конструктора:', event.detail);
+      console.log('🌐 IntroScreen: Spline налаштування з події:', event.detail.splineSettings);
       setIntroSettings(event.detail);
     };
 
@@ -91,6 +122,14 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
       
       if (indexedDBSettings) {
         console.log('✅ IntroScreen: Налаштування завантажено з IndexedDB');
+        console.log('🌐 IntroScreen: Spline налаштування:', indexedDBSettings.splineSettings);
+        console.log('🔍 IntroScreen: Детальні Spline параметри:', {
+          enabled: indexedDBSettings.splineSettings?.enabled,
+          opacity: indexedDBSettings.splineSettings?.opacity,
+          scale: indexedDBSettings.splineSettings?.scale,
+          position: indexedDBSettings.splineSettings?.position
+        });
+        
         // Конвертуємо розширений формат в базовий для IntroScreen
         const convertedSettings = {
           title: indexedDBSettings.title || defaultSettings.title,
@@ -112,8 +151,13 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
           musicUrl: indexedDBSettings.audioSettings?.backgroundMusic?.url || defaultSettings.musicUrl,
           animationStyle: defaultSettings.animationStyle, // Базова анімація для IntroScreen
           showParticles: indexedDBSettings.showParticles || defaultSettings.showParticles,
-          particleColor: indexedDBSettings.particleColor || defaultSettings.particleColor
+          particleColor: indexedDBSettings.particleColor || defaultSettings.particleColor,
+          
+          // 🌐 Spline 3D анімації
+          splineSettings: indexedDBSettings.splineSettings || defaultSettings.splineSettings
         };
+        
+        console.log('🎭 IntroScreen: Оброблені налаштування з Spline:', convertedSettings.splineSettings);
         setIntroSettings(convertedSettings);
         return;
       }
@@ -161,8 +205,12 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
           musicUrl: settings.audioSettings?.backgroundMusic?.url || defaultSettings.musicUrl,
           animationStyle: defaultSettings.animationStyle, // Базова анімація для IntroScreen
           showParticles: settings.showParticles || defaultSettings.showParticles,
-          particleColor: settings.particleColor || defaultSettings.particleColor
+          particleColor: settings.particleColor || defaultSettings.particleColor,
+          
+          // 🌐 Spline 3D анімації
+          splineSettings: settings.splineSettings || defaultSettings.splineSettings
         };
+        console.log('🎭 IntroScreen: localStorage конвертовані налаштування з Spline:', convertedSettings.splineSettings);
         setIntroSettings(convertedSettings);
         
         // Мігруємо в IndexedDB
@@ -279,9 +327,24 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
 
   return (
     <AnimatePresence>
-      <div 
+      <motion.div 
         className="fixed inset-0 flex flex-col items-center justify-center z-50"
         style={getBackgroundStyle()}
+        initial={{ opacity: 0 }}
+        animate={{ 
+          opacity: 1,
+          transition: {
+            duration: 0.8,
+            ease: [0.4, 0.0, 0.2, 1]
+          }
+        }}
+        exit={{ 
+          opacity: 0,
+          transition: { 
+            duration: 0.6, 
+            ease: [0.4, 0.0, 0.6, 1] 
+          }
+        }}
       >
         {/* Background video */}
         {introSettings.backgroundType === 'video' && introSettings.backgroundVideo && (
@@ -320,6 +383,22 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
               />
             ))}
           </div>
+        )}
+
+        {/* 🌐 Spline 3D Animation */}
+        {introSettings.splineSettings?.enabled && (
+          <SplineAnimation
+            sceneUrl={introSettings.splineSettings.sceneUrl}
+            embedCode={introSettings.splineSettings.embedCode}
+            localFile={introSettings.splineSettings.localFile}
+            position={introSettings.splineSettings.position}
+            opacity={introSettings.splineSettings.opacity}
+            scale={introSettings.splineSettings.scale}
+            autoplay={introSettings.splineSettings.autoplay}
+            controls={introSettings.splineSettings.controls}
+            method={introSettings.splineSettings.method}
+            className="intro-screen-spline"
+          />
         )}
 
         <motion.div
@@ -431,7 +510,7 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
             <source src={introSettings.musicUrl} type="audio/mpeg" />
           </audio>
         )}
-      </div>
+      </motion.div>
     </AnimatePresence>
   );
 };
