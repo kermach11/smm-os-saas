@@ -500,6 +500,10 @@ class IndexedDBService {
     try {
       console.log(`🌐 IndexedDBService: Починаємо збереження ${settingsKey} на сервері...`);
       
+      // Тимчасово відключаємо серверне збереження для стабільності
+      console.log(`📱 IndexedDBService: Серверна синхронізація відключена - використовуємо тільки локальне зберігання`);
+      return;
+      
       // Динамічно імпортуємо BackendService
       console.log(`📦 IndexedDBService: Імпортуємо BackendService...`);
       const { backendService } = await import('./BackendService');
@@ -511,8 +515,11 @@ class IndexedDBService {
       console.log(`🔗 IndexedDBService: Backend доступний: ${isBackendAvailable}`);
       
       if (isBackendAvailable) {
+        // Фільтруємо великі base64 зображення перед відправкою
+        const filteredData = this.filterLargeBase64Images(data);
+        
         console.log(`💾 IndexedDBService: Викликаємо backendService.saveSettings для ${settingsKey}...`);
-        const success = await backendService.saveSettings(settingsKey, data);
+        const success = await backendService.saveSettings(settingsKey, filteredData);
         if (success) {
           console.log(`☁️ IndexedDBService: ${settingsKey} збережено на сервері`);
         } else {
@@ -525,6 +532,41 @@ class IndexedDBService {
       console.warn(`⚠️ IndexedDBService: Помилка збереження на сервері:`, error);
       // Не перериваємо роботу - локальне зберігання вже виконане
     }
+  }
+
+  // Фільтрація великих base64 зображень для серверного збереження
+  private filterLargeBase64Images(data: any): any {
+    const MAX_BASE64_SIZE = 500000; // 500KB ліміт для base64
+    
+    const filterObject = (obj: any): any => {
+      if (typeof obj === 'string') {
+        // Перевіряємо чи це base64 зображення
+        if (obj.startsWith('data:image/') && obj.includes('base64,')) {
+          const base64Size = obj.length;
+          if (base64Size > MAX_BASE64_SIZE) {
+            console.warn(`🚫 IndexedDBService: Видаляємо велике base64 зображення (${Math.round(base64Size/1024)}KB) для серверного збереження`);
+            return '[LARGE_IMAGE_FILTERED]'; // Замінюємо на плейсхолдер
+          }
+        }
+        return obj;
+      }
+      
+      if (Array.isArray(obj)) {
+        return obj.map(filterObject);
+      }
+      
+      if (obj && typeof obj === 'object') {
+        const filtered: any = {};
+        for (const [key, value] of Object.entries(obj)) {
+          filtered[key] = filterObject(value);
+        }
+        return filtered;
+      }
+      
+      return obj;
+    };
+    
+    return filterObject(data);
   }
 
   // Завантаження налаштувань (з перевіркою backend)

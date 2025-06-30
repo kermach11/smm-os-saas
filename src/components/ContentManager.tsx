@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '../hooks/useTranslation';
 import { FileItem, ContentManagerProps } from '../types/contentManager';
 import indexedDBService from '../services/IndexedDBService';
+import SupabaseUploader from './SupabaseUploader';
+import { UploadedFile } from '../services/SupabaseStorageService';
 
 const ContentManager: React.FC<ContentManagerProps> = ({
   className = '',
@@ -13,7 +15,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({
   const { t } = useTranslation();
   // Стани
   const [files, setFiles] = useState<FileItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'gallery' | 'upload'>('gallery');
+  const [activeTab, setActiveTab] = useState<'gallery' | 'upload' | 'cloud'>('gallery');
   const [selectedType, setSelectedType] = useState<'all' | 'image' | 'audio' | 'video'>('all');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -27,6 +29,48 @@ const ContentManager: React.FC<ContentManagerProps> = ({
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
+
+  // Обробник завантажених файлів з Supabase
+  const handleSupabaseUpload = async (uploadedFiles: UploadedFile[]) => {
+    console.log('🌐 ContentManager: Отримано файли з Supabase Storage:', uploadedFiles);
+    
+    try {
+      // Конвертуємо SupabaseUploadedFile в FileItem формат (фільтруємо тільки підтримувані типи)
+      const newFiles: FileItem[] = uploadedFiles
+        .filter(file => ['image', 'audio', 'video'].includes(file.type)) // Фільтруємо тільки підтримувані типи
+        .map(file => ({
+          id: file.id,
+          name: file.name,
+          type: file.type as 'image' | 'audio' | 'video', // Кастимо до правильного типу
+          size: file.size,
+          url: file.publicUrl, // Використовуємо публічний URL з Supabase
+          optimized: false,
+          uploadDate: file.uploadDate,
+          originalName: file.originalName,
+          isSupabaseFile: true, // Позначаємо як файл з Supabase
+          supabaseData: {
+            bucket: file.bucket,
+            path: file.path,
+            publicUrl: file.publicUrl
+          }
+        }));
+
+      // Додаємо файли до локального списку та IndexedDB для кешування
+      const updatedFiles = [...files, ...newFiles];
+      setFiles(updatedFiles);
+      
+      // Зберігаємо в IndexedDB для кешування (тільки метадані, не контент)
+      await saveFilesToStorage(updatedFiles);
+      
+      console.log(`✅ ContentManager: Додано ${newFiles.length} файлів з Supabase Storage`);
+      
+      // Переключаємось на галерею, щоб показати завантажені файли
+      setActiveTab('gallery');
+      
+    } catch (error) {
+      console.error('❌ ContentManager: Помилка обробки файлів з Supabase:', error);
+    }
+  };
 
   // Ініціалізація файлів при завантаженні компонента
   useEffect(() => {
@@ -1347,6 +1391,17 @@ const ContentManager: React.FC<ContentManagerProps> = ({
               <span className="hidden lg:inline">⬆️ {t('content.manager.upload.btn')}</span>
               <span className="lg:hidden">⬆️ {t('content.manager.upload.btn')}</span>
             </button>
+            <button
+              onClick={() => setActiveTab('cloud')}
+              className={`px-2 lg:px-6 py-1 lg:py-3 rounded-md lg:rounded-xl font-medium transition-all duration-200 text-xs lg:text-base min-h-[36px] touch-manipulation ${
+                activeTab === 'cloud'
+                  ? 'bg-purple-500 text-white shadow-lg'
+                  : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+              }`}
+            >
+              <span className="hidden lg:inline">🌐 {t('content.manager.cloud')}</span>
+              <span className="lg:hidden">🌐 {t('content.manager.cloud')}</span>
+            </button>
           </div>
           
           {/* Права частина - кнопка очистки (тільки мобільна) */}
@@ -1675,6 +1730,23 @@ const ContentManager: React.FC<ContentManagerProps> = ({
               </div>
             )}
           </motion.div>
+        )}
+
+        {activeTab === 'cloud' && (
+                     <motion.div
+             key="cloud"
+             initial={{ opacity: 0, y: 20 }}
+             animate={{ opacity: 1, y: 0 }}
+             exit={{ opacity: 0, y: -20 }}
+             className="space-y-2 lg:space-y-6"
+           >
+             <SupabaseUploader 
+               onUpload={handleSupabaseUpload}
+               allowedTypes={allowedTypes}
+               maxFiles={10}
+               maxSize={50}
+             />
+           </motion.div>
         )}
       </AnimatePresence>
     </div>

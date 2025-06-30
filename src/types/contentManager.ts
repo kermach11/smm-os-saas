@@ -13,6 +13,12 @@ export interface FileItem {
   hasFullFile?: boolean; // Чи повний файл доступний в IndexedDB
   isFullFile?: boolean; // Чи це повний файл (не мініатюра)
   fullVideoUrl?: string; // Повний URL відео файлу (для відео з превью)
+  isSupabaseFile?: boolean; // Чи файл завантажений через Supabase Storage
+  supabaseData?: {
+    bucket: string;
+    path: string;
+    publicUrl: string;
+  };
 }
 
 export interface ContentManagerProps {
