@@ -3,8 +3,7 @@ name: 🚀 Deploy SMM OS to GitHub Pages
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch: # Дозволити ручний запуск
 
 # Дозволити тільки один одночасний деплой
 concurrency:
@@ -33,7 +32,7 @@ jobs:
     - name: 📦 Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
         cache-dependency-path: main/package-lock.json
         
@@ -52,7 +51,7 @@ jobs:
         VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         
     - name: 📋 Setup Pages
-      uses: actions/configure-pages@v4
+      uses: actions/configure-pages@v5
       
     - name: 📤 Upload artifact
       uses: actions/upload-pages-artifact@v3
