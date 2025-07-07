@@ -9,6 +9,7 @@ import indexedDBService from '../services/IndexedDBService';
 import syncService from '../services/SyncService';
 import SyncButton from './SyncButton';
 import SplineAnimation from './SplineAnimation';
+import SimpleConstructorToggle from './SimpleConstructorToggle';
 
 interface MainPageSettings {
   headerTitle: string;
@@ -106,6 +107,7 @@ interface MainPageSettings {
   accentColor: string;
   textColor: string;
   logoUrl: string;
+  logoSize?: number;
   backgroundType: 'color' | 'gradient' | 'image' | 'video';
   backgroundColor: string;
   gradientFrom: string;
@@ -123,6 +125,7 @@ interface MainPageSettings {
       loop: boolean;
       autoPlay: boolean;
       fileName?: string; // Додаємо ім'я файлу для ідентифікації
+      autoStartAfterWelcome?: boolean; // НОВЕ: Автозапуск після Welcome
     };
     hoverSounds: {
       enabled: boolean;
@@ -247,6 +250,7 @@ const defaultSettings: MainPageSettings = {
   accentColor: "#3b82f6",
   textColor: "#ffffff",
   logoUrl: "",
+  logoSize: 96,
   backgroundType: 'gradient',
   backgroundColor: "#1a1a1a",
   gradientFrom: "#f9fafb",
@@ -262,7 +266,8 @@ const defaultSettings: MainPageSettings = {
       url: "",
       volume: 0.5,
       loop: true,
-      autoPlay: false
+      autoPlay: false,
+      autoStartAfterWelcome: false
     },
     hoverSounds: {
       enabled: false,
@@ -1461,10 +1466,21 @@ const MainPageCustomizer: React.FC = () => {
           brandColor: settings.brandColor,
           accentColor: settings.accentColor,
           textColor: settings.textColor,
+          
+          // ВАЖЛИВО: Включаємо налаштування фону
+          backgroundType: settings.backgroundType,
+          backgroundColor: settings.backgroundColor,
+          gradientFrom: settings.gradientFrom,
+          gradientTo: settings.gradientTo,
+          backgroundImage: settings.backgroundImage,
+          backgroundVideo: settings.backgroundVideo,
+          logoUrl: settings.logoUrl,
+          
           carouselItems: settings.carouselItems?.map(item => ({
             ...item,
             imageUrl: item.imageUrl?.length > 100000 ? '' : item.imageUrl
           })) || [],
+          
           // Зберігаємо тільки назви аудіо файлів, не URL
           audioSettings: {
             backgroundMusic: {
@@ -1546,6 +1562,12 @@ const MainPageCustomizer: React.FC = () => {
       };
       reader.readAsText(file);
     }
+  };
+
+  // Функція для закриття адмін панелі
+  const handleCloseAdminPanel = () => {
+    // Відправляємо event щоб закрити адмін панель
+    window.dispatchEvent(new CustomEvent('closeAdminPanel'));
   };
 
 
@@ -1839,11 +1861,11 @@ const MainPageCustomizer: React.FC = () => {
         }
         `
       }} />
-      <div className="flex h-full bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="flex h-full bg-gradient-to-br from-slate-50 to-slate-100" data-main-customizer="true">
       {/* Mobile & Desktop Responsive Sidebar */}
               <div className="w-full lg:w-[520px] lg:min-w-[520px] lg:max-w-[520px] bg-white/80 backdrop-blur-xl lg:border-r border-slate-200/60 flex flex-col shadow-xl overflow-hidden">
         {/* Mobile-Optimized Header */}
-        <div className="p-1 lg:p-8 border-b border-slate-200/60 bg-gradient-to-r from-blue-600 to-purple-600">
+        <div className="p-1 lg:p-4 border-b border-slate-200/60 bg-gradient-to-r from-blue-600 to-purple-600">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xs lg:text-2xl font-bold text-white mb-0 lg:mb-2">{t('main.constructor.title')}</h2>
@@ -1899,51 +1921,10 @@ const MainPageCustomizer: React.FC = () => {
         </div>
 
         {/* Mobile-Optimized Tab Content */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-1.5 lg:p-6 space-y-2 lg:space-y-6">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-1.5 lg:p-6 space-y-2 lg:space-y-6" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
           {activeTab === 'header' && (
             <div className="space-y-4 lg:space-y-6">
-              {/* 1. Логотип - ПЕРШИЙ БЛОК */}
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg lg:rounded-2xl p-2 lg:p-6 border border-amber-100 shadow-sm">
-                <div className="flex items-center gap-1.5 lg:gap-3 mb-2 lg:mb-6">
-                  <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-md lg:rounded-xl flex items-center justify-center">
-                    <span className="text-white text-xs lg:text-lg">🖼️</span>
-                  </div>
-                  <div>
-                    <h3 className="text-xs lg:text-lg font-bold text-slate-800">{t('main.logo.title')}</h3>
-                    <p className="text-xs lg:text-sm text-slate-600 hidden lg:block">{t('main.logo.description')}</p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2 lg:gap-3">
-                  <button
-                    onClick={() => openMediaSelector('logo', ['image'])}
-                    className="flex-1 px-2 lg:px-4 py-2 lg:py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md lg:rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl min-h-[40px] lg:min-h-[auto] touch-manipulation text-xs lg:text-base"
-                  >
-                    📚 {t('common.select.from.media')}
-                  </button>
-                  {settings.logoUrl && (
-                    <button
-                      onClick={() => updateSettings({ logoUrl: '' })}
-                      className="px-2 lg:px-4 py-2 lg:py-3 text-red-600 hover:bg-red-50 rounded-md lg:rounded-xl transition-all duration-200 border border-red-200 hover:border-red-300 min-h-[40px] lg:min-h-[auto] min-w-[40px] lg:min-w-[auto] touch-manipulation"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-                {settings.logoUrl && (
-                  <div className="mt-4 p-3 bg-white/60 rounded-xl border border-amber-100">
-                    <div className="flex items-center gap-3">
-                      <img src={settings.logoUrl} alt="Логотип" className="w-8 h-8 lg:w-12 lg:h-12 object-contain rounded-lg border border-amber-200" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-700">{t('main.logo.loaded')}</p>
-                        <p className="text-xs text-slate-500">{t('main.logo.loaded.description')}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* 2. Текстовий контент - ДРУГИЙ БЛОК */}
+              {/* 1. Текстовий контент - ПЕРШИЙ БЛОК */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg lg:rounded-2xl p-2 lg:p-6 border border-blue-100 shadow-sm">
                 <div className="flex items-center gap-1.5 lg:gap-3 mb-2 lg:mb-6">
                   <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md lg:rounded-xl flex items-center justify-center">
@@ -2000,7 +1981,7 @@ const MainPageCustomizer: React.FC = () => {
                 </div>
               </div>
 
-              {/* 3. Типографіка - ТРЕТІЙ БЛОК */}
+              {/* 2. Типографіка - ДРУГИЙ БЛОК */}
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg lg:rounded-2xl p-2 lg:p-6 border border-purple-100 shadow-sm">
                 <div className="flex items-center gap-1.5 lg:gap-3 mb-2 lg:mb-6">
                   <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-md lg:rounded-xl flex items-center justify-center">
@@ -2827,6 +2808,70 @@ const MainPageCustomizer: React.FC = () => {
 
           {activeTab === 'design' && (
             <div className="space-y-2 lg:space-y-6">
+              {/* 🎯 Конструктор позицій */}
+                              <SimpleConstructorToggle onCloseAdminPanel={handleCloseAdminPanel} />
+
+              {/* 🖼️ Логотип - MOBILE OPTIMIZED */}
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-amber-100 shadow-sm">
+                <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-6">
+                  <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-md lg:rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xs lg:text-lg">🖼️</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xs lg:text-lg font-bold text-slate-800">Логотип</h3>
+                    <p className="text-xs lg:text-sm text-slate-600 hidden lg:block">Завантажити медіа</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-1.5 lg:gap-3">
+                  <button
+                    onClick={() => openMediaSelector('logo', ['image'])}
+                    className="flex-1 px-2 py-2 lg:px-4 lg:py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md lg:rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl min-h-[40px] lg:min-h-[auto] touch-manipulation text-xs lg:text-base"
+                  >
+                    📚 Вибрати з медіа-бібліотеки
+                  </button>
+                  {settings.logoUrl && (
+                    <button
+                      onClick={() => updateSettings({ logoUrl: '' })}
+                      className="px-2 py-2 lg:px-4 lg:py-3 text-red-600 hover:bg-red-50 rounded-md lg:rounded-xl transition-all duration-200 border border-red-200 hover:border-red-300 min-h-[40px] lg:min-h-[auto] min-w-[40px] lg:min-w-[auto] touch-manipulation"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {settings.logoUrl && (
+                  <div className="mt-2 lg:mt-4 p-2 lg:p-3 bg-white/60 rounded-xl border border-amber-100 space-y-3">
+                    <div className="flex items-center gap-2 lg:gap-3">
+                      <img src={settings.logoUrl} alt="Логотип" className="w-8 h-8 lg:w-12 lg:h-12 object-contain rounded-lg border border-amber-200" />
+                      <div>
+                        <p className="text-xs lg:text-sm font-medium text-slate-700">Логотип завантажено</p>
+                        <p className="hidden lg:block text-xs text-slate-500">Відображається у верхній частині сторінки</p>
+                      </div>
+                    </div>
+                    
+                    {/* Контрол розміру логотипа */}
+                    <div>
+                      <label className="block text-xs lg:text-sm font-medium text-slate-700 mb-2">
+                        Розмір логотипа: {settings.logoSize || 64}px
+                      </label>
+                      <input
+                        type="range"
+                        min="32"
+                        max="200"
+                        step="8"
+                        value={settings.logoSize || 64}
+                        onChange={(e) => updateSettings({ logoSize: parseInt(e.target.value) })}
+                        className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer slider"
+                      />
+                      <div className="flex justify-between text-xs text-slate-500 mt-1">
+                        <span>32px</span>
+                        <span>200px</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Кольорова схема */}
               <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-md lg:rounded-2xl p-1.5 lg:p-6 border border-pink-100 shadow-sm">
                 <div className="flex items-center gap-1 lg:gap-3 mb-1.5 lg:mb-6">
@@ -3257,7 +3302,7 @@ const MainPageCustomizer: React.FC = () => {
                       </div>
 
                       {/* Додаткові налаштування */}
-                      <div className="grid grid-cols-2 gap-1 lg:gap-4">
+                      <div className="grid grid-cols-1 gap-1 lg:gap-4">
                         <label className="flex items-center gap-1 lg:gap-2 p-1.5 lg:p-3 bg-white/60 rounded-sm lg:rounded-xl border border-green-100 cursor-pointer hover:bg-white/80 transition-all min-h-[40px] lg:min-h-[auto] touch-manipulation">
                           <input
                             type="checkbox"
@@ -3273,7 +3318,7 @@ const MainPageCustomizer: React.FC = () => {
                             })}
                             className="w-3 h-3 lg:w-4 lg:h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
                           />
-                          <span className="text-xs lg:text-sm font-medium text-slate-700">{t('main.audio.loop')}</span>
+                          <span className="text-xs lg:text-sm font-medium text-slate-700">Повторювати</span>
                         </label>
                         <label className="flex items-center gap-1 lg:gap-2 p-1.5 lg:p-3 bg-white/60 rounded-sm lg:rounded-xl border border-green-100 cursor-pointer hover:bg-white/80 transition-all min-h-[40px] lg:min-h-[auto] touch-manipulation">
                           <input
@@ -3290,7 +3335,28 @@ const MainPageCustomizer: React.FC = () => {
                             })}
                             className="w-3 h-3 lg:w-4 lg:h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
                           />
-                          <span className="text-xs lg:text-sm font-medium text-slate-700">{t('main.audio.autoplay')}</span>
+                          <span className="text-xs lg:text-sm font-medium text-slate-700">Автозапуск</span>
+                        </label>
+                        {/* НОВА ГАЛОЧКА: Автозапуск після Welcome */}
+                        <label className="flex items-center gap-1 lg:gap-2 p-1.5 lg:p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-sm lg:rounded-xl border border-purple-200 cursor-pointer hover:from-purple-100 hover:to-pink-100 transition-all min-h-[40px] lg:min-h-[auto] touch-manipulation">
+                          <input
+                            type="checkbox"
+                            checked={settings.audioSettings.backgroundMusic.autoStartAfterWelcome || false}
+                            onChange={(e) => updateSettings({ 
+                              audioSettings: { 
+                                ...settings.audioSettings, 
+                                backgroundMusic: { 
+                                  ...settings.audioSettings.backgroundMusic, 
+                                  autoStartAfterWelcome: e.target.checked 
+                                } 
+                              } 
+                            })}
+                            className="w-3 h-3 lg:w-4 lg:h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-xs lg:text-sm font-medium text-slate-700">🎵 Автозапуск після Welcome</span>
+                            <span className="text-xs text-slate-500 hidden lg:block">Музика грає постійно після натискання кнопки Welcome</span>
+                          </div>
                         </label>
                       </div>
                     </div>
@@ -4005,15 +4071,17 @@ const MainPageCustomizer: React.FC = () => {
               </div>
             </div>
           )}
+
+
         </div>
 
         {/* Modern Actions */}
-        <div className="p-2 lg:p-6 border-t border-slate-200/60 bg-gradient-to-r from-slate-50 to-slate-100">
+        <div className="p-2 lg:p-4 border-t border-slate-200/60 bg-gradient-to-r from-slate-50 to-slate-100">
           <div className="space-y-2 lg:space-y-4">
             <div className="flex gap-1.5 lg:gap-3">
               <button
                 onClick={saveSettings}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-2 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-1 lg:gap-2 text-xs lg:text-base min-h-[44px] touch-manipulation"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-2 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform lg:hover:scale-105 lg:hover:-translate-y-0.5 lg:active:scale-102 lg:active:translate-y-0 flex items-center justify-center gap-1 lg:gap-2 text-xs lg:text-base min-h-[44px] touch-manipulation"
               >
                 <span className="text-sm lg:text-base">💾</span>
                 <span>{t('main.actions.save')}</span>
@@ -4023,25 +4091,6 @@ const MainPageCustomizer: React.FC = () => {
             {/* Індикатор синхронізації */}
             <SyncButton className="w-full" />
             
-            <div className="flex gap-1.5 lg:gap-3">
-              <button
-                onClick={exportSettings}
-                className="flex-1 bg-white/80 text-slate-700 px-1.5 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:bg-white transition-all duration-200 text-xs lg:text-sm font-medium border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md flex items-center justify-center gap-1 lg:gap-2 min-h-[44px] touch-manipulation"
-              >
-                <span className="text-sm lg:text-base">📤</span>
-                <span>{t('main.actions.export')}</span>
-              </button>
-              <label className="flex-1 bg-white/80 text-slate-700 px-1.5 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:bg-white transition-all duration-200 text-xs lg:text-sm font-medium cursor-pointer border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md flex items-center justify-center gap-1 lg:gap-2 min-h-[44px] touch-manipulation">
-                <span className="text-sm lg:text-base">📥</span>
-                <span>{t('main.actions.import')}</span>
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={importSettings}
-                  className="hidden"
-                />
-              </label>
-            </div>
 
           </div>
         </div>

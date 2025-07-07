@@ -2,7 +2,7 @@
 <html lang="uk">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>SMM OS | Преміум-система для стратегічного керування соціальними мережами</title>
     <meta name="description" content="Преміум-система для стратегічного керування соціальними мережами з інтерактивною 3D-каруселлю та сучасним дизайном" />
     <meta name="author" content="SMM OS Team" />
@@ -22,6 +22,16 @@
     <!-- 🌐 Spline Performance Optimization -->
     <link rel="preconnect" href="https://prod.spline.design">
     <link rel="dns-prefetch" href="https://prod.spline.design">
+
+    <!-- Eruda мобільна консоль для діагностики -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+      // Включаємо мобільну консоль тільки на мобільних пристроях
+      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        eruda.init();
+        console.log('🔧 Eruda mobile console enabled for debugging');
+      }
+    </script>
   </head>
 
   <body style="background-color: #000000;">

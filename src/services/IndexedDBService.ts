@@ -498,27 +498,16 @@ class IndexedDBService {
   // Збереження на сервері через Backend Service
   private async saveSettingsToBackend(settingsKey: string, data: SettingsData): Promise<void> {
     try {
-      console.log(`🌐 IndexedDBService: Починаємо збереження ${settingsKey} на сервері...`);
-      
-      // Тимчасово відключаємо серверне збереження для стабільності
-      console.log(`📱 IndexedDBService: Серверна синхронізація відключена - використовуємо тільки локальне зберігання`);
-      return;
-      
       // Динамічно імпортуємо BackendService
-      console.log(`📦 IndexedDBService: Імпортуємо BackendService...`);
       const { backendService } = await import('./BackendService');
-      console.log(`✅ IndexedDBService: BackendService імпортовано успішно`);
       
       // Перевіряємо доступність backend
-      console.log(`🔗 IndexedDBService: Перевіряємо з'єднання з backend...`);
       const isBackendAvailable = await backendService.checkConnection();
-      console.log(`🔗 IndexedDBService: Backend доступний: ${isBackendAvailable}`);
       
       if (isBackendAvailable) {
         // Фільтруємо великі base64 зображення перед відправкою
         const filteredData = this.filterLargeBase64Images(data);
         
-        console.log(`💾 IndexedDBService: Викликаємо backendService.saveSettings для ${settingsKey}...`);
         const success = await backendService.saveSettings(settingsKey, filteredData);
         if (success) {
           console.log(`☁️ IndexedDBService: ${settingsKey} збережено на сервері`);
@@ -526,11 +515,11 @@ class IndexedDBService {
           throw new Error('Backend повернув помилку');
         }
       } else {
-        console.log(`📱 IndexedDBService: Backend недоступний, використовуємо тільки локальне зберігання`);
+        // Тихо пропускаємо якщо backend недоступний
       }
     } catch (error) {
-      console.warn(`⚠️ IndexedDBService: Помилка збереження на сервері:`, error);
-      // Не перериваємо роботу - локальне зберігання вже виконане
+      // Тихо ігноруємо помилки backend в локальному режимі
+      // Локальне зберігання вже виконане
     }
   }
 

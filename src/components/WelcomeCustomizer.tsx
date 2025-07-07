@@ -14,6 +14,7 @@ interface WelcomeSettings {
   textColor: string;
   subtitleColor: string;
   descriptionColor: string;
+  buttonColor: string;
   buttonTextColor: string;
   logoUrl: string;
   showLogo: boolean;
@@ -31,6 +32,29 @@ interface WelcomeSettings {
   showParticles: boolean;
   particleColor: string;
   animationSpeed: 'slow' | 'normal' | 'fast';
+  // Typography settings
+  titleFontSize?: number;
+  subtitleFontSize?: number;
+  descriptionFontSize?: number;
+  titleFontFamily?: string;
+  subtitleFontFamily?: string;
+  descriptionFontFamily?: string;
+  titleFontWeight?: number;
+  subtitleFontWeight?: number;
+  descriptionFontWeight?: number;
+  titleFontStyle?: string;
+  subtitleFontStyle?: string;
+  descriptionFontStyle?: string;
+  // Тіні та ефекти
+  titleShadowIntensity?: number;
+  subtitleShadowIntensity?: number;
+  descriptionShadowIntensity?: number;
+  titleShadowColor?: string;
+  subtitleShadowColor?: string;
+  descriptionShadowColor?: string;
+  title3DDepth?: number;
+  subtitle3DDepth?: number;
+  description3DDepth?: number;
 }
 
 const defaultSettings: WelcomeSettings = {
@@ -39,11 +63,12 @@ const defaultSettings: WelcomeSettings = {
   description: "Everything you need for your SMM\nin one place",
   buttonText: "Enter",
   hintText: "Tap to enter and start music",
-  brandColor: "#4a4b57",
-  accentColor: "#3b82f6",
+  brandColor: "#3b82f6",
+  accentColor: "#8b5cf6",
   textColor: "#111111",
   subtitleColor: "#333333",
   descriptionColor: "#666666",
+  buttonColor: "#3b82f6",
   buttonTextColor: "#ffffff",
   logoUrl: "",
   showLogo: true,
@@ -60,7 +85,30 @@ const defaultSettings: WelcomeSettings = {
   animationStyle: 'fade',
   showParticles: false,
   particleColor: "#ffffff",
-  animationSpeed: 'normal'
+  animationSpeed: 'normal',
+  // Typography settings
+  titleFontSize: 32,
+  subtitleFontSize: 20,
+  descriptionFontSize: 14,
+  titleFontFamily: 'Inter',
+  subtitleFontFamily: 'Inter',
+  descriptionFontFamily: 'Inter',
+  titleFontWeight: 300,
+  subtitleFontWeight: 300,
+  descriptionFontWeight: 400,
+  titleFontStyle: 'normal',
+  subtitleFontStyle: 'normal',
+  descriptionFontStyle: 'normal',
+  // Тіні та ефекти
+  titleShadowIntensity: 0,
+  subtitleShadowIntensity: 0,
+  descriptionShadowIntensity: 0,
+  titleShadowColor: '#000000',
+  subtitleShadowColor: '#000000',
+  descriptionShadowColor: '#000000',
+  title3DDepth: 0,
+  subtitle3DDepth: 0,
+  description3DDepth: 0
 };
 
 type DeviceType = 'mobile' | 'tablet' | 'desktop';
@@ -89,22 +137,28 @@ const WelcomeCustomizer: React.FC = () => {
         
         if (indexedDBSettings) {
           console.log('✅ WelcomeCustomizer: Налаштування завантажено з IndexedDB');
+          console.log('📂 Завантажені налаштування з IndexedDB');
           setSettings(prev => ({ ...prev, ...indexedDBSettings }));
         } else {
           // Якщо IndexedDB порожній, пробуємо localStorage як резерв
           console.log('ℹ️ WelcomeCustomizer: Налаштування не знайдено в IndexedDB, перевіряємо localStorage...');
           
-          const savedSettings = localStorage.getItem('welcomeSettings');
+          const savedSettings = localStorage.getItem('welcomeSettings') || localStorage.getItem('welcomeSettings_backup');
           if (savedSettings) {
             const parsed = JSON.parse(savedSettings);
             console.log('✅ WelcomeCustomizer: Налаштування завантажено з localStorage');
             
-            // Мігруємо в IndexedDB
+            // Мігруємо в IndexedDB ТІЛЬКИ ОДИН РАЗ
             console.log('🔄 WelcomeCustomizer: Міграція налаштувань в IndexedDB...');
             await indexedDBService.saveSettings('welcomeSettings', parsed, 'project');
             
             setSettings(prev => ({ ...prev, ...parsed }));
             console.log('✅ WelcomeCustomizer: Міграція завершена');
+            
+            // Видаляємо з localStorage після успішної міграції
+            localStorage.removeItem('welcomeSettings');
+            localStorage.removeItem('welcomeSettings_backup');
+            console.log('��️ WelcomeCustomizer: Видалено з localStorage після міграції');
           }
         }
       } catch (error) {
@@ -112,7 +166,7 @@ const WelcomeCustomizer: React.FC = () => {
         
         // У випадку помилки пробуємо localStorage
         try {
-          const savedSettings = localStorage.getItem('welcomeSettings');
+          const savedSettings = localStorage.getItem('welcomeSettings') || localStorage.getItem('welcomeSettings_backup');
           if (savedSettings) {
             const parsed = JSON.parse(savedSettings);
             setSettings(prev => ({ ...prev, ...parsed }));
@@ -135,14 +189,31 @@ const WelcomeCustomizer: React.FC = () => {
   }, [settings.musicVolume]);
 
   const updateSettings = useCallback((updates: Partial<WelcomeSettings>) => {
+    console.log('🔄 WelcomeCustomizer updateSettings викликано з:', updates);
+    
+    // Додаю спеціальні логи для тіней
+    if (updates.titleShadowIntensity !== undefined || 
+        updates.subtitleShadowIntensity !== undefined || 
+        updates.descriptionShadowIntensity !== undefined ||
+        updates.titleShadowColor !== undefined ||
+        updates.subtitleShadowColor !== undefined ||
+        updates.descriptionShadowColor !== undefined ||
+        updates.title3DDepth !== undefined ||
+        updates.subtitle3DDepth !== undefined ||
+        updates.description3DDepth !== undefined) {
+      console.log('🌟 WelcomeCustomizer: Оновлення тіней!', updates);
+    }
+    
     setSettings(prev => {
       const newSettings = { ...prev, ...updates };
+      console.log('📝 WelcomeCustomizer нові налаштування збережено');
       
       // Зберігаємо через IndexedDBService
       indexedDBService.saveSettings('welcomeSettings', newSettings, 'project').catch(error => {
         console.error('❌ WelcomeCustomizer: Помилка збереження в IndexedDB:', error);
-        // Резервне збереження в localStorage
-        localStorage.setItem('welcomeSettings', JSON.stringify(newSettings));
+        // Резервне збереження в localStorage (тимчасово)
+        localStorage.setItem('welcomeSettings_backup', JSON.stringify(newSettings));
+        console.log('⚠️ WelcomeCustomizer: Використано резервне збереження');
       });
       
       // Відправляємо подію для синхронізації
@@ -291,8 +362,8 @@ const WelcomeCustomizer: React.FC = () => {
     } catch (error) {
       console.error('❌ WelcomeCustomizer: Помилка збереження:', error);
       
-      // Резервне збереження в localStorage
-      localStorage.setItem('welcomeSettings', JSON.stringify(settings));
+      // Резервне збереження в localStorage (тимчасово)
+      localStorage.setItem('welcomeSettings_backup', JSON.stringify(settings));
       alert('Налаштування збережено (резервно)!');
     }
   };
@@ -468,6 +539,8 @@ const WelcomeCustomizer: React.FC = () => {
                   }}
                   className="hidden"
                 />
+                
+
               </div>
             </div>
           </div>
@@ -486,7 +559,7 @@ const WelcomeCustomizer: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="flex h-full bg-gradient-to-br from-slate-50 to-slate-100" data-welcome-customizer="true">
       {/* Modern Sidebar with controls */}
       <div className="w-full lg:w-[520px] lg:min-w-[520px] lg:max-w-[520px] bg-white/80 backdrop-blur-xl border-r border-slate-200/60 flex flex-col shadow-xl">
         {/* Modern Header */}
@@ -599,7 +672,7 @@ const WelcomeCustomizer: React.FC = () => {
                       <img 
                         src={settings.logoUrl} 
                         alt="Logo" 
-                        className="h-16 w-auto max-w-32 object-contain"
+                        className="w-16 h-16 object-contain"
                       />
                     </motion.div>
                   )}
@@ -607,7 +680,7 @@ const WelcomeCustomizer: React.FC = () => {
                   {/* Title */}
                   <motion.h1
                     {...getAnimationVariants()}
-                    className="text-4xl md:text-5xl font-bold mb-4"
+                    className="mb-4 text-3xl font-light"
                     style={{ color: settings.textColor }}
                   >
                     {settings.title}
@@ -616,7 +689,7 @@ const WelcomeCustomizer: React.FC = () => {
                   {/* Subtitle */}
                   <motion.h2
                     {...getAnimationVariants()}
-                    className="text-xl md:text-2xl font-medium mb-6"
+                    className="mb-6 text-xl font-light"
                     style={{ color: settings.subtitleColor }}
                     transition={{ ...getAnimationVariants().transition, delay: 0.2 }}
                   >
@@ -626,7 +699,7 @@ const WelcomeCustomizer: React.FC = () => {
                   {/* Description */}
                   <motion.p
                     {...getAnimationVariants()}
-                    className="text-lg mb-8 max-w-md leading-relaxed whitespace-pre-line"
+                    className="mb-8 max-w-md leading-relaxed whitespace-pre-line text-sm"
                     style={{ color: settings.descriptionColor }}
                     transition={{ ...getAnimationVariants().transition, delay: 0.4 }}
                   >
@@ -638,7 +711,7 @@ const WelcomeCustomizer: React.FC = () => {
                     {...getAnimationVariants()}
                     className="px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                     style={{ 
-                      backgroundColor: settings.accentColor,
+                      backgroundColor: settings.buttonColor,
                       color: settings.buttonTextColor 
                     }}
                     transition={{ ...getAnimationVariants().transition, delay: 0.6 }}

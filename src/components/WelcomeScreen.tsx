@@ -2,8 +2,10 @@ import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import indexedDBService from '../services/IndexedDBService';
 import SplineAnimation from './SplineAnimation';
+import { responsiveFontSize } from '../lib/utils';
 
 interface WelcomeScreenProps {
+  visible: boolean;
   onComplete: () => void;
   isAudioLoaded: boolean;
   settings?: WelcomeSettings;
@@ -27,14 +29,25 @@ interface WelcomeSettings {
   buttonColor: string;
   buttonTextColor: string;
   logoUrl: string;
+  logoSize?: number;
   showLogo: boolean;
   hasMusic: boolean;
   musicUrl: string;
   musicVolume: number;
+  musicLoop: boolean;
   autoPlay: boolean;
   showParticles: boolean;
   particleColor: string;
   animationSpeed: 'slow' | 'normal' | 'fast';
+  // Анімації
+  titleAnimation?: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow';
+  subtitleAnimation?: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow';
+  descriptionAnimation?: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow';
+  titleExitAnimation?: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve';
+  subtitleExitAnimation?: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve';
+  descriptionExitAnimation?: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve';
+  animationDuration?: number;
+  animationDelay?: number;
   // Typography settings
   titleFontSize?: number;
   subtitleFontSize?: number;
@@ -48,6 +61,16 @@ interface WelcomeSettings {
   titleFontStyle?: string;
   subtitleFontStyle?: string;
   descriptionFontStyle?: string;
+  // Тіні та ефекти
+  titleShadowIntensity?: number;
+  subtitleShadowIntensity?: number;
+  descriptionShadowIntensity?: number;
+  titleShadowColor?: string;
+  subtitleShadowColor?: string;
+  descriptionShadowColor?: string;
+  title3DDepth?: number;
+  subtitle3DDepth?: number;
+  description3DDepth?: number;
   splineSettings?: {
     enabled: boolean;
     sceneUrl: string;
@@ -67,7 +90,7 @@ const minimalDefaultSettings: WelcomeSettings = {
   title: "",
   subtitle: "",
   description: "",
-  buttonText: "",
+  buttonText: "Почати",
   hintText: "",
   backgroundType: 'color',
   backgroundColor: '#000000',
@@ -85,10 +108,20 @@ const minimalDefaultSettings: WelcomeSettings = {
   hasMusic: false,
   musicUrl: '',
   musicVolume: 0.5,
+  musicLoop: true,
   autoPlay: false,
   showParticles: false,
   particleColor: '#ffffff',
   animationSpeed: 'normal',
+  // Дефолтні анімації
+  titleAnimation: 'fadeIn',
+  subtitleAnimation: 'slideUp',
+  descriptionAnimation: 'fadeIn',
+  titleExitAnimation: 'fadeOut',
+  subtitleExitAnimation: 'slideDown',
+  descriptionExitAnimation: 'fadeOut',
+  animationDuration: 800,
+  animationDelay: 200,
   // Default typography settings
   titleFontSize: 32,
   subtitleFontSize: 20,
@@ -102,6 +135,16 @@ const minimalDefaultSettings: WelcomeSettings = {
   titleFontStyle: 'normal',
   subtitleFontStyle: 'normal',
   descriptionFontStyle: 'normal',
+  // Тіні та ефекти
+  titleShadowIntensity: 0,
+  subtitleShadowIntensity: 0,
+  descriptionShadowIntensity: 0,
+  titleShadowColor: '#000000',
+  subtitleShadowColor: '#000000',
+  descriptionShadowColor: '#000000',
+  title3DDepth: 0,
+  subtitle3DDepth: 0,
+  description3DDepth: 0,
   splineSettings: {
     enabled: false,
     sceneUrl: "",
@@ -116,13 +159,46 @@ const minimalDefaultSettings: WelcomeSettings = {
   }
 };
 
-const WelcomeScreen = ({ onComplete, isAudioLoaded, settings: propsSettings }: WelcomeScreenProps) => {
+const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSettings }: WelcomeScreenProps) => {
   const [isPressed, setIsPressed] = useState(false);
   const [settings, setSettings] = useState<WelcomeSettings>(propsSettings || minimalDefaultSettings);
   const [customMusicLoaded, setCustomMusicLoaded] = useState(false);
   const [isSettingsLoaded, setIsSettingsLoaded] = useState(!!propsSettings);
+  const [animationKey, setAnimationKey] = useState(0);
   
   const musicRef = useRef<HTMLAudioElement>(null);
+
+
+
+  // Простий фікс - тільки приховання скролбарів
+  useEffect(() => {
+    // Тільки приховуємо скролбари, без зміни позиціонування
+    document.body.style.overflowX = 'hidden';
+    
+    return () => {
+      document.body.style.overflowX = '';
+    };
+  }, []);
+
+  // Зупинка музики при зміні видимості
+  useEffect(() => {
+    if (!visible && musicRef.current) {
+      console.log('🎵 WelcomeScreen: Зупиняємо музику при переході');
+      musicRef.current.pause();
+      musicRef.current.currentTime = 0;
+    }
+  }, [visible]);
+
+  // Cleanup при демонтажі компонента
+  useEffect(() => {
+    return () => {
+      if (musicRef.current) {
+        console.log('🎵 WelcomeScreen: Очищення музики при демонтажі');
+        musicRef.current.pause();
+        musicRef.current.currentTime = 0;
+      }
+    };
+  }, []);
 
   // Використовуємо налаштування з props якщо є, інакше завантажуємо
   useEffect(() => {
@@ -160,7 +236,7 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded, settings: propsSettings }: W
         } else {
           // Якщо IndexedDB порожній, пробуємо localStorage як резерв
           console.log('ℹ️ WelcomeScreen: Налаштування не знайдено в IndexedDB, перевіряємо localStorage...');
-          const savedSettings = localStorage.getItem('welcomeSettings');
+          const savedSettings = localStorage.getItem('welcomeSettings') || localStorage.getItem('welcomeSettings_backup');
           if (savedSettings) {
             const parsed = JSON.parse(savedSettings);
             console.log('✅ WelcomeScreen: Налаштування завантажено з localStorage');
@@ -174,10 +250,15 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded, settings: propsSettings }: W
             };
             setSettings(safeSettings);
             
-            // Мігруємо в IndexedDB
+            // Мігруємо в IndexedDB ТІЛЬКИ ОДИН РАЗ
             console.log('🔄 WelcomeScreen: Міграція налаштувань в IndexedDB...');
             await indexedDBService.saveSettings('welcomeSettings', safeSettings, 'project');
             console.log('✅ WelcomeScreen: Міграція завершена');
+            
+            // Видаляємо з localStorage після успішної міграції
+            localStorage.removeItem('welcomeSettings');
+            localStorage.removeItem('welcomeSettings_backup');
+            console.log('🗑️ WelcomeScreen: Видалено з localStorage після міграції');
           } else {
             console.log('ℹ️ WelcomeScreen: Використовуємо мінімальні налаштування за замовчуванням');
             setSettings(minimalDefaultSettings);
@@ -229,6 +310,14 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded, settings: propsSettings }: W
     };
   }, [propsSettings]);
 
+  // Перезапуск анімацій при зміні налаштувань
+  useEffect(() => {
+    if (isSettingsLoaded) {
+      setAnimationKey(prev => prev + 1);
+      console.log('🎭 WelcomeScreen: Animation key updated:', animationKey + 1);
+    }
+  }, [settings.titleAnimation, settings.subtitleAnimation, settings.descriptionAnimation, settings.animationDuration, settings.animationDelay, isSettingsLoaded]);
+
   // Ефект для керування власною музикою
   useEffect(() => {
     if (musicRef.current && settings.hasMusic && settings.musicUrl) {
@@ -254,19 +343,21 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded, settings: propsSettings }: W
   const handleEnter = async () => {
     setIsPressed(true);
     
-    // Запускаємо власну музику якщо вона є і не грає
+    // Запускаємо музику в фоні без блокування UI
+    // Власна музика Welcome сторінки
     if (settings.hasMusic && settings.musicUrl && musicRef.current) {
-      try {
-        await musicRef.current.play();
-      } catch (error) {
+      musicRef.current.play().catch(() => {
         // Тихо ігноруємо помилки
-      }
+      });
     }
+
+    // Фонова музика MainScreen тепер запускається автоматично - не потрібно викликати
     
-    // Small delay for visual feedback
+    // Негайно переходимо далі без очікування музики
     setTimeout(() => {
       onComplete();
-    }, 200);
+      setIsPressed(false);
+    }, 150);
   };
 
   const getBackgroundStyle = () => {
@@ -292,17 +383,180 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded, settings: propsSettings }: W
     }
   };
 
-  // Визначаємо чи готовий до запуску (системна музика або власна музика)
-  const isReady = settings.hasMusic ? (customMusicLoaded || !settings.musicUrl) : isAudioLoaded;
+  // Функція для генерації стилів тексту з тінями та ефектами
+  const getTextStyle = (element: 'title' | 'subtitle' | 'description') => {
+    const baseStyle: any = {
+      color: element === 'title' ? settings.textColor : 
+             element === 'subtitle' ? settings.subtitleColor : 
+             settings.descriptionColor,
+      fontFamily: settings[`${element}FontFamily`] || 'Inter',
+      fontWeight: settings[`${element}FontWeight`] || (element === 'description' ? 400 : 300),
+      fontStyle: settings[`${element}FontStyle`] || 'normal',
+      fontSize: responsiveFontSize(settings[`${element}FontSize`] || 
+                (element === 'title' ? 32 : element === 'subtitle' ? 20 : 14))
+    };
+
+    // Додавання тіней
+    const shadowIntensity = settings[`${element}ShadowIntensity`] || 0;
+    const shadowColor = settings[`${element}ShadowColor`] || '#000000';
+    const depth3D = settings[`${element}3DDepth`] || 0;
+
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result 
+        ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
+        : '0, 0, 0';
+    };
+
+    if (depth3D > 0) {
+      // 3D ефект
+      const shadows = Array.from({ length: depth3D }, (_, i) => 
+        `${i + 1}px ${i + 1}px 0 ${shadowColor}`
+      ).join(', ');
+      baseStyle.textShadow = shadows;
+    } else if (shadowIntensity > 0) {
+      // Звичайна тінь
+      const offset = Math.round(shadowIntensity * 4);
+      const blur = Math.round(shadowIntensity * 8);
+      baseStyle.textShadow = `${offset}px ${offset}px ${blur}px rgba(${hexToRgb(shadowColor)}, ${shadowIntensity})`;
+    }
+
+    return baseStyle;
+  };
+
+  // Функція для отримання варіантів анімацій
+  const getAnimationVariants = (element: 'title' | 'subtitle' | 'description') => {
+    const enterAnimation = element === 'title' ? settings.titleAnimation :
+                          element === 'subtitle' ? settings.subtitleAnimation :
+                          settings.descriptionAnimation;
+    
+    console.log(`🎭 WelcomeScreen: getAnimationVariants для ${element}:`, {
+      enterAnimation,
+      settingsAnimations: {
+        titleAnimation: settings.titleAnimation,
+        subtitleAnimation: settings.subtitleAnimation,
+        descriptionAnimation: settings.descriptionAnimation
+      }
+    });
+
+    // Якщо анімація 'none' або не задана, повертаємо статичну анімацію
+    if (!enterAnimation || enterAnimation === 'none') {
+      console.log(`🎭 WelcomeScreen: No animation for ${element}, returning static`);
+      return {
+        initial: { opacity: 1 },
+        animate: { opacity: 1 },
+        transition: { duration: 0 }
+      };
+    }
+    
+    const exitAnimation = element === 'title' ? settings.titleExitAnimation :
+                         element === 'subtitle' ? settings.subtitleExitAnimation :
+                         settings.descriptionExitAnimation;
+
+    const duration = (settings.animationDuration || 800) / 1000;
+    const delay = (settings.animationDelay || 200) / 1000;
+
+    const variants: any = {
+      hidden: { opacity: 0 },
+      visible: { opacity: 1 }
+    };
+
+    // Налаштування входу
+    switch (enterAnimation) {
+      case 'fadeIn':
+        variants.hidden = { opacity: 0 };
+        variants.visible = { opacity: 1 };
+        break;
+      case 'slideUp':
+        variants.hidden = { opacity: 0, y: 50 };
+        variants.visible = { opacity: 1, y: 0 };
+        break;
+      case 'slideDown':
+        variants.hidden = { opacity: 0, y: -50 };
+        variants.visible = { opacity: 1, y: 0 };
+        break;
+      case 'slideLeft':
+        variants.hidden = { opacity: 0, x: 50 };
+        variants.visible = { opacity: 1, x: 0 };
+        break;
+      case 'slideRight':
+        variants.hidden = { opacity: 0, x: -50 };
+        variants.visible = { opacity: 1, x: 0 };
+        break;
+      case 'zoomIn':
+        variants.hidden = { opacity: 0, scale: 0.8 };
+        variants.visible = { opacity: 1, scale: 1 };
+        break;
+      case 'zoomOut':
+        variants.hidden = { opacity: 0, scale: 1.2 };
+        variants.visible = { opacity: 1, scale: 1 };
+        break;
+      case 'rotateIn':
+        variants.hidden = { opacity: 0, rotate: -180 };
+        variants.visible = { opacity: 1, rotate: 0 };
+        break;
+      case 'bounce':
+        variants.hidden = { opacity: 0, y: 50 };
+        variants.visible = { 
+          opacity: 1, 
+          y: 0,
+          transition: {
+            type: 'spring',
+            stiffness: 300,
+            damping: 20
+          }
+        };
+        break;
+      case 'typewriter':
+        variants.hidden = { opacity: 0, width: 0 };
+        variants.visible = { opacity: 1, width: 'auto' };
+        break;
+      case 'glow':
+        variants.hidden = { opacity: 0, textShadow: '0 0 0px rgba(255,255,255,0)' };
+        variants.visible = { opacity: 1, textShadow: '0 0 20px rgba(255,255,255,0.8)' };
+        break;
+      default:
+        variants.hidden = { opacity: 0 };
+        variants.visible = { opacity: 1 };
+    }
+
+    const animationConfig = {
+      initial: 'hidden',
+      animate: 'visible',
+      variants,
+      transition: {
+        duration,
+        delay: delay * (element === 'title' ? 0 : element === 'subtitle' ? 1 : 2),
+        type: enterAnimation === 'bounce' ? 'spring' : 'tween',
+        stiffness: enterAnimation === 'bounce' ? 300 : undefined,
+        damping: enterAnimation === 'bounce' ? 20 : undefined
+      }
+    };
+
+    console.log(`🎭 WelcomeScreen: Animation config for ${element}:`, animationConfig);
+    
+    return animationConfig;
+  };
+
+  // Спрощена логіка готовності - кнопка доступна після завантаження налаштувань
+  // Не залежить від аудіо стану для уникнення проблем на мобільних пристроях
+  const isReady = isSettingsLoaded;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
-      animate={{ opacity: isSettingsLoaded ? 1 : 0 }}
+      animate={{ opacity: visible && isSettingsLoaded ? 1 : 0 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className="fixed inset-0 flex items-center justify-center z-50"
-      style={getBackgroundStyle()}
+      transition={{ 
+        duration: 1.2, 
+        ease: [0.25, 0.1, 0.25, 1.0] // Плавніша крива анімації
+      }}
+      className="welcome-screen-container fixed inset-0 flex items-center justify-center z-50 overflow-hidden"
+      style={{ 
+        ...getBackgroundStyle(),
+        display: visible ? 'flex' : 'none',
+        pointerEvents: visible ? 'auto' : 'none'
+      }}
     >
       {/* Background video */}
       {settings.backgroundType === 'video' && settings.backgroundVideo && (
@@ -342,78 +596,54 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded, settings: propsSettings }: W
         />
       </div>
 
-      <div className="relative text-center px-6 max-w-md mx-auto z-10">
+      <div className="relative text-center px-6 max-w-md mx-auto z-10 overflow-hidden">
         {/* Logo and Title */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isSettingsLoaded ? 1 : 0 }}
-          transition={{ 
-            duration: 1.2, 
-            delay: isSettingsLoaded ? 0.3 : 0, 
-            ease: "easeOut"
-          }}
-          className="mb-8"
-        >
+        <div className="mb-8">
           {/* Logo - only if logoUrl exists */}
           {settings.logoUrl && (
             <div className="flex items-center justify-center mb-4">
               <img 
                 src={settings.logoUrl} 
                 alt="Logo" 
-                className="w-12 h-12 rounded-full object-cover"
+                className="w-auto h-auto object-contain"
+                style={{ 
+                  maxWidth: `${settings.logoSize || 96}px`, 
+                  maxHeight: `${settings.logoSize || 96}px`,
+                  width: 'auto',
+                  height: 'auto'
+                }}
               />
             </div>
           )}
           
           {/* Title - always show if exists */}
           {settings.title && (
-            <h1 
+            <motion.h1 
+              key={`title-${animationKey}`}
               className="sf-text" 
-              style={{ 
-                color: settings.textColor,
-                fontSize: `${settings.titleFontSize || 32}px`,
-                fontFamily: settings.titleFontFamily || 'Inter',
-                fontWeight: settings.titleFontWeight || 300,
-                fontStyle: settings.titleFontStyle || 'normal'
-              }}
+              style={getTextStyle('title')}
+              {...getAnimationVariants('title')}
             >
               {settings.title}
-            </h1>
+            </motion.h1>
           )}
-        </motion.div>
+        </div>
 
         {/* Welcome text */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isSettingsLoaded ? 1 : 0 }}
-          transition={{ 
-            duration: 1.2, 
-            delay: isSettingsLoaded ? 0.8 : 0, 
-            ease: "easeOut"
-          }}
-          className="mb-12"
-        >
-          <h2 
+        <div className="mb-12">
+          <motion.h2 
+            key={`subtitle-${animationKey}`}
             className="mb-3 sf-heading" 
-            style={{ 
-              color: settings.subtitleColor,
-              fontSize: `${settings.subtitleFontSize || 20}px`,
-              fontFamily: settings.subtitleFontFamily || 'Inter',
-              fontWeight: settings.subtitleFontWeight || 300,
-              fontStyle: settings.subtitleFontStyle || 'normal'
-            }}
+            style={getTextStyle('subtitle')}
+            {...getAnimationVariants('subtitle')}
           >
             {settings.subtitle}
-          </h2>
-          <p 
+          </motion.h2>
+          <motion.p 
+            key={`description-${animationKey}`}
             className="leading-relaxed sf-body" 
-            style={{ 
-              color: settings.descriptionColor,
-              fontSize: `${settings.descriptionFontSize || 14}px`,
-              fontFamily: settings.descriptionFontFamily || 'Inter',
-              fontWeight: settings.descriptionFontWeight || 400,
-              fontStyle: settings.descriptionFontStyle || 'normal'
-            }}
+            style={getTextStyle('description')}
+            {...getAnimationVariants('description')}
           >
             {settings.description.split('\n').map((line, index) => (
               <span key={index}>
@@ -421,8 +651,8 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded, settings: propsSettings }: W
                 {index < settings.description.split('\n').length - 1 && <br />}
               </span>
             ))}
-          </p>
-        </motion.div>
+          </motion.p>
+        </div>
 
         {/* Enter button */}
         <motion.div
@@ -458,7 +688,7 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded, settings: propsSettings }: W
               ) : (
                 <>
                   <span className="text-lg">🎵</span>
-                  {settings.buttonText}
+                  {settings.buttonText || "Почати"}
                 </>
               )}
             </span>
@@ -490,7 +720,7 @@ const WelcomeScreen = ({ onComplete, isAudioLoaded, settings: propsSettings }: W
       {settings.hasMusic && settings.musicUrl && (
         <audio 
           ref={musicRef}
-          loop 
+          loop={settings.musicLoop}
           className="hidden"
         >
           <source src={settings.musicUrl} type="audio/mpeg" />

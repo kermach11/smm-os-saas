@@ -46,4 +46,8 @@
   minify = true
 [build.processing.html]
   pretty_urls = true
-  minify = true 
+  minify = true
+
+# Плагін для автоматичної установки залежностей в functions
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core" 

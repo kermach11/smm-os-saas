@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import './App.css'
 
 // 🚀 Реєстрація Spline Service Worker для миттєвого завантаження
 if ('serviceWorker' in navigator) {

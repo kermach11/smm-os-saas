@@ -1330,6 +1330,134 @@ const ContentManager: React.FC<ContentManagerProps> = ({
     }
   };
 
+  // Діагностика та виправлення відео файлів
+  const diagnoseAndFixVideoFiles = async () => {
+    console.log('🔍 ContentManager: Початок діагностики відео файлів');
+    
+    try {
+      // Завантажуємо поточний список файлів
+      const currentFiles = await new Promise<FileItem[]>((resolve) => {
+        const savedFiles = localStorage.getItem('contentManagerFiles');
+        if (savedFiles) {
+          try {
+            const parsed = JSON.parse(savedFiles);
+            resolve(Array.isArray(parsed) ? parsed : []);
+          } catch {
+            resolve([]);
+          }
+        } else {
+          resolve([]);
+        }
+      });
+      
+      const videoFiles = currentFiles.filter(file => file.type === 'video');
+      console.log(`🎬 Знайдено ${videoFiles.length} відео файлів для діагностики`);
+      
+      if (videoFiles.length === 0) {
+        alert('ℹ️ Відео файлів не знайдено для діагностики');
+        return;
+      }
+      
+      let fixedCount = 0;
+      let totalCount = videoFiles.length;
+      
+      for (const videoFile of videoFiles) {
+        console.log(`🔍 Діагностика відео файлу: ${videoFile.name}`);
+        
+        try {
+          // Перевіряємо наявність файлу в IndexedDB
+          const dbFile = await new Promise<FileItem | null>((resolve) => {
+            const request = indexedDB.open('ContentManagerDB', 2);
+            
+            request.onsuccess = (event) => {
+              const db = (event.target as IDBOpenDBRequest).result;
+              
+              if (!db.objectStoreNames.contains('files')) {
+                console.warn(`⚠️ IndexedDB не містить сховище "files"`);
+                db.close();
+                resolve(null);
+                return;
+              }
+              
+              const transaction = db.transaction(['files'], 'readonly');
+              const store = transaction.objectStore('files');
+              const getRequest = store.get(videoFile.id);
+              
+              getRequest.onsuccess = () => {
+                const file = getRequest.result;
+                db.close();
+                resolve(file || null);
+              };
+              
+              getRequest.onerror = () => {
+                console.error(`❌ Помилка отримання файлу ${videoFile.id} з IndexedDB`);
+                db.close();
+                resolve(null);
+              };
+            };
+            
+            request.onerror = () => {
+              console.error(`❌ Помилка відкриття IndexedDB для файлу ${videoFile.id}`);
+              resolve(null);
+            };
+          });
+          
+          if (!dbFile || !dbFile.url || !dbFile.url.startsWith('data:video/')) {
+            console.warn(`⚠️ Відео файл ${videoFile.name} не знайдено в IndexedDB або має неправильний формат`);
+            
+            // Якщо файл не знайдено або пошкоджений, пропонуємо перезавантажити
+            const shouldReupload = confirm(`❌ Відео файл "${videoFile.name}" пошкоджений або відсутній в IndexedDB.\n\n` +
+              `Це означає, що файл може не відтворюватися правильно.\n\n` +
+              `Хочете видалити його зі списку? (Потім ви зможете перезавантажити його заново)`);
+            
+            if (shouldReupload) {
+              // Видаляємо файл зі списку
+              const updatedFiles = currentFiles.filter(f => f.id !== videoFile.id);
+              setFiles(updatedFiles);
+              await saveFilesToStorage(updatedFiles);
+              
+              // Очищуємо з IndexedDB якщо там щось є
+              try {
+                const request = indexedDB.open('ContentManagerDB', 2);
+                request.onsuccess = (event) => {
+                  const db = (event.target as IDBOpenDBRequest).result;
+                  if (db.objectStoreNames.contains('files')) {
+                    const transaction = db.transaction(['files'], 'readwrite');
+                    const store = transaction.objectStore('files');
+                    store.delete(videoFile.id);
+                  }
+                  db.close();
+                };
+              } catch (dbError) {
+                console.error('Помилка очищення IndexedDB:', dbError);
+              }
+              
+              fixedCount++;
+              console.log(`✅ Видалено пошкоджений відео файл: ${videoFile.name}`);
+            }
+          } else {
+            console.log(`✅ Відео файл ${videoFile.name} в порядку в IndexedDB`);
+          }
+          
+        } catch (error) {
+          console.error(`❌ Помилка діагностики файлу ${videoFile.name}:`, error);
+        }
+      }
+      
+      if (fixedCount > 0) {
+        alert(`✅ Діагностика завершена!\n\n` +
+          `Видалено ${fixedCount} з ${totalCount} пошкоджених відео файлів.\n\n` +
+          `Тепер ви можете перезавантажити їх заново через цей же Content Manager.`);
+      } else {
+        alert(`✅ Діагностика завершена!\n\nВсі ${totalCount} відео файлів в порядку.`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Помилка діагностики відео файлів:', error);
+      alert(`❌ Помилка діагностики: ${error.message}`);
+    }
+  };
+
   return (
     <div className={`bg-gradient-to-br from-slate-50 to-blue-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-slate-200 shadow-lg ${className}`}>
       {/* Заголовок - ультра-компактний */}
@@ -1404,24 +1532,42 @@ const ContentManager: React.FC<ContentManagerProps> = ({
             </button>
           </div>
           
-          {/* Права частина - кнопка очистки (тільки мобільна) */}
+          {/* Права частина - кнопки дій (тільки мобільна) */}
+          <div className="lg:hidden flex gap-1">
+            <button
+              onClick={diagnoseAndFixVideoFiles}
+              className="px-2 py-1 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-md hover:from-orange-600 hover:to-yellow-600 transition-all duration-200 text-xs font-medium shadow-md hover:shadow-lg min-h-[32px] touch-manipulation whitespace-nowrap"
+              title="Виправити відео"
+            >
+              🔧
+            </button>
+            <button
+              onClick={clearAllData}
+              className="px-2 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-md hover:from-red-600 hover:to-pink-600 transition-all duration-200 text-xs font-medium shadow-md hover:shadow-lg min-h-[32px] touch-manipulation whitespace-nowrap"
+              title={t('content.manager.clear.tooltip')}
+            >
+              🗑️ {t('content.manager.clear.btn')}
+            </button>
+          </div>
+        </div>
+        
+        {/* Кнопки дій (тільки десктоп) */}
+        <div className="hidden lg:flex gap-2">
+          <button
+            onClick={diagnoseAndFixVideoFiles}
+            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-lg hover:from-orange-600 hover:to-yellow-600 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg min-h-[36px] touch-manipulation whitespace-nowrap"
+            title="Діагностика та виправлення відео файлів"
+          >
+            🔧 Виправити відео
+          </button>
           <button
             onClick={clearAllData}
-            className="lg:hidden px-2 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-md hover:from-red-600 hover:to-pink-600 transition-all duration-200 text-xs font-medium shadow-md hover:shadow-lg min-h-[32px] touch-manipulation whitespace-nowrap"
+            className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg min-h-[36px] touch-manipulation whitespace-nowrap"
             title={t('content.manager.clear.tooltip')}
           >
             🗑️ {t('content.manager.clear.btn')}
           </button>
         </div>
-        
-        {/* Кнопка очистки (тільки десктоп) */}
-        <button
-          onClick={clearAllData}
-          className="hidden lg:block px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg min-h-[36px] touch-manipulation whitespace-nowrap"
-          title={t('content.manager.clear.tooltip')}
-        >
-          🗑️ {t('content.manager.clear.btn')}
-        </button>
       </div>
 
       {/* Контент вкладок */}
@@ -1455,7 +1601,16 @@ const ContentManager: React.FC<ContentManagerProps> = ({
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept={allowedTypes.map(type => `${type}/*`).join(',')}
+                accept={allowedTypes.map(type => {
+                  if (type === 'audio') {
+                    return '.mp3,.wav,.ogg,.m4a,.aac,.flac,.wma,audio/*';
+                  } else if (type === 'video') {
+                    return '.mp4,.avi,.mov,.wmv,.mkv,.webm,.m4v,video/*';
+                  } else if (type === 'image') {
+                    return '.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,image/*';
+                  }
+                  return `${type}/*`;
+                }).join(',')}
                 onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
                 className="hidden"
               />

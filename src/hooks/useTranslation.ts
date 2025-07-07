@@ -13,7 +13,7 @@ export const TranslationContext = createContext<TranslationContextType | null>(n
 const translations = {
   uk: {
     // Загальні
-    'common.save': 'Зберегти',
+    'common.save': 'Попередній перегляд',
     'common.cancel': 'Скасувати',
     'common.delete': 'Видалити',
     'common.edit': 'Редагувати',
@@ -167,6 +167,32 @@ const translations = {
     'nav.settings': 'Налаштування',
     'nav.overview': 'Огляд системи',
     'nav.tips': 'Корисні поради',
+
+    // V2 Admin Panel
+    'admin.panel.title': 'Адмін панель',
+    'admin.panel.subtitle': 'Панель управління',
+    'admin.panel.close': 'Закрити',
+    'admin.panel.logout': 'Вийти',
+    'admin.panel.version.switcher': 'Переключення версій',
+    'admin.panel.version.v1': 'V1 (Поточна)',
+    'admin.panel.version.v2': 'V2 (Тест)',
+    'admin.panel.beta.badge': 'BETA',
+    'admin.panel.mobile.mode': 'Мобільний режим',
+    'admin.panel.desktop.mode': 'Десктоп режим',
+    'admin.panel.tablet.mode': 'Планшет режим',
+    'admin.panel.responsive.info': 'Адаптивний дизайн активний',
+    'admin.panel.all.functions': 'Всі функції V1 збережено',
+    'admin.panel.new.responsive': 'Новий адаптивний дизайн',
+    'admin.panel.safe.testing': 'Безпечне тестування',
+
+    // V2 Tab Names with Icons
+    'admin.tab.preview': 'Превю',
+    'admin.tab.intro': 'Інтро', 
+    'admin.tab.main': 'Головна',
+    'admin.tab.content': 'Контент',
+    'admin.tab.analytics': 'Аналітика',
+    'admin.tab.instructions': 'Інструкції',
+    'admin.tab.settings': 'Налаштування',
 
     // Налаштування
     'settings.system.title': 'Налаштування системи',
@@ -483,7 +509,7 @@ const translations = {
     'preview.generate': 'Згенерувати превью',
 
     // Синхронізація
-    'sync.button.changes': 'Синхронізувати зміни',
+    'sync.button.changes': 'Опублікувати на сайті',
     'sync.button.syncing': 'Синхронізація...',
     'sync.button.success': 'Синхронізовано!',
     'sync.button.error': 'Помилка синхронізації',
@@ -652,7 +678,7 @@ const translations = {
     'instructions.features.storage': 'Надійне збереження в IndexedDB з резервуванням',
     'instructions.features.performance': 'Оптимізація продуктивності та швидкості завантаження',
     
-    'instructions.tips.title': 'Корисні поради',
+    'instructions.tips.practical.title': 'Корисні поради',
     'instructions.tips.file.size': 'Рекомендуємо використовувати файли до 10MB для оптимальної продуктивності',
     'instructions.tips.backup': 'Регулярно створюйте резервні копії через вкладку "Налаштування"',
     'instructions.tips.mobile': 'Завжди перевіряйте як виглядає сайт на мобільних пристроях',
@@ -723,8 +749,6 @@ const translations = {
     'preview.font.family': 'Сім\'я шрифтів',
     'preview.font.weight': 'Вага шрифту',
     'preview.font.style': 'Стиль шрифту',
-    'preview.enter.button.placeholder': 'Введіть текст кнопки...',
-    'preview.enter.description.placeholder': 'Введіть опис...',
     
     // Додаткові ключі для Preview
     'preview.select.device': 'Оберіть пристрій',
@@ -745,23 +769,12 @@ const translations = {
     'tabs.style': 'Стиль',
     'tabs.sound': 'Звук',
     
-    // Adaptive settings
-    'responsive.description': 'Налаштування для різних розмірів екрану',
-    'responsive.mobile': 'Мобільний (до 640px)',
-    'responsive.tablet': 'Планшет (640px - 1024px)',
-    'responsive.desktop': 'Робочий стіл (1024px+)',
-    'responsive.font.size': 'Розмір шрифту',
-    'responsive.margin.bottom': 'Нижній відступ',
-    'responsive.line.height': 'Висота рядка',
-    'responsive.letter.spacing': 'Міжлітерний інтервал',
-    'responsive.container.padding': 'Внутрішні відступи контейнера',
-    'responsive.container.margin.top': 'Верхній відступ контейнера',
-    'responsive.container.margin.bottom': 'Нижній відступ контейнера',
+
     
     // IntroCustomizer компонент
-    'intro.constructor': 'Конструктор Інтро',
-    'intro.page.description': 'Налаштування вступної сторінки',
-    'intro.content': 'Контент інтро',
+          'intro.constructor': 'Конструктор Інтро',
+      'intro.page.description': 'Налаштування вступної сторінки',
+      'intro.content.detailed': 'Контент інтро',
     'intro.animations': 'Анімації',
     'intro.timing': 'Час відображення',
     'intro.transitions': 'Переходи',
@@ -792,22 +805,7 @@ const translations = {
     'content.duplicate': 'Дублювати',
     'content.archive': 'Архівувати',
     
-    // AnalyticsPanel компонент
-    'analytics.panel': 'Панель аналітики',
-    'analytics.stats.description': 'Статистика та звіти',
-    'analytics.overview': 'Огляд',
-    'analytics.visitors': 'Відвідувачі',
-    'analytics.pageviews': 'Перегляди сторінок',
-    'analytics.bounce.rate': 'Показник відмов',
-    'analytics.time.on.site': 'Час на сайті',
-    'analytics.traffic.sources': 'Джерела трафіку',
-    'analytics.popular.pages': 'Популярні сторінки',
-    'analytics.conversions': 'Конверсії',
-    'analytics.goals': 'Цілі',
-    'analytics.reports': 'Звіти',
-    'analytics.export': 'Експорт даних',
-    'analytics.date.range': 'Період',
-    'analytics.real.time': 'В реальному часі',
+
     
     // InstructionsPanel компонент (переміщено вгору)
 
@@ -854,8 +852,7 @@ const translations = {
     'main.typography.font.family': 'Сімейство шрифтів',
     'main.typography.font.weight': 'Товщина шрифту',
     'main.typography.font.style': 'Стиль тексту',
-    'typography.font.family': 'Сімейство шрифтів',
-    'typography.font.weight': 'Товщина шрифту',
+
     'main.typography.weight.normal': 'Звичайний',
     'main.typography.weight.semibold': 'Напівжирний',
     'main.typography.weight.bold': 'Жирний',
@@ -901,11 +898,11 @@ const translations = {
     'main.animation.zoomIn': 'Збільшення',
     'main.animation.rotateIn': 'Обертання',
     'main.animation.bounce': 'Підскок',
-    'main.animation.typewriter': 'Друкарська',
+    'main.animation.typewriter': 'Друкарська машинка',
     'main.animation.glow': 'Світіння',
 
     // Action Buttons
-    'main.actions.save': 'Зберегти',
+    'main.actions.save': 'Попередній перегляд',
     'main.actions.export': 'Експорт',
     'main.actions.import': 'Імпорт',
 
@@ -1065,13 +1062,12 @@ const translations = {
     'main.animations.type.glow': 'Світіння',
 
     // Preview Navigation
-    'main.preview.navigation': 'Використовуйте ← → для навігації, Enter/Space для деталей, Esc для закриття',
     'main.preview.count': '{current} з {total}'
   },
 
   en: {
     // Common
-    'common.save': 'Save',
+    'common.save': 'Preview',
     'common.cancel': 'Cancel',
     'common.delete': 'Delete',
     'common.edit': 'Edit',
@@ -1222,29 +1218,33 @@ const translations = {
     'nav.instructions': 'Instructions',
     'nav.settings': 'Settings',
 
-    // Audio System
-    'audio.bg.music': 'Background Music',
-    'audio.bg.music.description': 'Add atmosphere with sound',
-    'audio.bg.music.enabled': 'Background Music',
-    'audio.bg.music.autoplay.description': 'Automatic music playback',
-    'audio.file.label': 'Audio File',
-    'audio.bg.music.loaded': 'Background music loaded',
-    'audio.bg.music.loaded.description': 'Music will play in the background of the page',
-    'audio.volume.label': 'Volume',
-    'audio.loop.label': 'Loop',
-    'audio.loop.description': 'Repeat music',
-    'audio.autoplay.label': 'Autostart',
-    'audio.autoplay.description': 'Play automatically',
-    'audio.sound.effects': 'Sound Effects',
-    'audio.sound.effects.description': 'Interactive sounds for buttons',
-    'audio.hover.sounds': 'Hover Sounds',
-    'audio.hover.sounds.description': 'When hovering over buttons',
-    'audio.hover.sound.loaded': 'Hover sound loaded',
-    'audio.hover.sound.loaded.description': 'Sound will play when hovering',
-    'audio.click.sounds': 'Click Sounds',
-    'audio.click.sounds.description': 'When clicking buttons',
-    'audio.click.sound.loaded': 'Click sound loaded',
-    'audio.click.sound.loaded.description': 'Sound will play when clicking buttons',
+    // V2 Admin Panel
+    'admin.panel.title': 'Admin Panel',
+    'admin.panel.subtitle': 'Control Panel',
+    'admin.panel.close': 'Close',
+    'admin.panel.logout': 'Logout',
+    'admin.panel.version.switcher': 'Version Switcher',
+    'admin.panel.version.v1': 'V1 (Current)',
+    'admin.panel.version.v2': 'V2 (Test)',
+    'admin.panel.beta.badge': 'BETA',
+    'admin.panel.mobile.mode': 'Mobile Mode',
+    'admin.panel.desktop.mode': 'Desktop Mode',
+    'admin.panel.tablet.mode': 'Tablet Mode',
+    'admin.panel.responsive.info': 'Responsive design active',
+    'admin.panel.all.functions': 'All V1 functions preserved',
+    'admin.panel.new.responsive': 'New responsive design',
+    'admin.panel.safe.testing': 'Safe testing',
+
+    // V2 Tab Names with Icons
+    'admin.tab.preview': 'Preview',
+    'admin.tab.intro': 'Intro', 
+    'admin.tab.main': 'Main',
+    'admin.tab.content': 'Content',
+    'admin.tab.analytics': 'Analytics',
+    'admin.tab.instructions': 'Instructions',
+    'admin.tab.settings': 'Settings',
+
+
 
     // Settings
     'settings.system.title': 'System Settings',
@@ -1450,28 +1450,9 @@ const translations = {
     'main.animation.glow': 'Glow',
 
     // Action Buttons
-    'main.actions.save': 'Save',
+    'main.actions.save': 'Preview',
     'main.actions.export': 'Export',
     'main.actions.import': 'Import',
-    
-    // Shadows & Effects
-    'main.shadows.title': 'Shadows & Effects',
-    'main.shadows.description': 'Add depth to your text',
-    'main.shadows.select.element': 'Select element for effects:',
-    'main.shadows.effects.for': 'Effects for: {element}',
-    'main.shadows.intensity': 'Shadow Intensity',
-    'main.shadows.color': 'Shadow Color',
-    'main.shadows.depth': '3D Depth',
-    
-    // Text Animations
-    'main.animations.title': 'Text Animations',
-    'main.animations.description': 'Add dynamics to your text',
-    'main.animations.select.element': 'Select element for animation:',
-    'main.animations.for': 'Animation for: {element}',
-    'main.animations.entrance': 'Entrance Animation',
-    'main.animations.settings': 'Animation Settings',
-    'main.animations.duration': 'Duration',
-    'main.animations.delay': 'Delay',
     
     // Animation Types
     'main.animations.type.none': 'No Animation',
@@ -1629,7 +1610,6 @@ const translations = {
     'main.3d.status': 'Position: {position} • Opacity: {opacity}% • Scale: {scale}%',
 
     // Preview Navigation
-    'main.preview.navigation': 'Use ← → to navigate, Enter/Space for details, Esc to close',
     'main.preview.count': '{current} of {total}',
 
     // Content
@@ -1773,7 +1753,7 @@ const translations = {
     'preview.generate': 'Generate Preview',
 
     // Synchronization
-    'sync.button.changes': 'Sync Changes',
+    'sync.button.changes': 'Publish to Site',
     'sync.button.syncing': 'Syncing...',
     'sync.button.success': 'Synced!',
     'sync.button.error': 'Sync Error',
@@ -2064,7 +2044,7 @@ const translations = {
 
   ru: {
     // Общие
-    'common.save': 'Сохранить',
+    'common.save': 'Предварительный просмотр',
     'common.cancel': 'Отмена',
     'common.delete': 'Удалить',
     'common.edit': 'Редактировать',
@@ -2214,6 +2194,32 @@ const translations = {
     'nav.analytics': 'Аналитика',
     'nav.instructions': 'Инструкции',
     'nav.settings': 'Настройки',
+
+    // V2 Admin Panel
+    'admin.panel.title': 'Админ панель',
+    'admin.panel.subtitle': 'Панель управления',
+    'admin.panel.close': 'Закрыть',
+    'admin.panel.logout': 'Выйти',
+    'admin.panel.version.switcher': 'Переключение версий',
+    'admin.panel.version.v1': 'V1 (Текущая)',
+    'admin.panel.version.v2': 'V2 (Тест)',
+    'admin.panel.beta.badge': 'BETA',
+    'admin.panel.mobile.mode': 'Мобильный режим',
+    'admin.panel.desktop.mode': 'Десктоп режим',
+    'admin.panel.tablet.mode': 'Планшет режим',
+    'admin.panel.responsive.info': 'Адаптивный дизайн активен',
+    'admin.panel.all.functions': 'Все функции V1 сохранены',
+    'admin.panel.new.responsive': 'Новый адаптивный дизайн',
+    'admin.panel.safe.testing': 'Безопасное тестирование',
+
+    // V2 Tab Names with Icons
+    'admin.tab.preview': 'Превью',
+    'admin.tab.intro': 'Интро', 
+    'admin.tab.main': 'Главная',
+    'admin.tab.content': 'Контент',
+    'admin.tab.analytics': 'Аналитика',
+    'admin.tab.instructions': 'Инструкции',
+    'admin.tab.settings': 'Настройки',
 
     // Настройки
     'settings.system.title': 'Настройки системы',
@@ -2419,7 +2425,7 @@ const translations = {
     'main.animation.glow': 'Свечение',
 
     // Action Buttons
-    'main.actions.save': 'Сохранить',
+    'main.actions.save': 'Предварительный просмотр',
     'main.actions.export': 'Экспорт',
     'main.actions.import': 'Импорт',
     
@@ -2754,7 +2760,7 @@ const translations = {
     'preview.generate': 'Сгенерировать превью',
 
     // Синхронизация
-    'sync.button.changes': 'Синхронизировать изменения',
+    'sync.button.changes': 'Опубликовать на сайте',
     'sync.button.syncing': 'Синхронизация...',
     'sync.button.success': 'Синхронизировано!',
     'sync.button.error': 'Ошибка синхронизации',

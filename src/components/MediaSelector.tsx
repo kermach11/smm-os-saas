@@ -35,8 +35,6 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
   // Завантаження файлів з localStorage
   useEffect(() => {
     if (isOpen) {
-      console.log('🔄 MediaSelector відкрито, починаємо завантаження файлів');
-      console.log('🎯 Дозволені типи:', allowedTypes);
       loadFiles();
     }
   }, [isOpen]);
@@ -44,8 +42,6 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
   const loadFiles = async () => {
     try {
       setIsLoading(true);
-      console.log('🔄 MediaSelector: Завантаження файлів через IndexedDBService...');
-      console.log('🎯 Дозволені типи файлів:', allowedTypes);
       
       // Спочатку пробуємо завантажити з IndexedDB через новий сервіс
       const indexedDBFiles = await indexedDBService.loadFiles();
@@ -58,8 +54,6 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
         setFiles(correctedFiles);
       } else {
         // Якщо IndexedDB порожній, пробуємо localStorage як резерв
-        console.log('ℹ️ MediaSelector: IndexedDB порожній, перевіряємо localStorage...');
-        
         const savedFiles = localStorage.getItem('smartContentManager_v2');
         if (savedFiles) {
           const allFiles = JSON.parse(savedFiles) as FileItem[];
@@ -72,7 +66,6 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
           setFiles(correctedFiles);
           console.log('✅ MediaSelector: Міграція та виправлення завершено');
         } else {
-          console.log('📂 MediaSelector: Немає збережених файлів');
           setFiles([]);
         }
       }
@@ -96,7 +89,6 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
       }
     } finally {
       setIsLoading(false);
-      console.log('🏁 MediaSelector: Завантаження файлів завершено');
     }
   };
 
@@ -379,6 +371,12 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
   const validateFileType = (file: FileItem): boolean => {
     if (!file.url) return true; // Якщо немає URL, не можемо валідувати
     
+    // ✅ SUPABASE STORAGE: Дозволяємо всі HTTPS URLs з Supabase
+    if (file.url.startsWith('https://') && file.url.includes('supabase.co')) {
+      console.log(`✅ Supabase Storage файл: ${file.name} - пропускаємо валідацію`);
+      return true;
+    }
+    
     // Перевіряємо data URL
     if (file.url.startsWith('data:')) {
       const mimeType = file.url.split(';')[0].replace('data:', '');
@@ -514,43 +512,67 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
       setLoadingFileId(file.id); // Показуємо індикатор завантаження
       
       try {
+        // Спробуємо завантажити повний файл з IndexedDB
         const fullVideoFile = await loadSingleFileFromIndexedDB(file.id);
-        if (fullVideoFile && fullVideoFile.url && 
-            fullVideoFile.url.startsWith('data:video/') && 
-            fullVideoFile.url.length > (file.url?.length || 0)) {
-          console.log(`✅ MediaSelector: Повний відео файл завантажено з IndexedDB: ${fullVideoFile.name}`);
-          console.log(`📊 Розмір превью: ${((file.url?.length || 0) / 1024).toFixed(2)} KB`);
-          console.log(`📊 Розмір повного файлу: ${(fullVideoFile.url.length / 1024 / 1024).toFixed(2)} MB`);
+        
+        if (fullVideoFile && fullVideoFile.url) {
+          // Перевіряємо чи це справжній відео файл
+          const isValidVideoUrl = fullVideoFile.url.startsWith('data:video/') && fullVideoFile.url.length > (file.url?.length || 0);
           
-          // Створюємо об'єкт з превью та повним файлом
-          const videoFileWithFull: FileItem = {
-            ...file,
-            url: fullVideoFile.url, // Основний URL - повний файл
-            fullVideoUrl: fullVideoFile.url // Додатково для сумісності
-          };
-          
-          onSelect(videoFileWithFull);
-          onClose();
-          return;
-        } else {
-          console.warn(`⚠️ MediaSelector: Повний відео файл не знайдено або не валідний:`, {
-            hasFullFile: !!fullVideoFile,
-            hasUrl: !!fullVideoFile?.url,
-            isVideoMime: fullVideoFile?.url?.startsWith('data:video/') || false,
-            fullUrlLength: fullVideoFile?.url?.length || 0,
-            previewUrlLength: file.url?.length || 0
-          });
-          
-          // Використовуємо превью якщо повний файл недоступний
+          if (isValidVideoUrl) {
+            console.log(`✅ MediaSelector: Повний відео файл завантажено з IndexedDB: ${fullVideoFile.name}`);
+            console.log(`📊 Розмір превью: ${((file.url?.length || 0) / 1024).toFixed(2)} KB`);
+            console.log(`📊 Розмір повного файлу: ${(fullVideoFile.url.length / 1024 / 1024).toFixed(2)} MB`);
+            
+            // Створюємо об'єкт з превью та повним файлом
+            const videoFileWithFull: FileItem = {
+              ...file,
+              url: fullVideoFile.url, // Основний URL - повний файл
+              fullVideoUrl: fullVideoFile.url // Додатково для сумісності
+            };
+            
+            onSelect(videoFileWithFull);
+            onClose();
+            return;
+          }
+        }
+        
+        // Показуємо повідомлення користувачу
+        console.warn(`⚠️ MediaSelector: Повний відео файл не знайдено в IndexedDB для ${file.name}`);
+        
+        // Спробуємо використати превью якщо воно достатньо велике
+        if (file.url && file.url.length > 50000) { // Якщо превью більше 50KB
+          console.log(`📹 MediaSelector: Використовуємо превью як відео (${(file.url.length / 1024).toFixed(2)} KB): ${file.name}`);
           onSelect(file);
           onClose();
           return;
         }
+        
+        // Тільки якщо файл дуже малий, показуємо попередження
+        const userChoice = confirm(`❌ Відео файл "${file.name}" не доступний для відтворення.\n\n` +
+          `Це може статися якщо файл не був повністю завантажений або IndexedDB було очищено.\n\n` +
+          `Натисніть OK, щоб спробувати використати превью (може не працювати як відео),\n` +
+          `або Cancel, щоб перезавантажити файл через Content Manager.`);
+        
+        if (userChoice) {
+          // Користувач хоче спробувати превью
+          console.log(`⚠️ MediaSelector: Використовуємо превью як відео (може не працювати)`);
+          onSelect(file);
+          onClose();
+          return;
+        } else {
+          // Користувач хоче перезавантажити файл
+          console.log(`💡 MediaSelector: Користувач обрав перезавантаження файлу "${file.name}"`);
+          return;
+        }
+        
       } catch (error) {
         console.error(`❌ MediaSelector: Помилка завантаження повного відео файлу з IndexedDB:`, error);
-        // Використовуємо превью у випадку помилки
-        onSelect(file);
-        onClose();
+        
+        // Показуємо повідомлення про помилку
+        alert(`❌ Помилка завантаження відео файлу "${file.name}".\n\n` +
+          `Причина: ${error.message || 'Невідома помилка'}\n\n` +
+          `Спробуйте перезавантажити файл через Content Manager.`);
         return;
       } finally {
         setLoadingFileId(null); // Приховуємо індикатор завантаження
@@ -609,104 +631,126 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
 
   // Завантаження одного файлу з IndexedDB
   const loadSingleFileFromIndexedDB = async (fileId: string): Promise<FileItem | null> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       try {
         console.log(`🔄 MediaSelector: Завантаження файлу з IndexedDB: ${fileId}`);
         
         // Таймаут для уникнення зависання
         const timeout = setTimeout(() => {
-          console.warn(`⏰ MediaSelector: Таймаут завантаження файлу ${fileId} (5 секунд)`);
+          console.warn(`⏰ MediaSelector: Таймаут завантаження файлу ${fileId} (10 секунд)`);
           resolve(null);
-        }, 5000);
+        }, 10000);
         
-        const request = indexedDB.open('ContentManagerDB', 2); // Оновлено до версії 2
-        
-        request.onupgradeneeded = (event) => {
-          console.log('🔧 MediaSelector: Створення/оновлення структури IndexedDB для одного файлу');
-          const db = (event.target as IDBOpenDBRequest).result;
+        // Спробуємо різні версії бази даних
+        const tryOpenDB = (version: number) => {
+          const request = indexedDB.open('ContentManagerDB', version);
           
-          // Видаляємо старе сховище якщо воно існує
-          if (db.objectStoreNames.contains('files')) {
-            db.deleteObjectStore('files');
-            console.log('🗑️ MediaSelector: Видалено старе об\'єкт-сховище для файлу');
-          }
-          
-          // Створюємо нове сховище
-          const store = db.createObjectStore('files', { keyPath: 'id' });
-          console.log('✅ MediaSelector: Створено об\'єкт-сховище "files" для файлу');
-        };
-        
-        request.onsuccess = (event) => {
-          clearTimeout(timeout);
-          const db = (event.target as IDBOpenDBRequest).result;
-          
-          // Перевіряємо, чи існує об'єкт-сховище
-          if (!db.objectStoreNames.contains('files')) {
-            console.warn(`⚠️ MediaSelector: Об\'єкт-сховище "files" не існує для файлу ${fileId}`);
-            db.close();
-            resolve(null);
-            return;
-          }
-          
-          try {
-            const transaction = db.transaction(['files'], 'readonly');
-            const store = transaction.objectStore('files');
-            const getRequest = store.get(fileId);
+          request.onupgradeneeded = (event) => {
+            console.log(`🔧 MediaSelector: Оновлення IndexedDB до версії ${version}`);
+            const db = (event.target as IDBOpenDBRequest).result;
             
-            getRequest.onsuccess = () => {
-              const file = getRequest.result;
-              if (file && file.url && file.id && file.name) {
-                console.log(`📂 MediaSelector: Знайдено файл в IndexedDB: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
-                db.close();
-                resolve(file);
-              } else if (file) {
-                console.warn(`⚠️ MediaSelector: Файл знайдено, але він пошкоджений: ${fileId}`, file);
-                db.close();
-                resolve(null);
+            // Створюємо сховище якщо воно не існує
+            if (!db.objectStoreNames.contains('files')) {
+              db.createObjectStore('files', { keyPath: 'id' });
+              console.log('✅ MediaSelector: Створено об\'єкт-сховище "files"');
+            }
+          };
+          
+          request.onsuccess = (event) => {
+            clearTimeout(timeout);
+            const db = (event.target as IDBOpenDBRequest).result;
+            
+            // Перевіряємо, чи існує об'єкт-сховище
+            if (!db.objectStoreNames.contains('files')) {
+              console.warn(`⚠️ MediaSelector: Об\'єкт-сховище "files" не існує у версії ${version}`);
+              db.close();
+              
+              // Спробуємо іншу версію
+              if (version === 2) {
+                tryOpenDB(1);
               } else {
-                console.warn(`⚠️ MediaSelector: Файл не знайдено або без URL в IndexedDB: ${fileId}`);
-                db.close();
                 resolve(null);
               }
-            };
+              return;
+            }
             
-            getRequest.onerror = () => {
-              console.error(`❌ MediaSelector: Помилка отримання файлу ${fileId} з IndexedDB`, getRequest.error);
+            try {
+              const transaction = db.transaction(['files'], 'readonly');
+              const store = transaction.objectStore('files');
+              const getRequest = store.get(fileId);
+              
+              getRequest.onsuccess = () => {
+                const file = getRequest.result;
+                if (file && file.url && file.id && file.name) {
+                  console.log(`📂 MediaSelector: Файл знайдено в IndexedDB v${version}: ${file.name}`);
+                  console.log(`📊 Тип файлу: ${file.type}, URL довжина: ${(file.url.length / 1024).toFixed(2)} KB`);
+                  
+                  // Додаткова перевірка для відео файлів
+                  if (file.type === 'video' && !file.url.startsWith('data:video/')) {
+                    console.warn(`⚠️ MediaSelector: Відео файл має неправильний MIME-тип: ${file.url.substring(0, 50)}...`);
+                  }
+                  
+                  db.close();
+                  resolve(file);
+                } else if (file) {
+                  console.warn(`⚠️ MediaSelector: Файл знайдено, але він пошкоджений: ${fileId}`, file);
+                  db.close();
+                  resolve(null);
+                } else {
+                  console.warn(`⚠️ MediaSelector: Файл не знайдено в IndexedDB v${version}: ${fileId}`);
+                  db.close();
+                  
+                  // Спробуємо іншу версію
+                  if (version === 2) {
+                    tryOpenDB(1);
+                  } else {
+                    resolve(null);
+                  }
+                }
+              };
+              
+              getRequest.onerror = () => {
+                console.error(`❌ MediaSelector: Помилка отримання файлу ${fileId} з IndexedDB v${version}`, getRequest.error);
+                db.close();
+                resolve(null);
+              };
+              
+              transaction.onerror = () => {
+                console.error(`❌ MediaSelector: Помилка транзакції при отриманні файлу ${fileId} з IndexedDB v${version}`, transaction.error);
+                db.close();
+                resolve(null);
+              };
+              
+              transaction.onabort = () => {
+                console.error(`❌ MediaSelector: Транзакція завантаження файлу ${fileId} перервана в версії ${version}`);
+                db.close();
+                resolve(null);
+              };
+            } catch (transactionError) {
+              console.error(`❌ MediaSelector: Помилка створення транзакції для файлу ${fileId} v${version}:`, transactionError);
               db.close();
               resolve(null);
-            };
-            
-            transaction.onerror = () => {
-              console.error(`❌ MediaSelector: Помилка транзакції при отриманні файлу ${fileId} з IndexedDB`, transaction.error);
-              db.close();
-              resolve(null);
-            };
-            
-            transaction.onabort = () => {
-              console.error(`❌ MediaSelector: Транзакція завантаження файлу ${fileId} перервана`);
-              db.close();
-              resolve(null);
-            };
-          } catch (transactionError) {
-            console.error(`❌ MediaSelector: Помилка створення транзакції для файлу ${fileId}:`, transactionError);
-            db.close();
+            }
+          };
+          
+          request.onerror = () => {
+            console.error(`❌ MediaSelector: Помилка відкриття IndexedDB v${version} для файлу ${fileId}`, request.error);
+            clearTimeout(timeout);
             resolve(null);
-          }
+          };
+          
+          request.onblocked = () => {
+            console.warn(`⚠️ MediaSelector: IndexedDB v${version} заблоковано для файлу ${fileId}`);
+            clearTimeout(timeout);
+            resolve(null);
+          };
         };
         
-        request.onerror = () => {
-          clearTimeout(timeout);
-          console.error(`❌ MediaSelector: Помилка відкриття IndexedDB для файлу ${fileId}`, request.error);
-          resolve(null);
-        };
+        // Починаємо з версії 2
+        tryOpenDB(2);
         
-        request.onblocked = () => {
-          clearTimeout(timeout);
-          console.warn(`⚠️ MediaSelector: IndexedDB заблокована при завантаженні файлу ${fileId}`);
-          resolve(null);
-        };
       } catch (error) {
-        console.error(`❌ MediaSelector: Помилка завантаження файлу ${fileId} з IndexedDB:`, error);
+        console.error(`❌ MediaSelector: Критична помилка завантаження файлу ${fileId}:`, error);
         resolve(null);
       }
     });

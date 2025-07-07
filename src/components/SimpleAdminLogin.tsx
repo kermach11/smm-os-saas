@@ -63,9 +63,13 @@ const SimpleAdminLogin: React.FC<SimpleAdminLoginProps> = ({ isVisible, onClose,
         if (savedData) {
           try {
             const data = JSON.parse(savedData);
+            // Перевіряємо різні варіанти назв поля для сумісності
             if (data.adminSettings?.sessionDuration) {
               sessionDuration = data.adminSettings.sessionDuration;
+            } else if (data.adminSettings?.logoutTime) {
+              sessionDuration = data.adminSettings.logoutTime;
             }
+            console.log('🔐 Admin login: Використовується тривалість сесії:', sessionDuration, 'хвилин');
           } catch (error) {
             console.error('Помилка читання налаштувань сесії:', error);
           }
@@ -80,6 +84,7 @@ const SimpleAdminLogin: React.FC<SimpleAdminLoginProps> = ({ isVisible, onClose,
         };
         
         localStorage.setItem('adminSession', JSON.stringify(sessionData));
+        console.log('🔐 Admin login: Сесія збережена до:', new Date(expiry).toLocaleString(), 'тривалість:', sessionDuration, 'хвилин');
         
         onLogin();
         setUsername('');

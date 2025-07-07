@@ -32,6 +32,7 @@ interface PreviewSettings {
   descriptionText: string;
   buttonText: string;
   logoUrl: string;
+  logoSize: number; // Розмір логотипа в пікселях
   
   // Типографіка
   titleFontSize: number;
@@ -185,6 +186,7 @@ const defaultSettings: PreviewSettings = {
   descriptionText: "We create incredible solutions for your success",
   buttonText: "Get Started",
   logoUrl: "",
+  logoSize: 96, // Розмір логотипа за замовчуванням
   
   // Типографіка
   titleFontSize: 48,
@@ -406,6 +408,25 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
             showParticles: safeSettings.showParticles,
             particleColor: safeSettings.particleColor,
             animationSpeed: safeSettings.animationSpeed,
+            // Додаємо налаштування анімацій
+            titleAnimation: safeSettings.titleAnimation,
+            subtitleAnimation: safeSettings.subtitleAnimation,
+            descriptionAnimation: safeSettings.descriptionAnimation,
+            titleExitAnimation: safeSettings.titleExitAnimation,
+            subtitleExitAnimation: safeSettings.subtitleExitAnimation,
+            descriptionExitAnimation: safeSettings.descriptionExitAnimation,
+            animationDuration: safeSettings.animationDuration,
+            animationDelay: safeSettings.animationDelay,
+            // Додаємо налаштування тіней та ефектів
+            titleShadowIntensity: safeSettings.titleShadowIntensity,
+            subtitleShadowIntensity: safeSettings.subtitleShadowIntensity,
+            descriptionShadowIntensity: safeSettings.descriptionShadowIntensity,
+            titleShadowColor: safeSettings.titleShadowColor,
+            subtitleShadowColor: safeSettings.subtitleShadowColor,
+            descriptionShadowColor: safeSettings.descriptionShadowColor,
+            title3DDepth: safeSettings.title3DDepth,
+            subtitle3DDepth: safeSettings.subtitle3DDepth,
+            description3DDepth: safeSettings.description3DDepth,
             splineSettings: safeSettings.splineSettings
           };
           
@@ -472,6 +493,25 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
               showParticles: safeSettings.showParticles,
               particleColor: safeSettings.particleColor,
               animationSpeed: safeSettings.animationSpeed,
+              // Додаємо налаштування анімацій
+              titleAnimation: safeSettings.titleAnimation,
+              subtitleAnimation: safeSettings.subtitleAnimation,
+              descriptionAnimation: safeSettings.descriptionAnimation,
+              titleExitAnimation: safeSettings.titleExitAnimation,
+              subtitleExitAnimation: safeSettings.subtitleExitAnimation,
+              descriptionExitAnimation: safeSettings.descriptionExitAnimation,
+              animationDuration: safeSettings.animationDuration,
+              animationDelay: safeSettings.animationDelay,
+              // Додаємо налаштування тіней та ефектів
+              titleShadowIntensity: safeSettings.titleShadowIntensity,
+              subtitleShadowIntensity: safeSettings.subtitleShadowIntensity,
+              descriptionShadowIntensity: safeSettings.descriptionShadowIntensity,
+              titleShadowColor: safeSettings.titleShadowColor,
+              subtitleShadowColor: safeSettings.subtitleShadowColor,
+              descriptionShadowColor: safeSettings.descriptionShadowColor,
+              title3DDepth: safeSettings.title3DDepth,
+              subtitle3DDepth: safeSettings.subtitle3DDepth,
+              description3DDepth: safeSettings.description3DDepth,
               splineSettings: safeSettings.splineSettings
             };
             
@@ -524,14 +564,25 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
         buttonColor: newSettings.brandColor,
         buttonTextColor: '#ffffff',
         logoUrl: newSettings.logoUrl,
+        logoSize: newSettings.logoSize,
         showLogo: true, // Завжди показуємо блок з заголовком/логотипом
         hasMusic: newSettings.audioSettings.backgroundMusic.enabled,
         musicUrl: newSettings.audioSettings.backgroundMusic.url,
         musicVolume: newSettings.audioSettings.backgroundMusic.volume,
+        musicLoop: newSettings.audioSettings.backgroundMusic.loop,
         autoPlay: newSettings.audioSettings.backgroundMusic.autoPlay,
         showParticles: newSettings.showParticles,
         particleColor: newSettings.particleColor,
         animationSpeed: newSettings.animationSpeed,
+        // Додаємо налаштування анімацій
+        titleAnimation: newSettings.titleAnimation,
+        subtitleAnimation: newSettings.subtitleAnimation,
+        descriptionAnimation: newSettings.descriptionAnimation,
+        titleExitAnimation: newSettings.titleExitAnimation,
+        subtitleExitAnimation: newSettings.subtitleExitAnimation,
+        descriptionExitAnimation: newSettings.descriptionExitAnimation,
+        animationDuration: newSettings.animationDuration,
+        animationDelay: newSettings.animationDelay,
         // Typography settings based on current device
         titleFontSize: adaptiveSettings.titleFontSize,
         subtitleFontSize: adaptiveSettings.subtitleFontSize,
@@ -545,6 +596,16 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
         titleFontStyle: newSettings.titleFontStyle,
         subtitleFontStyle: newSettings.subtitleFontStyle,
         descriptionFontStyle: newSettings.descriptionFontStyle,
+        // Додаємо налаштування тіней та ефектів
+        titleShadowIntensity: newSettings.titleShadowIntensity,
+        subtitleShadowIntensity: newSettings.subtitleShadowIntensity,
+        descriptionShadowIntensity: newSettings.descriptionShadowIntensity,
+        titleShadowColor: newSettings.titleShadowColor,
+        subtitleShadowColor: newSettings.subtitleShadowColor,
+        descriptionShadowColor: newSettings.descriptionShadowColor,
+        title3DDepth: newSettings.title3DDepth,
+        subtitle3DDepth: newSettings.subtitle3DDepth,
+        description3DDepth: newSettings.description3DDepth,
         splineSettings: newSettings.splineSettings
       };
       
@@ -559,6 +620,13 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
       const syncEvent = new CustomEvent('previewSettingsUpdated', { detail: newSettings });
       window.dispatchEvent(syncEvent);
       console.log('📤 PreviewCustomizer: Dispatching welcomeSettingsUpdated with splineSettings:', welcomeSettings.splineSettings);
+      console.log('📤 PreviewCustomizer: Dispatching welcomeSettingsUpdated with animations:', {
+        titleAnimation: welcomeSettings.titleAnimation,
+        subtitleAnimation: welcomeSettings.subtitleAnimation,
+        descriptionAnimation: welcomeSettings.descriptionAnimation,
+        animationDuration: welcomeSettings.animationDuration,
+        animationDelay: welcomeSettings.animationDelay
+      });
       const welcomeEvent = new CustomEvent('welcomeSettingsUpdated', { detail: welcomeSettings });
       window.dispatchEvent(welcomeEvent);
       
@@ -883,14 +951,25 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
         buttonColor: settings.brandColor,
         buttonTextColor: '#ffffff',
         logoUrl: settings.logoUrl,
+        logoSize: settings.logoSize,
         showLogo: !!settings.logoUrl,
         hasMusic: settings.audioSettings.backgroundMusic.enabled,
         musicUrl: settings.audioSettings.backgroundMusic.url,
         musicVolume: settings.audioSettings.backgroundMusic.volume,
+        musicLoop: settings.audioSettings.backgroundMusic.loop,
         autoPlay: settings.audioSettings.backgroundMusic.autoPlay,
         showParticles: settings.showParticles,
         particleColor: settings.particleColor,
         animationSpeed: settings.animationSpeed,
+        // Додаємо налаштування анімацій
+        titleAnimation: settings.titleAnimation,
+        subtitleAnimation: settings.subtitleAnimation,
+        descriptionAnimation: settings.descriptionAnimation,
+        titleExitAnimation: settings.titleExitAnimation,
+        subtitleExitAnimation: settings.subtitleExitAnimation,
+        descriptionExitAnimation: settings.descriptionExitAnimation,
+        animationDuration: settings.animationDuration,
+        animationDelay: settings.animationDelay,
         // Typography settings based on current device
         titleFontSize: adaptiveSettings.titleFontSize,
         subtitleFontSize: adaptiveSettings.subtitleFontSize,
@@ -904,6 +983,16 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
         titleFontStyle: settings.titleFontStyle,
         subtitleFontStyle: settings.subtitleFontStyle,
         descriptionFontStyle: settings.descriptionFontStyle,
+        // Додаємо налаштування тіней та ефектів
+        titleShadowIntensity: settings.titleShadowIntensity,
+        subtitleShadowIntensity: settings.subtitleShadowIntensity,
+        descriptionShadowIntensity: settings.descriptionShadowIntensity,
+        titleShadowColor: settings.titleShadowColor,
+        subtitleShadowColor: settings.subtitleShadowColor,
+        descriptionShadowColor: settings.descriptionShadowColor,
+        title3DDepth: settings.title3DDepth,
+        subtitle3DDepth: settings.subtitle3DDepth,
+        description3DDepth: settings.description3DDepth,
         splineSettings: settings.splineSettings
       };
       
@@ -942,14 +1031,25 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
         buttonColor: settings.brandColor,
         buttonTextColor: '#ffffff',
         logoUrl: settings.logoUrl,
+        logoSize: settings.logoSize,
         showLogo: true, // Завжди показуємо блок з заголовком/логотипом (в catch блоці)
         hasMusic: settings.audioSettings.backgroundMusic.enabled,
         musicUrl: settings.audioSettings.backgroundMusic.url,
         musicVolume: settings.audioSettings.backgroundMusic.volume,
+        musicLoop: settings.audioSettings.backgroundMusic.loop,
         autoPlay: settings.audioSettings.backgroundMusic.autoPlay,
         showParticles: settings.showParticles,
         particleColor: settings.particleColor,
         animationSpeed: settings.animationSpeed,
+        // Додаємо налаштування анімацій
+        titleAnimation: settings.titleAnimation,
+        subtitleAnimation: settings.subtitleAnimation,
+        descriptionAnimation: settings.descriptionAnimation,
+        titleExitAnimation: settings.titleExitAnimation,
+        subtitleExitAnimation: settings.subtitleExitAnimation,
+        descriptionExitAnimation: settings.descriptionExitAnimation,
+        animationDuration: settings.animationDuration,
+        animationDelay: settings.animationDelay,
         // Typography settings based on current device
         titleFontSize: adaptiveSettings.titleFontSize,
         subtitleFontSize: adaptiveSettings.subtitleFontSize,
@@ -963,6 +1063,16 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
         titleFontStyle: settings.titleFontStyle,
         subtitleFontStyle: settings.subtitleFontStyle,
         descriptionFontStyle: settings.descriptionFontStyle,
+        // Додаємо налаштування тіней та ефектів
+        titleShadowIntensity: settings.titleShadowIntensity,
+        subtitleShadowIntensity: settings.subtitleShadowIntensity,
+        descriptionShadowIntensity: settings.descriptionShadowIntensity,
+        titleShadowColor: settings.titleShadowColor,
+        subtitleShadowColor: settings.subtitleShadowColor,
+        descriptionShadowColor: settings.descriptionShadowColor,
+        title3DDepth: settings.title3DDepth,
+        subtitle3DDepth: settings.subtitle3DDepth,
+        description3DDepth: settings.description3DDepth,
         splineSettings: settings.splineSettings
       };
       
@@ -1000,7 +1110,7 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
       {/* Mobile & Desktop Responsive Sidebar */}
       <div className="w-full lg:w-[520px] lg:min-w-[520px] lg:max-w-[520px] bg-white/80 backdrop-blur-xl lg:border-r border-slate-200/60 flex flex-col shadow-xl">
         {/* Ultra-Compact Mobile Header */}
-        <div className="p-1 lg:p-8 border-b border-slate-200/60 bg-gradient-to-r from-blue-600 to-purple-600">
+        <div className="p-1 lg:p-4 border-b border-slate-200/60 bg-gradient-to-r from-blue-600 to-purple-600">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xs lg:text-2xl font-bold text-white mb-0 lg:mb-2">{t('preview.constructor.title')}</h2>
@@ -1065,51 +1175,10 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
         </div>
 
         {/* Ultra-Compact Tab Content */}
-        <div className="flex-1 overflow-y-auto p-1.5 lg:p-6 space-y-2 lg:space-y-6">
+        <div className="flex-1 overflow-y-auto p-1.5 lg:p-6 space-y-2 lg:space-y-6" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
           {activeTab === 'header' && (
             <div className="space-y-2 lg:space-y-6">
-              {/* 1. 🖼️ Логотип - MOBILE OPTIMIZED */}
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-amber-100 shadow-sm">
-                <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-6">
-                  <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-md lg:rounded-xl flex items-center justify-center">
-                    <span className="text-white text-xs lg:text-lg">🖼️</span>
-                  </div>
-                  <div>
-                    <h3 className="text-xs lg:text-lg font-bold text-slate-800">{t('form.image')}</h3>
-                    <p className="text-xs lg:text-sm text-slate-600 hidden lg:block">{t('media.upload')}</p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-1.5 lg:gap-3">
-                  <button
-                    onClick={() => openMediaSelector('logo', ['image'])}
-                    className="flex-1 px-2 py-2 lg:px-4 lg:py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md lg:rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl min-h-[40px] lg:min-h-[auto] touch-manipulation text-xs lg:text-base"
-                  >
-                    📚 {t('common.select.from.media')}
-                  </button>
-                  {settings.logoUrl && (
-                    <button
-                      onClick={() => updateSettings({ logoUrl: '' })}
-                      className="px-2 py-2 lg:px-4 lg:py-3 text-red-600 hover:bg-red-50 rounded-md lg:rounded-xl transition-all duration-200 border border-red-200 hover:border-red-300 min-h-[40px] lg:min-h-[auto] min-w-[40px] lg:min-w-[auto] touch-manipulation"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-                {settings.logoUrl && (
-                  <div className="mt-2 lg:mt-4 p-2 lg:p-3 bg-white/60 rounded-xl border border-amber-100">
-                    <div className="flex items-center gap-2 lg:gap-3">
-                      <img src={settings.logoUrl} alt="Логотип" className="w-8 h-8 lg:w-12 lg:h-12 object-contain rounded-lg border border-amber-200" />
-                      <div>
-                        <p className="text-xs lg:text-sm font-medium text-slate-700">Логотип завантажено</p>
-                        <p className="hidden lg:block text-xs text-slate-500">Відображається у верхній частині сторінки</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* 2. 📝 Текстовий контент - MOBILE OPTIMIZED */}
+              {/* 1. 📝 Текстовий контент - MOBILE OPTIMIZED */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-blue-100 shadow-sm">
                 <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-6">
                   <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md lg:rounded-xl flex items-center justify-center">
@@ -1180,7 +1249,7 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
                 </div>
               </div>
 
-              {/* 3. 🔤 Типографіка - MOBILE OPTIMIZED */}
+              {/* 2. 🔤 Типографіка - MOBILE OPTIMIZED */}
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-purple-100 shadow-sm">
                 <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-6">
                   <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-md lg:rounded-xl flex items-center justify-center">
@@ -1795,6 +1864,67 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
 
           {activeTab === 'design' && (
             <div className="space-y-2 lg:space-y-6">
+              {/* 🖼️ Логотип - MOBILE OPTIMIZED */}
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-amber-100 shadow-sm">
+                <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-6">
+                  <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-md lg:rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xs lg:text-lg">🖼️</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xs lg:text-lg font-bold text-slate-800">Логотип</h3>
+                    <p className="text-xs lg:text-sm text-slate-600 hidden lg:block">Завантажити медіа</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-1.5 lg:gap-3">
+                  <button
+                    onClick={() => openMediaSelector('logo', ['image'])}
+                    className="flex-1 px-2 py-2 lg:px-4 lg:py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md lg:rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl min-h-[40px] lg:min-h-[auto] touch-manipulation text-xs lg:text-base"
+                  >
+                    📚 Вибрати з медіа-бібліотеки
+                  </button>
+                  {settings.logoUrl && (
+                    <button
+                      onClick={() => updateSettings({ logoUrl: '' })}
+                      className="px-2 py-2 lg:px-4 lg:py-3 text-red-600 hover:bg-red-50 rounded-md lg:rounded-xl transition-all duration-200 border border-red-200 hover:border-red-300 min-h-[40px] lg:min-h-[auto] min-w-[40px] lg:min-w-[auto] touch-manipulation"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {settings.logoUrl && (
+                  <div className="mt-2 lg:mt-4 p-2 lg:p-3 bg-white/60 rounded-xl border border-amber-100 space-y-3">
+                    <div className="flex items-center gap-2 lg:gap-3">
+                      <img src={settings.logoUrl} alt="Логотип" className="w-8 h-8 lg:w-12 lg:h-12 object-contain rounded-lg border border-amber-200" />
+                      <div>
+                        <p className="text-xs lg:text-sm font-medium text-slate-700">Логотип завантажено</p>
+                        <p className="hidden lg:block text-xs text-slate-500">Відображається у верхній частині сторінки</p>
+                      </div>
+                    </div>
+                    
+                    {/* Контрол розміру логотипа */}
+                    <div>
+                      <label className="block text-xs lg:text-sm font-medium text-slate-700 mb-2">
+                        Розмір логотипа: {settings.logoSize}px
+                      </label>
+                      <input
+                        type="range"
+                        min="32"
+                        max="200"
+                        step="8"
+                        value={settings.logoSize}
+                        onChange={(e) => updateSettings({ logoSize: parseInt(e.target.value) })}
+                        className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer slider"
+                      />
+                      <div className="flex justify-between text-xs text-slate-500 mt-1">
+                        <span>32px</span>
+                        <span>200px</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* 🎨 Кольорова схема - MOBILE OPTIMIZED */}
               <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-pink-100 shadow-sm">
                 <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-6">
@@ -2474,12 +2604,12 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
         </div>
 
         {/* Modern Actions */}
-        <div className="p-2 lg:p-8 border-t border-slate-200/60 bg-gradient-to-r from-slate-50 to-slate-100">
+        <div className="p-2 lg:p-4 border-t border-slate-200/60 bg-gradient-to-r from-slate-50 to-slate-100">
           <div className="space-y-2 lg:space-y-4">
             <div className="flex gap-1.5 lg:gap-3">
               <button
                 onClick={saveSettings}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-2 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform lg:hover:scale-105 flex items-center justify-center gap-1 lg:gap-2 text-xs lg:text-base min-h-[44px] touch-manipulation"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-2 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform lg:hover:scale-105 lg:hover:-translate-y-0.5 lg:active:scale-102 lg:active:translate-y-0 flex items-center justify-center gap-1 lg:gap-2 text-xs lg:text-base min-h-[44px] touch-manipulation"
               >
                 <span className="text-sm lg:text-base">💾</span>
                 <span>{t('common.save')}</span>
@@ -2489,25 +2619,6 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
             {/* Індикатор синхронізації */}
             <SyncButton className="w-full" />
             
-            <div className="flex gap-1.5 lg:gap-3">
-              <button
-                onClick={exportSettings}
-                className="flex-1 bg-white/80 text-slate-700 px-1.5 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:bg-white transition-all duration-200 text-xs lg:text-sm font-medium border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md flex items-center justify-center gap-1 lg:gap-2 min-h-[44px] touch-manipulation"
-              >
-                <span className="text-sm lg:text-base">📤</span>
-                <span>{t('common.download')}</span>
-              </button>
-              <label className="flex-1 bg-white/80 text-slate-700 px-1.5 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:bg-white transition-all duration-200 text-xs lg:text-sm font-medium cursor-pointer border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md flex items-center justify-center gap-1 lg:gap-2 min-h-[44px] touch-manipulation">
-                <span className="text-sm lg:text-base">📥</span>
-                <span>{t('common.upload')}</span>
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={importSettings}
-                  className="hidden"
-                />
-              </label>
-            </div>
           </div>
         </div>
       </div>

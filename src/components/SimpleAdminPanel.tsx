@@ -1,5 +1,24 @@
+/**
+ * ⚠️ DEPRECATED: SimpleAdminPanel V1 - ЗАСТАРІЛА ВЕРСІЯ
+ * 
+ * Цей компонент замінено на SimpleAdminPanelV2.
+ * 
+ * Статус: DEPRECATED since V2.0
+ * Заміна: SimpleAdminPanelV2 (main/src/components/admin-v2/SimpleAdminPanelV2.tsx)
+ * 
+ * Причини deprecation:
+ * - Блокування scroll на мобільних пристроях
+ * - Застарілі методи завантаження файлів
+ * - Відсутність V2 архітектури
+ * - Немає responsive дизайну
+ * 
+ * Залишається для зворотної сумісності, але не розвивається.
+ * Рекомендується використовувати SimpleAdminPanelV2.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
 
 interface SimpleAdminPanelProps {
   isVisible: boolean;
@@ -89,6 +108,23 @@ const SimpleAdminPanel: React.FC<SimpleAdminPanelProps> = ({ isVisible, onClose 
     loadDataFromStorage();
   }, []);
 
+  // Простий фікс скролу для SimpleAdminPanel - ВИПРАВЛЕНО
+  useEffect(() => {
+    if (isVisible) {
+      // Блокуємо тільки скрол фону, не всього body
+      document.body.style.position = 'relative';
+      document.body.style.overflowX = 'hidden'; // Тільки горизонтальний скрол
+      // НЕ блокуємо повний overflow, щоб адмін панель могла скролитися
+    }
+    
+    return () => {
+      if (isVisible) {
+        document.body.style.position = '';
+        document.body.style.overflowX = '';
+      }
+    };
+  }, [isVisible]);
+
   const loadDataFromStorage = () => {
     try {
       const savedData = localStorage.getItem('immersiveExperienceData');
@@ -96,7 +132,12 @@ const SimpleAdminPanel: React.FC<SimpleAdminPanelProps> = ({ isVisible, onClose 
         const data = JSON.parse(savedData);
         if (data.carouselItems) setCarouselItems(data.carouselItems);
         if (data.introSettings) setIntroSettings(data.introSettings);
-        if (data.adminSettings) setAdminSettings(data.adminSettings);
+        if (data.adminSettings) {
+          setAdminSettings({
+            ...data.adminSettings,
+            showAdminButton: false // ЗАВЖДИ false - контролюється через URL
+          });
+        }
         if (data.audioSettings) setAudioSettings(data.audioSettings);
         if (data.backgroundSettings) setBackgroundSettings(data.backgroundSettings);
       }
@@ -110,7 +151,10 @@ const SimpleAdminPanel: React.FC<SimpleAdminPanelProps> = ({ isVisible, onClose 
       const dataToSave = {
         carouselItems,
         introSettings,
-        adminSettings,
+        adminSettings: {
+          ...adminSettings,
+          showAdminButton: false // ЗАВЖДИ false при збереженні
+        },
         audioSettings,
         backgroundSettings,
         lastUpdated: new Date().toISOString()
@@ -175,7 +219,7 @@ const SimpleAdminPanel: React.FC<SimpleAdminPanelProps> = ({ isVisible, onClose 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="simple-admin-panel-container fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-hidden"
         onClick={onClose}
       >
         <motion.div
@@ -668,17 +712,13 @@ const SimpleAdminPanel: React.FC<SimpleAdminPanelProps> = ({ isVisible, onClose 
                   />
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="showAdminButton"
-                    checked={adminSettings.showAdminButton}
-                    onChange={(e) => setAdminSettings({...adminSettings, showAdminButton: e.target.checked})}
-                    className="rounded"
-                  />
-                  <label htmlFor="showAdminButton" className="text-sm">
-                    Завжди показувати кнопку адміністратора
-                  </label>
+                {/* ВІДКЛЮЧЕНО: Показ адмін кнопки контролюється через URL (?admin) */}
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>ℹ️ Показ кнопки адміністратора:</strong><br/>
+                    Адмін-панель відображається тільки при додаванні <code>?admin</code> до URL.<br/>
+                    Наприклад: <code>http://192.168.1.49:8080/?admin</code>
+                  </p>
                 </div>
                 
                 <div className="flex items-center space-x-2">

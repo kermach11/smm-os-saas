@@ -25,6 +25,7 @@ interface IntroSettings {
   buttonText: string;
   buttonUrl: string;
   logoUrl: string;
+  logoSize: number;
   
   // Типографіка
   titleFontSize: number;
@@ -41,12 +42,12 @@ interface IntroSettings {
   descriptionFontStyle: string;
   
   // Анімації
-  titleAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow';
-  subtitleAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow';
-  descriptionAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow';
-  titleExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve';
-  subtitleExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve';
-  descriptionExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve';
+  titleAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow' | 'cinematicZoom';
+  subtitleAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow' | 'cinematicZoom';
+  descriptionAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow' | 'cinematicZoom';
+  titleExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve' | 'cinematicZoomOut';
+  subtitleExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve' | 'cinematicZoomOut';
+  descriptionExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve' | 'cinematicZoomOut';
   
   // Тіні та ефекти
   title3DDepth: number;
@@ -180,6 +181,7 @@ const defaultSettings: IntroSettings = {
   buttonText: "Почати роботу",
   buttonUrl: "#start",
   logoUrl: "",
+  logoSize: 64,
   
   // Типографіка
   titleFontSize: 48,
@@ -307,8 +309,8 @@ const defaultSettings: IntroSettings = {
   },
   
   // Ефекти
-  showParticles: false,
-  particleColor: "#ffffff",
+  showParticles: true,
+  particleColor: "#ff6b35",
   animationSpeed: 'normal',
   autoPlay: true,
   
@@ -396,6 +398,25 @@ const IntroCustomizer: React.FC = () => {
   const updateSettings = useCallback(async (updates: Partial<IntroSettings>) => {
     console.log('🔄 IntroCustomizer: updateSettings викликано з оновленнями:', updates);
     
+    // Спеціальне логування для анімацій
+    if (updates.titleAnimation || updates.subtitleAnimation || updates.descriptionAnimation) {
+      console.log('🎭 IntroCustomizer: Оновлення анімацій:', {
+        titleAnimation: updates.titleAnimation,
+        subtitleAnimation: updates.subtitleAnimation,
+        descriptionAnimation: updates.descriptionAnimation
+      });
+    }
+    
+    // Спеціальне логування для текстових змін
+    if (updates.title || updates.subtitle || updates.description || updates.buttonText) {
+      console.log('📝 IntroCustomizer: Текстові зміни:', {
+        title: updates.title,
+        subtitle: updates.subtitle,
+        description: updates.description,
+        buttonText: updates.buttonText
+      });
+    }
+    
     // Спеціальне логування для Spline налаштувань
     if (updates.splineSettings) {
       console.log('🌐 IntroCustomizer: Spline налаштування оновлюються:', updates.splineSettings);
@@ -407,6 +428,8 @@ const IntroCustomizer: React.FC = () => {
     console.log('📝 IntroCustomizer: Нові налаштування сформовано:', {
       title: newSettings.title,
       subtitle: newSettings.subtitle,
+      description: newSettings.description,
+      buttonText: newSettings.buttonText,
       logoUrl: newSettings.logoUrl ? 'є' : 'немає',
       titleFontSize: newSettings.titleFontSize,
       titleAnimation: newSettings.titleAnimation
@@ -440,8 +463,16 @@ const IntroCustomizer: React.FC = () => {
     
     // Debounce відправки події (300ms)
     updateTimeoutRef.current = setTimeout(() => {
+      console.log('🔄 IntroCustomizer: Відправляємо подію introSettingsUpdated з налаштуваннями:', {
+        titleAnimation: settings.titleAnimation,
+        subtitleAnimation: settings.subtitleAnimation,
+        descriptionAnimation: settings.descriptionAnimation,
+        animationDuration: settings.animationDuration,
+        animationDelay: settings.animationDelay
+      });
       const syncEvent = new CustomEvent('introSettingsUpdated', { detail: settings });
       window.dispatchEvent(syncEvent);
+      console.log('✅ IntroCustomizer: Подія introSettingsUpdated відправлена');
     }, 300);
     
     // Cleanup function
@@ -797,11 +828,11 @@ const IntroCustomizer: React.FC = () => {
         }
         `
       }} />
-      <div className="flex h-full bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="flex h-full bg-gradient-to-br from-slate-50 to-slate-100" data-intro-customizer="true">
         {/* Mobile & Desktop Responsive Sidebar */}
         <div className="w-full lg:w-[520px] lg:min-w-[520px] lg:max-w-[520px] bg-white/80 backdrop-blur-xl lg:border-r border-slate-200/60 flex flex-col shadow-xl">
           {/* Ultra-Compact Mobile Header */}
-          <div className="p-1 lg:p-8 border-b border-slate-200/60 bg-gradient-to-r from-blue-600 to-purple-600">
+          <div className="p-1 lg:p-4 border-b border-slate-200/60 bg-gradient-to-r from-blue-600 to-purple-600">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xs lg:text-2xl font-bold text-white mb-0 lg:mb-2">{t('intro.constructor.title')}</h2>
@@ -865,52 +896,11 @@ const IntroCustomizer: React.FC = () => {
             ))}
           </div>
 
-          {/* Ultra-Compact Tab Content */}
-          <div className="flex-1 overflow-y-auto p-1.5 lg:p-6 space-y-2 lg:space-y-6">
+                  {/* Ultra-Compact Tab Content */}
+        <div className="flex-1 overflow-y-auto p-1.5 lg:p-6 space-y-2 lg:space-y-6" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
             {activeTab === 'header' && (
               <div className="space-y-2 lg:space-y-6">
-                {/* 1. 🖼️ Логотип - MOBILE OPTIMIZED */}
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-amber-100 shadow-sm">
-                  <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-6">
-                    <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-md lg:rounded-xl flex items-center justify-center">
-                      <span className="text-white text-xs lg:text-lg">🖼️</span>
-                    </div>
-                    <div>
-                      <h3 className="text-xs lg:text-lg font-bold text-slate-800">{t('intro.logo.title')}</h3>
-                      <p className="text-xs lg:text-sm text-slate-600 hidden lg:block">{t('intro.logo.description')}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-1.5 lg:gap-3">
-                    <button
-                      onClick={() => openMediaSelector('logo', ['image'])}
-                      className="flex-1 px-2 py-2 lg:px-4 lg:py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md lg:rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl min-h-[40px] lg:min-h-[auto] touch-manipulation text-xs lg:text-base"
-                    >
-                      📚 {t('common.select.from.media')}
-                    </button>
-                    {settings.logoUrl && (
-                      <button
-                        onClick={() => updateSettings({ logoUrl: '' })}
-                        className="px-2 py-2 lg:px-4 lg:py-3 text-red-600 hover:bg-red-50 rounded-md lg:rounded-xl transition-all duration-200 border border-red-200 hover:border-red-300 min-h-[40px] lg:min-h-[auto] min-w-[40px] lg:min-w-[auto] touch-manipulation"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                  {settings.logoUrl && (
-                    <div className="mt-2 lg:mt-4 p-2 lg:p-3 bg-white/60 rounded-xl border border-amber-100">
-                      <div className="flex items-center gap-2 lg:gap-3">
-                        <img src={settings.logoUrl} alt="Логотип" className="w-8 h-8 lg:w-12 lg:h-12 object-contain rounded-lg border border-amber-200" />
-                        <div>
-                          <p className="text-xs lg:text-sm font-medium text-slate-700">Логотип завантажено</p>
-                          <p className="hidden lg:block text-xs text-slate-500">Відображається у верхній частині сторінки</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 2. 📝 Текстовий контент - MOBILE OPTIMIZED */}
+                {/* 1. 📝 Текстовий контент - MOBILE OPTIMIZED */}
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-blue-100 shadow-sm">
                   <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-6">
                     <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md lg:rounded-xl flex items-center justify-center">
@@ -995,7 +985,7 @@ const IntroCustomizer: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 3. Типографіка - ТРЕТІЙ БЛОК - MOBILE OPTIMIZED */}
+                {/* 2. Типографіка - MOBILE OPTIMIZED */}
                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-purple-100 shadow-sm">
                   <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-6">
                     <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-md lg:rounded-xl flex items-center justify-center">
@@ -1543,11 +1533,13 @@ const IntroCustomizer: React.FC = () => {
                             { value: 'rotateIn', label: t('preview.animation.rotate'), icon: '🔄' },
                             { value: 'bounce', label: t('preview.animation.bounce'), icon: '⚡' },
                             { value: 'typewriter', label: t('preview.animation.typewriter'), icon: '⌨️' },
-                            { value: 'glow', label: t('preview.animation.glow'), icon: '✨' }
+                            { value: 'glow', label: t('preview.animation.glow'), icon: '✨' },
+                            { value: 'cinematicZoom', label: 'Кіно-зум', icon: '🎬' }
                           ].map((animation) => (
                             <button
                               key={animation.value}
                               onClick={() => {
+                                console.log(`🎭 IntroCustomizer: Змінюємо анімацію для ${activeTypographyElement} на ${animation.value}`);
                                 if (activeTypographyElement === 'title') {
                                   updateSettings({ titleAnimation: animation.value as any });
                                 } else if (activeTypographyElement === 'subtitle') {
@@ -1585,7 +1577,8 @@ const IntroCustomizer: React.FC = () => {
                             { value: 'zoomOut', label: t('preview.animation.zoom.out'), icon: '🔎' },
                             { value: 'zoomIn', label: t('preview.animation.zoom'), icon: '🔍' },
                             { value: 'rotateOut', label: t('preview.animation.rotate'), icon: '🔄' },
-                            { value: 'dissolve', label: t('preview.animation.dissolve'), icon: '💫' }
+                            { value: 'dissolve', label: t('preview.animation.dissolve'), icon: '💫' },
+                            { value: 'cinematicZoomOut', label: 'Кіно-зум виходу', icon: '🎭' }
                           ].map((animation) => (
                             <button
                               key={animation.value}
@@ -1652,6 +1645,67 @@ const IntroCustomizer: React.FC = () => {
 
             {activeTab === 'design' && (
               <div className="space-y-2 lg:space-y-6">
+                {/* 🖼️ Логотип - MOBILE OPTIMIZED */}
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-amber-100 shadow-sm">
+                  <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-6">
+                    <div className="w-5 h-5 lg:w-10 lg:h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-md lg:rounded-xl flex items-center justify-center">
+                      <span className="text-white text-xs lg:text-lg">🖼️</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xs lg:text-lg font-bold text-slate-800">Логотип</h3>
+                      <p className="text-xs lg:text-sm text-slate-600 hidden lg:block">Завантажити медіа</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-1.5 lg:gap-3">
+                    <button
+                      onClick={() => openMediaSelector('logo', ['image'])}
+                      className="flex-1 px-2 py-2 lg:px-4 lg:py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md lg:rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl min-h-[40px] lg:min-h-[auto] touch-manipulation text-xs lg:text-base"
+                    >
+                      📚 Вибрати з медіа-бібліотеки
+                    </button>
+                    {settings.logoUrl && (
+                      <button
+                        onClick={() => updateSettings({ logoUrl: '' })}
+                        className="px-2 py-2 lg:px-4 lg:py-3 text-red-600 hover:bg-red-50 rounded-md lg:rounded-xl transition-all duration-200 border border-red-200 hover:border-red-300 min-h-[40px] lg:min-h-[auto] min-w-[40px] lg:min-w-[auto] touch-manipulation"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  {settings.logoUrl && (
+                    <div className="mt-2 lg:mt-4 p-2 lg:p-3 bg-white/60 rounded-xl border border-amber-100 space-y-3">
+                      <div className="flex items-center gap-2 lg:gap-3">
+                        <img src={settings.logoUrl} alt="Логотип" className="w-8 h-8 lg:w-12 lg:h-12 object-contain rounded-lg border border-amber-200" />
+                        <div>
+                          <p className="text-xs lg:text-sm font-medium text-slate-700">Логотип завантажено</p>
+                          <p className="hidden lg:block text-xs text-slate-500">Відображається у верхній частині сторінки</p>
+                        </div>
+                      </div>
+                      
+                      {/* Контрол розміру логотипа */}
+                      <div>
+                        <label className="block text-xs lg:text-sm font-medium text-slate-700 mb-2">
+                          Розмір логотипа: {settings.logoSize || 64}px
+                        </label>
+                        <input
+                          type="range"
+                          min="32"
+                          max="200"
+                          step="8"
+                          value={settings.logoSize || 64}
+                          onChange={(e) => updateSettings({ logoSize: parseInt(e.target.value) })}
+                          className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer slider"
+                        />
+                        <div className="flex justify-between text-xs text-slate-500 mt-1">
+                          <span>32px</span>
+                          <span>200px</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Кольорова схема - MOBILE OPTIMIZED */}
                 <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg lg:rounded-2xl p-1.5 lg:p-6 border border-pink-100 shadow-sm">
                   <div className="flex items-center gap-1.5 lg:gap-3 mb-2 lg:mb-6">
@@ -2651,12 +2705,12 @@ const IntroCustomizer: React.FC = () => {
           </div>
 
           {/* Modern Actions */}
-          <div className="p-2 lg:p-6 border-t border-slate-200/60 bg-gradient-to-r from-slate-50 to-slate-100">
+          <div className="p-2 lg:p-4 border-t border-slate-200/60 bg-gradient-to-r from-slate-50 to-slate-100">
             <div className="space-y-2 lg:space-y-4">
               <div className="flex gap-1.5 lg:gap-3">
                 <button
                   onClick={saveSettings}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-2 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-1 lg:gap-2 text-xs lg:text-base min-h-[44px] touch-manipulation"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-2 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform lg:hover:scale-105 lg:hover:-translate-y-0.5 lg:active:scale-102 lg:active:translate-y-0 flex items-center justify-center gap-1 lg:gap-2 text-xs lg:text-base min-h-[44px] touch-manipulation"
                 >
                   <span className="text-sm lg:text-base">💾</span>
                   <span>{t('common.save')}</span>
@@ -2666,25 +2720,6 @@ const IntroCustomizer: React.FC = () => {
               {/* Індикатор синхронізації */}
               <SyncButton className="w-full" />
               
-              <div className="flex gap-1.5 lg:gap-3">
-                <button
-                  onClick={exportSettings}
-                  className="flex-1 bg-white/80 text-slate-700 px-1.5 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:bg-white transition-all duration-200 text-xs lg:text-sm font-medium border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md flex items-center justify-center gap-1 lg:gap-2 min-h-[44px] touch-manipulation"
-                >
-                  <span className="text-sm lg:text-base">📤</span>
-                  <span>{t('common.download')}</span>
-                </button>
-                <label className="flex-1 bg-white/80 text-slate-700 px-1.5 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:bg-white transition-all duration-200 text-xs lg:text-sm font-medium cursor-pointer border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md flex items-center justify-center gap-1 lg:gap-2 min-h-[44px] touch-manipulation">
-                  <span className="text-sm lg:text-base">📥</span>
-                  <span>{t('common.upload')}</span>
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={importSettings}
-                    className="hidden"
-                  />
-                </label>
-              </div>
             </div>
           </div>
         </div>

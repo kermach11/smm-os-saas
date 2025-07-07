@@ -1,4 +1,22 @@
-import React, { useState } from 'react';
+/**
+ * ⚠️ DEPRECATED: AdminPanel V1 - ЗАСТАРІЛА ВЕРСІЯ
+ * 
+ * Цей компонент замінено на AdminPanelV2.
+ * 
+ * Статус: DEPRECATED since V2.0
+ * Заміна: AdminPanelV2 (main/src/components/admin-v2/AdminPanelV2.tsx)
+ * 
+ * Причини deprecation:
+ * - Відсутність responsive дизайну
+ * - Застаріла архітектура
+ * - Проблеми з touch scroll на мобільних
+ * - Важко підтримувати код
+ * 
+ * Залишається для зворотної сумісності, але не розвивається.
+ * Рекомендується використовувати AdminPanelV2.
+ */
+
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import IntroCustomizer from './IntroCustomizer';
@@ -21,6 +39,19 @@ type TabId = 'intro' | 'main' | 'content' | 'preview' | 'analytics' | 'instructi
 const AdminPanelContent: React.FC<AdminPanelProps> = ({ isOpen, onClose, onLogout }) => {
   const [activeTab, setActiveTab] = useState<TabId>('preview');
   const { t } = useTranslation();
+  
+  // Визначення типу пристрою для масштабування
+  const [isDesktop, setIsDesktop] = useState(false);
+  
+  useEffect(() => {
+    const checkIsDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    
+    checkIsDesktop();
+    window.addEventListener('resize', checkIsDesktop);
+    return () => window.removeEventListener('resize', checkIsDesktop);
+  }, []);
 
   const tabs = [
     { id: 'preview', label: t('nav.preview'), icon: '🎨' },
@@ -67,10 +98,17 @@ const AdminPanelContent: React.FC<AdminPanelProps> = ({ isOpen, onClose, onLogou
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
+            animate={{ 
+              scale: isDesktop ? 0.85 : 1, 
+              opacity: 1, 
+              y: 0 
+            }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
             className="bg-gradient-to-br from-slate-50 to-white rounded-none lg:rounded-2xl shadow-2xl w-full max-w-[1400px] h-screen lg:h-[90vh] flex flex-col overflow-hidden border-0 lg:border border-slate-200/50"
+            style={{ 
+              marginBottom: window.innerWidth < 768 ? '20px' : '0' 
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Fullscreen Mobile Header */}
@@ -166,7 +204,7 @@ const AdminPanelContent: React.FC<AdminPanelProps> = ({ isOpen, onClose, onLogou
                       {tab.icon}
                     </span>
                     <span className="text-[9px] sm:text-xs lg:text-sm font-semibold text-center leading-tight max-w-full truncate px-0.5">
-                      <span className="hidden sm:inline lg:hidden">{shortLabels[tab.id] || tab.label}</span>
+                      <span className="lg:hidden">{shortLabels[tab.id] || tab.label}</span>
                       <span className="hidden lg:inline">{tab.label}</span>
                     </span>
                     {activeTab === tab.id && (
@@ -252,7 +290,7 @@ const SettingsTab: React.FC = () => {
         login: securitySettings.adminLogin,
         password: securitySettings.adminPassword,
         sessionDuration: securitySettings.sessionDuration,
-        showAdminButton: securitySettings.showAdminButton,
+        // showAdminButton: securitySettings.showAdminButton, // ВІДКЛЮЧЕНО - контролюється через URL
         autoLogout: securitySettings.autoLogout
       };
       
@@ -276,7 +314,7 @@ const SettingsTab: React.FC = () => {
             adminLogin: data.adminSettings.login || 'admin',
             adminPassword: data.adminSettings.password || 'admin123',
             sessionDuration: data.adminSettings.sessionDuration || 30,
-            showAdminButton: data.adminSettings.showAdminButton || false,
+            showAdminButton: false, // ЗАВЖДИ false - контролюється через URL
             autoLogout: data.adminSettings.autoLogout !== false
           });
         }

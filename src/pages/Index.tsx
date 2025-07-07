@@ -1,9 +1,10 @@
 import { useState, useEffect, createContext, useContext } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 // Застарілі імпорти аудіо видалені - тепер вся музика керується через конструктори
 import indexedDBService from '../services/IndexedDBService';
 import syncService from '../services/SyncService';
 import domainSyncService from '../services/DomainSyncService';
+import { webAudioManager } from '../utils/webAudioUtils';
 
 // 🚀 Global Spline Preloader для миттєвого завантаження
 const SPLINE_SCENE_URL = "https://prod.spline.design/Li0xtQwxHAu6qXGd/scene.splinecode";
@@ -67,6 +68,7 @@ const preloadSplineScene = async () => {
 import IntroScreen from "../components/IntroScreen";
 import MainScreen from "../components/MainScreen";
 import WelcomeScreen from "../components/WelcomeScreen";
+import { useGlobalAudio } from '../hooks/useGlobalAudio';
 
 // Audio context for global sound management
 interface AudioContextType {
@@ -78,30 +80,40 @@ interface AudioContextType {
 
 const AudioContext = createContext<AudioContextType | null>(null);
 
-export const useGlobalAudio = () => {
-  // Застарілий глобальний аудіо більше не використовується - вся музика тепер керується через конструктори
-  return {
-    isPlaying: false,
-    toggle: () => {},
-    isLoaded: true,
-    canAutoPlay: true,
-    play: () => Promise.resolve()
-  };
-};
+// Хук винесено в окремий файл для виправлення HMR попереджень
 
 // Глобальний стан для відстеження початкового завантаження
+// ВИПРАВЛЕННЯ: Завжди починаємо з Welcome екрану при свіжому завантаженні сторінки
 let hasInitialLoadCompleted = false;
 
 const Index = () => {
   const [screenState, setScreenState] = useState<'welcome' | 'intro' | 'main'>(() => {
-    // Якщо початкове завантаження вже було - одразу показуємо головний екран
-    return hasInitialLoadCompleted ? 'main' : 'welcome';
+    // ВИПРАВЛЕННЯ: Завжди починаємо з Welcome екрану при свіжому завантаженні
+    return 'welcome';
   });
 
   const [welcomeSettings, setWelcomeSettings] = useState<any>(null);
+  const [userInteracted, setUserInteracted] = useState(() => {
+    // ВИПРАВЛЕННЯ: Завжди починаємо з false при свіжому завантаженні
+    return false;
+  });
 
   // Global audio management with auto-play disabled
   const { isPlaying, isLoaded, canAutoPlay, toggle, play } = useGlobalAudio();
+
+  // Стан для переходного затемнення
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Захист від "застрягання" затемнення - автоматично прибираємо через 5 секунд
+  useEffect(() => {
+    if (isTransitioning) {
+      const clearTransitionTimer = setTimeout(() => {
+        setIsTransitioning(false);
+      }, 5000); // 5 секунд максимум
+      
+      return () => clearTimeout(clearTransitionTimer);
+    }
+  }, [isTransitioning]);
 
   // 🚀 Запускаємо preload Spline сцени асинхронно (без блокування UI)
   useEffect(() => {
@@ -167,32 +179,133 @@ const Index = () => {
 
   // Handle welcome screen completion (user tapped to enter)
   const handleWelcomeComplete = async () => {
-    // Запускаємо стару музику тільки якщо в превю немає власної музики
-    const hasCustomMusic = welcomeSettings?.hasMusic && welcomeSettings?.musicUrl;
+    console.log('🎵 UnifiedPage: Обробка завершення Welcome екрану');
     
-    if (!hasCustomMusic && isLoaded) {
-      try {
-        await play();
-      } catch (error) {
-        // Тихо ігноруємо помилки аудіо
-      }
+    // Показуємо затемнення тільки якщо не на головній сторінці
+    if (screenState !== 'main') {
+      setIsTransitioning(true);
     }
     
-    // Move to intro screen
-    setScreenState('intro');
+    // Завантажуємо налаштування головної сторінки для перевірки autoStartAfterWelcome
+    const mainSettings = await indexedDBService.loadSettings('mainPageSettings');
+    const backgroundMusic = mainSettings?.audioSettings?.backgroundMusic;
+    
+    if (backgroundMusic?.enabled && backgroundMusic?.autoStartAfterWelcome) {
+      console.log('🎵 Index: Запуск постійної фонової музики після Welcome');
+      // Запускаємо фонову музику головної сторінки
+      if (backgroundMusic?.url) {
+        try {
+          await webAudioManager.loadAudio(backgroundMusic.url, 'background-music');
+          await webAudioManager.playAudio('background-music', {
+            loop: backgroundMusic.loop,
+            volume: backgroundMusic.volume
+          });
+          console.log('✅ Index: Фонова музика запущена після Welcome');
+        } catch (error) {
+          console.log('⚠️ Index: Не вдалося запустити фонову музику:', error);
+        }
+      }
+      
+      // Зупиняємо Welcome музику
+      const welcomeAudio = document.querySelectorAll('audio');
+      welcomeAudio.forEach(audio => {
+        if (!audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+          console.log('🔇 Index: Зупинено Welcome аудіо');
+        }
+      });
+    } else {
+      console.log('🎵 Index: Режим окремої музики - зупиняємо Welcome музику');
+      // Зупиняємо всю музику з Welcome Screen
+      const welcomeAudio = document.querySelectorAll('audio');
+      welcomeAudio.forEach(audio => {
+        if (!audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+          console.log('🔇 UnifiedPage: Зупинено Welcome аудіо');
+        }
+      });
+    }
+    
+    // Позначаємо що користувач вже взаємодіяв зі сторінкою
+    setUserInteracted(true);
+    
+    // Додаємо затримку для плавного переходу
+    setTimeout(() => {
+      setScreenState('intro');
+      // Приховуємо затемнення після переходу
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 200);
+    }, 600);
   };
 
   // Handle intro screen completion
-  const handleIntroComplete = () => {
+  const handleIntroComplete = async () => {
+    // Показуємо затемнення тільки якщо не на головній сторінці
+    if (screenState !== 'main') {
+      setIsTransitioning(true);
+    }
+    
+    // Завантажуємо налаштування головної сторінки для перевірки autoStartAfterWelcome
+    const mainSettings = await indexedDBService.loadSettings('mainPageSettings');
+    const backgroundMusic = mainSettings?.audioSettings?.backgroundMusic;
+    
+    if (backgroundMusic?.enabled && backgroundMusic?.autoStartAfterWelcome) {
+      console.log('🎵 Index: Режим постійної фонової музики - запускаємо фонову музику');
+      // Запускаємо фонову музику головної сторінки
+      if (backgroundMusic?.url) {
+        try {
+          await webAudioManager.loadAudio(backgroundMusic.url, 'background-music');
+          await webAudioManager.playAudio('background-music', {
+            loop: backgroundMusic.loop,
+            volume: backgroundMusic.volume
+          });
+          console.log('✅ Index: Фонова музика запущена після Intro');
+        } catch (error) {
+          console.log('⚠️ Index: Не вдалося запустити фонову музику:', error);
+        }
+      }
+      
+      // Зупиняємо Intro музику
+      const introAudio = document.querySelectorAll('audio');
+      introAudio.forEach(audio => {
+        if (!audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      });
+    } else {
+      console.log('🎵 Index: Режим окремої музики - зупиняємо Intro музику');
+      // Зупиняємо всю музику з Intro Screen (тільки один раз)
+      const introAudio = document.querySelectorAll('audio');
+      introAudio.forEach(audio => {
+        if (!audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      });
+    }
+    
     setTimeout(() => {
       setScreenState('main');
       hasInitialLoadCompleted = true; // Позначаємо, що початкове завантаження завершено
-    }, 300);
+      // Приховуємо затемнення після переходу
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 300);
+    }, 800); // Збільшуємо затримку для плавнішого переходу
   };
 
   // Fallback: Try to start audio on any user interaction (if not started yet)
   useEffect(() => {
     const handleFirstInteraction = async () => {
+      // Позначаємо що користувач взаємодіяв зі сторінкою
+      if (!userInteracted) {
+        setUserInteracted(true);
+      }
+      
       const hasCustomMusic = welcomeSettings?.hasMusic && welcomeSettings?.musicUrl;
       
       if (!hasCustomMusic && isLoaded && !canAutoPlay && !isPlaying && screenState !== 'welcome') {
@@ -211,15 +324,178 @@ const Index = () => {
         document.removeEventListener(event, handleFirstInteraction);
       });
     };
-  }, [isLoaded, canAutoPlay, isPlaying, play, screenState, welcomeSettings]);
+  }, [isLoaded, canAutoPlay, isPlaying, play, screenState, welcomeSettings, userInteracted]);
 
-  // Зупиняємо стару музику коли переходимо на головну сторінку
+  // НОВА ЛОГІКА МУЗИКИ: Залежить від налаштування autoStartAfterWelcome
   useEffect(() => {
-    if (screenState === 'main' && isPlaying) {
-      // Зупиняємо стару глобальну музику на головній сторінці
-      toggle(); // Це зупинить стару музику
-    }
-  }, [screenState, isPlaying, toggle]);
+    const handleMainScreenMusic = async () => {
+      if (screenState === 'main') {
+        // Завантажуємо налаштування головної сторінки
+        const mainSettings = await indexedDBService.loadSettings('mainPageSettings');
+        const backgroundMusic = mainSettings?.audioSettings?.backgroundMusic;
+        
+        if (backgroundMusic?.enabled && backgroundMusic?.autoStartAfterWelcome) {
+          console.log('🎵 Index: Режим постійної фонової музики увімкнено');
+          // Не зупиняємо стару музику, вона грає постійно
+        } else {
+          console.log('🎵 Index: Режим окремої музики для кожного екрану');
+          // Зупиняємо стару глобальну музику
+          if (isPlaying) {
+            toggle(); // Це зупинить стару музику
+          }
+        }
+        
+        // Гарантуємо що затемнення вимкнено на головній сторінці
+        if (isTransitioning) {
+          console.log('🛡️ Автоматично вимикаємо затемнення на головній сторінці');
+          setIsTransitioning(false);
+        }
+      }
+    };
+    
+    handleMainScreenMusic();
+  }, [screenState, isPlaying, toggle, isTransitioning]);
+
+  // 🎬 ЦЕНТРАЛІЗОВАНА МЕДІА ІНІЦІАЛІЗАЦІЯ для Unified Page
+  useEffect(() => {
+    const initializeAllMedia = async () => {
+      console.log('🎬 UnifiedPage: Початок централізованої ініціалізації медіа');
+      
+      // Завантажуємо всі налаштування одночасно
+      const [welcomeSettings, introSettings, mainSettings] = await Promise.all([
+        indexedDBService.loadSettings('welcomeSettings'),
+        indexedDBService.loadSettings('introSettings'), 
+        indexedDBService.loadSettings('mainPageSettings')
+      ]);
+      
+      const mediaPromises: Promise<void>[] = [];
+      
+      // Ініціалізуємо Welcome відео
+      if (welcomeSettings?.backgroundType === 'video' && welcomeSettings?.backgroundVideo) {
+        console.log('🎬 UnifiedPage: Попередньо завантажуємо Welcome відео');
+        mediaPromises.push(preloadVideo(welcomeSettings.backgroundVideo, 'welcome'));
+      }
+      
+      // Ініціалізуємо Intro відео
+      if (introSettings?.backgroundType === 'video' && introSettings?.backgroundVideo) {
+        console.log('🎬 UnifiedPage: Попередньо завантажуємо Intro відео');
+        mediaPromises.push(preloadVideo(introSettings.backgroundVideo, 'intro'));
+      }
+      
+      // Ініціалізуємо Main відео
+      if (mainSettings?.backgroundSettings?.backgroundType === 'video' && mainSettings?.backgroundSettings?.backgroundVideo) {
+        console.log('🎬 UnifiedPage: Попередньо завантажуємо Main відео');
+        mediaPromises.push(preloadVideo(mainSettings.backgroundSettings.backgroundVideo, 'main'));
+      }
+      
+      // Ініціалізуємо всі аудіо
+      if (welcomeSettings?.hasMusic && welcomeSettings?.musicUrl) {
+        console.log('🎵 UnifiedPage: Попередньо завантажуємо Welcome аудіо');
+        mediaPromises.push(preloadAudio(welcomeSettings.musicUrl, 'welcome'));
+      }
+      
+      if (introSettings?.hasMusic && introSettings?.musicUrl) {
+        console.log('🎵 UnifiedPage: Попередньо завантажуємо Intro аудіо');
+        mediaPromises.push(preloadAudio(introSettings.musicUrl, 'intro'));
+      }
+      
+      if (mainSettings?.backgroundSettings?.hasMusic && mainSettings?.backgroundSettings?.musicUrl) {
+        console.log('🎵 UnifiedPage: Попередньо завантажуємо Main аудіо');
+        mediaPromises.push(preloadAudio(mainSettings.backgroundSettings.musicUrl, 'main'));
+      }
+      
+      // Чекаємо завантаження всіх медіа
+      try {
+        await Promise.all(mediaPromises);
+        console.log('✅ UnifiedPage: Всі медіа успішно попередньо завантажені');
+      } catch (error) {
+        console.log('⚠️ UnifiedPage: Деякі медіа не завантажилися:', error);
+      }
+    };
+    
+    // Запускаємо ініціалізацію після монтування компонента
+    initializeAllMedia();
+  }, []);
+  
+  // Функція для попереднього завантаження відео
+  const preloadVideo = async (videoUrl: string, context: string): Promise<void> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.src = videoUrl;
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = 'auto';
+      video.style.display = 'none';
+      
+      // Додаємо мобільні атрибути
+      video.setAttribute('webkit-playsinline', 'true');
+      video.setAttribute('playsinline', 'true');
+      
+      const onLoad = () => {
+        console.log(`✅ UnifiedPage: ${context} відео завантажено:`, videoUrl);
+        video.removeEventListener('loadeddata', onLoad);
+        video.removeEventListener('error', onError);
+        resolve();
+      };
+      
+      const onError = () => {
+        console.log(`⚠️ UnifiedPage: ${context} відео не завантажилося:`, videoUrl);
+        video.removeEventListener('loadeddata', onLoad);
+        video.removeEventListener('error', onError);
+        resolve(); // Продовжуємо навіть при помилці
+      };
+      
+      video.addEventListener('loadeddata', onLoad);
+      video.addEventListener('error', onError);
+      
+      // Додаємо до DOM для завантаження
+      document.body.appendChild(video);
+      
+      // Видаляємо після завантаження
+      setTimeout(() => {
+        if (document.body.contains(video)) {
+          document.body.removeChild(video);
+        }
+      }, 5000);
+    });
+  };
+  
+  // Функція для попереднього завантаження аудіо
+  const preloadAudio = async (audioUrl: string, context: string): Promise<void> => {
+    return new Promise((resolve) => {
+      const audio = document.createElement('audio');
+      audio.src = audioUrl;
+      audio.preload = 'auto';
+      audio.style.display = 'none';
+      
+      const onLoad = () => {
+        console.log(`✅ UnifiedPage: ${context} аудіо завантажено:`, audioUrl);
+        audio.removeEventListener('loadeddata', onLoad);
+        audio.removeEventListener('error', onError);
+        resolve();
+      };
+      
+      const onError = () => {
+        console.log(`⚠️ UnifiedPage: ${context} аудіо не завантажилося:`, audioUrl);
+        audio.removeEventListener('loadeddata', onLoad);
+        audio.removeEventListener('error', onError);
+        resolve(); // Продовжуємо навіть при помилці
+      };
+      
+      audio.addEventListener('loadeddata', onLoad);
+      audio.addEventListener('error', onError);
+      
+      // Додаємо до DOM для завантаження
+      document.body.appendChild(audio);
+      
+      // Видаляємо після завантаження
+      setTimeout(() => {
+        if (document.body.contains(audio)) {
+          document.body.removeChild(audio);
+        }
+      }, 5000);
+    });
+  };
 
   const audioContextValue = {
     isPlaying,
@@ -230,30 +506,41 @@ const Index = () => {
 
   return (
     <AudioContext.Provider value={audioContextValue}>
-      <div className="w-full h-screen overflow-hidden bg-black">
-
+      <div className="w-full h-screen overflow-x-hidden lg:overflow-hidden" style={{ backgroundColor: screenState === 'main' ? 'transparent' : 'black' }}>
+        {/* 🎬 UNIFIED PAGE APPROACH - Всі компоненти рендеряться одночасно */}
+        {/* Welcome Screen - завжди рендериться, показується умовно */}
+        <WelcomeScreen 
+          visible={screenState === 'welcome' && !hasInitialLoadCompleted}
+          onComplete={handleWelcomeComplete}
+          isAudioLoaded={isLoaded}
+          settings={welcomeSettings}
+        />
         
-        <AnimatePresence mode="wait" initial={false}>
-          {screenState === 'welcome' && !hasInitialLoadCompleted && (
-            <WelcomeScreen 
-              key="welcome" 
-              onComplete={handleWelcomeComplete}
-              isAudioLoaded={isLoaded}
-              settings={welcomeSettings}
-            />
-          )}
-          
-          {screenState === 'intro' && !hasInitialLoadCompleted && (
-            <IntroScreen 
-              key="intro" 
-              onComplete={handleIntroComplete} 
-            />
-          )}
-          
-          {(screenState === 'main' || hasInitialLoadCompleted) && (
-            <MainScreen key="main" />
-          )}
-        </AnimatePresence>
+        {/* Intro Screen - завжди рендериться, показується умовно */}
+        <IntroScreen 
+          visible={screenState === 'intro' && !hasInitialLoadCompleted}
+          onComplete={handleIntroComplete} 
+        />
+        
+        {/* Main Screen - завжди рендериться, показується умовно */}
+        <MainScreen 
+          visible={screenState === 'main' || hasInitialLoadCompleted}
+          userInteracted={userInteracted} 
+        />
+        
+        {/* Затемнення під час переходів - повністю чорне */}
+        {isTransitioning && screenState !== 'main' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="fixed inset-0 bg-black z-[100] pointer-events-none"
+            style={{
+              backgroundColor: '#000000'
+            }}
+          />
+        )}
       </div>
     </AudioContext.Provider>
   );

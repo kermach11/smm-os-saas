@@ -2,26 +2,66 @@
 class BackendService {
   private siteId: string;
   private baseUrl: string;
+  private isLocalDev: boolean;
 
   constructor() {
     // Генеруємо унікальний ID сайту на основі домену
     this.siteId = this.generateSiteId();
     this.baseUrl = '/.netlify/functions';
+    this.isLocalDev = this.checkIfLocalDev();
+  }
+
+  // Перевірка чи це локальна розробка
+  private checkIfLocalDev(): boolean {
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    return hostname === 'localhost' || 
+           hostname === '127.0.0.1' || 
+           hostname.includes('192.168') || 
+           port === '5173' || 
+           port === '3000';
   }
 
   // Генерація унікального ID сайту
   private generateSiteId(): string {
     const domain = window.location.hostname;
     // Для localhost використовуємо унікальний ідентифікатор
-    if (domain === 'localhost' || domain === '127.0.0.1') {
-      return `dev-${Date.now()}`;
+    if (domain === 'localhost' || domain === '127.0.0.1' || domain.includes('192.168')) {
+      return domain.replace(/\./g, '-');
     }
     return domain.replace(/\./g, '-');
+  }
+
+  // Перевірка авторизації адміна
+  private isAdminAuthenticated(): boolean {
+    try {
+      const sessionData = localStorage.getItem('adminSession');
+      if (!sessionData) return false;
+      
+      const session = JSON.parse(sessionData);
+      const now = new Date().getTime();
+      
+      return session.expiry > now;
+    } catch {
+      return false;
+    }
   }
 
   // Збереження налаштувань на сервері
   async saveSettings(settingsType: string, data: any): Promise<boolean> {
     try {
+      // В режимі локальної розробки не використовуємо backend
+      if (this.isLocalDev) {
+        // Тихо повертаємо true без логування
+        return true;
+      }
+
+      // Перевіряємо авторизацію для серверного збереження
+      if (!this.isAdminAuthenticated()) {
+        console.warn(`🔒 BackendService: Неавторизований доступ до збереження ${settingsType}`);
+        return false;
+      }
+      
       console.log(`💾 BackendService: Збереження ${settingsType} для сайту ${this.siteId}`);
       
       const response = await fetch(`${this.baseUrl}/save-settings`, {
@@ -53,6 +93,12 @@ class BackendService {
   // Завантаження налаштувань з сервера
   async loadSettings(settingsType: string): Promise<any | null> {
     try {
+      // В режимі локальної розробки не використовуємо backend
+      if (this.isLocalDev) {
+        // Тихо повертаємо null без логування
+        return null;
+      }
+
       console.log(`🔄 BackendService: Завантаження ${settingsType} для сайту ${this.siteId}`);
       
       const response = await fetch(
@@ -82,6 +128,12 @@ class BackendService {
   // Перевірка доступності backend сервісу
   async checkConnection(): Promise<boolean> {
     try {
+      // В режимі локальної розробки завжди повертаємо false
+      if (this.isLocalDev) {
+        // Тихо повертаємо false без логування
+        return false;
+      }
+
       const response = await fetch(`${this.baseUrl}/load-settings?siteId=test&settingsType=test`);
       return response.status !== 404; // 404 означає що функція не знайдена
     } catch (error) {
@@ -91,16 +143,23 @@ class BackendService {
   }
 
   // Отримання інформації про сайт
-  getSiteInfo(): { siteId: string; domain: string } {
+  getSiteInfo(): { siteId: string; domain: string; isLocalDev: boolean } {
     return {
       siteId: this.siteId,
-      domain: window.location.hostname
+      domain: window.location.hostname,
+      isLocalDev: this.isLocalDev
     };
   }
 
   // Синхронізація локальних даних з сервером
   async syncWithServer(settingsType: string, localData: any): Promise<any> {
     try {
+      // В режимі локальної розробки завжди використовуємо локальні дані
+      if (this.isLocalDev) {
+        console.log(`🔧 BackendService: Локальна розробка - використовуємо тільки локальні дані для ${settingsType}`);
+        return localData;
+      }
+
       // Спочатку завантажуємо серверні дані
       const serverData = await this.loadSettings(settingsType);
       

@@ -34,6 +34,40 @@ const SplineAnimation: React.FC<SplineAnimationProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isPreloaded, setIsPreloaded] = useState(false);
   const [splineOpacity, setSplineOpacity] = useState(0);
+  const [containerReady, setContainerReady] = useState(false);
+
+  // Перевірка розмірів контейнера
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const checkContainerSize = () => {
+      const container = containerRef.current;
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        const hasValidSize = rect.width > 0 && rect.height > 0;
+        setContainerReady(hasValidSize);
+        
+        if (!hasValidSize) {
+          console.log('🔍 SplineAnimation: Контейнер ще не має валідних розмірів, очікуємо...');
+        }
+      }
+    };
+
+    // Перевіряємо розміри одразу
+    checkContainerSize();
+
+    // Також перевіряємо через ResizeObserver
+    const resizeObserver = new ResizeObserver(checkContainerSize);
+    resizeObserver.observe(containerRef.current);
+
+    // Fallback через setTimeout якщо ResizeObserver не спрацював
+    const timeout = setTimeout(checkContainerSize, 100);
+
+    return () => {
+      resizeObserver.disconnect();
+      clearTimeout(timeout);
+    };
+  }, []);
 
   // 🚀 Ultra-optimized Preloading з жорстким кешуванням
   useEffect(() => {
@@ -185,20 +219,39 @@ const SplineAnimation: React.FC<SplineAnimationProps> = ({
     return classes;
   };
 
-
-
   if (!sceneUrl && !embedCode && !localFile) return null;
 
-  // 🚀 Офіційний Spline компонент з оптимізаціями
-  if (method === 'component' && sceneUrl && sceneUrl.includes('.splinecode')) {
+  // Не рендеримо Spline компонент поки контейнер не готовий
+  if (!containerReady && method === 'component') {
     return (
       <div 
+        ref={containerRef}
         className={`${getPositionClasses()} ${className}`}
         style={{
           opacity: opacity,
           transform: `scale(${scale})`,
           transformOrigin: 'center',
-          pointerEvents: controls ? 'auto' : 'none'
+          pointerEvents: 'none',
+          minWidth: '100%',
+          minHeight: '100%'
+        }}
+      />
+    );
+  }
+
+  // 🚀 Офіційний Spline компонент з оптимізаціями
+  if (method === 'component' && sceneUrl && sceneUrl.includes('.splinecode')) {
+    return (
+      <div 
+        ref={containerRef}
+        className={`${getPositionClasses()} ${className}`}
+        style={{
+          opacity: opacity,
+          transform: `scale(${scale})`,
+          transformOrigin: 'center',
+          pointerEvents: controls ? 'auto' : 'none',
+          minWidth: '100%',
+          minHeight: '100%'
         }}
       >
         <Spline 
@@ -206,6 +259,8 @@ const SplineAnimation: React.FC<SplineAnimationProps> = ({
           style={{ 
             width: '100%', 
             height: '100%',
+            minWidth: '100%',
+            minHeight: '100%',
             // 🎯 CSS оптимізації для плавності + швидкий старт
             opacity: splineOpacity,
             transition: 'opacity 1.2s ease-out',
@@ -227,7 +282,6 @@ const SplineAnimation: React.FC<SplineAnimationProps> = ({
           // 🚀 Performance оптимізації
           renderOnDemand={false} // Завжди рендерити для кращої performance
         />
-
       </div>
     );
   }
@@ -236,12 +290,15 @@ const SplineAnimation: React.FC<SplineAnimationProps> = ({
   if (method === 'local' && localFile) {
     return (
       <div 
+        ref={containerRef}
         className={`${getPositionClasses()} ${className}`}
         style={{
           opacity: opacity,
           transform: `scale(${scale})`,
           transformOrigin: 'center',
-          pointerEvents: controls ? 'auto' : 'none'
+          pointerEvents: controls ? 'auto' : 'none',
+          minWidth: '100%',
+          minHeight: '100%'
         }}
       >
         <Spline 
@@ -249,6 +306,8 @@ const SplineAnimation: React.FC<SplineAnimationProps> = ({
           style={{ 
             width: '100%', 
             height: '100%',
+            minWidth: '100%',
+            minHeight: '100%',
             willChange: 'transform',
             backfaceVisibility: 'hidden'
           }}
@@ -271,6 +330,8 @@ const SplineAnimation: React.FC<SplineAnimationProps> = ({
         transform: `scale(${scale})`,
         transformOrigin: 'center',
         pointerEvents: controls ? 'auto' : 'none',
+        minWidth: '100%',
+        minHeight: '100%',
         // 🎯 CSS оптимізації
         willChange: 'transform',
         backfaceVisibility: 'hidden'

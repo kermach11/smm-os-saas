@@ -14,7 +14,20 @@ class SyncService {
   ];
 
   constructor() {
+    // ⚠️ PRODUCTION FIX: Відключаємо синхронізацію на HTTPS (Netlify)
+    if (window.location.protocol === 'https:' && !this.isLocalDevelopment()) {
+      console.log('🔒 SyncService: Відключено на HTTPS продакшені (запобігає Mixed Content помилкам)');
+      return;
+    }
+    
     this.setupMessageListener();
+  }
+
+  // Перевірка чи це локальна розробка
+  private isLocalDevelopment(): boolean {
+    return window.location.hostname === 'localhost' || 
+           window.location.hostname === '127.0.0.1' || 
+           window.location.hostname.startsWith('192.168.');
   }
 
   private setupMessageListener() {
@@ -82,6 +95,12 @@ class SyncService {
 
   // Метод для синхронізації налаштувань на інші сайти
   async syncSettings(settingsKey: string, data: any) {
+    // ⚠️ PRODUCTION FIX: Пропускаємо синхронізацію на HTTPS продакшені
+    if (window.location.protocol === 'https:' && !this.isLocalDevelopment()) {
+      console.log(`🔒 SyncService: Синхронізація ${settingsKey} пропущена (HTTPS продакшен)`);
+      return;
+    }
+
     this.targetOrigins.forEach(origin => {
       if (origin !== window.location.origin) {
         try {
@@ -177,6 +196,12 @@ class SyncService {
   // Автоматична синхронізація при зміні налаштувань (для адмін режиму)
   enableAutoSync() {
     if (!this.isAdminMode()) return;
+
+    // ⚠️ PRODUCTION FIX: Відключаємо автосинхронізацію на HTTPS продакшені
+    if (window.location.protocol === 'https:' && !this.isLocalDevelopment()) {
+      console.log('🔒 SyncService: Автосинхронізація відключена (HTTPS продакшен)');
+      return;
+    }
 
     // Слухаємо події оновлення налаштувань
     ['mainPageSettingsUpdated', 'introSettingsUpdated', 'welcomeSettingsUpdated'].forEach(eventName => {

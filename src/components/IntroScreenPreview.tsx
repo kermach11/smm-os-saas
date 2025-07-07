@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { motion, useAnimation } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import indexedDBService from '../services/IndexedDBService';
 import SplineAnimation from './SplineAnimation';
+import { responsiveFontSize } from '../lib/utils';
 
 
 interface IntroScreenPreviewProps {
@@ -16,6 +17,7 @@ interface IntroSettings {
   buttonText: string;
   buttonUrl: string;
   logoUrl: string;
+  logoSize?: number;
   
   // Типографіка
   titleFontSize: number;
@@ -31,13 +33,14 @@ interface IntroSettings {
   subtitleFontStyle: string;
   descriptionFontStyle: string;
   
-  // Анімації
-  titleAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow';
-  subtitleAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow';
-  descriptionAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow';
-  titleExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve';
-  subtitleExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve';
-  descriptionExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve';
+  // Анімації - вхідні
+  titleAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow' | 'cinematicZoom';
+  subtitleAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow' | 'cinematicZoom';
+  descriptionAnimation: 'none' | 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'zoomOut' | 'rotateIn' | 'bounce' | 'typewriter' | 'glow' | 'cinematicZoom';
+  // Анімації - вихідні
+  titleExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve' | 'cinematicZoomOut';
+  subtitleExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve' | 'cinematicZoomOut';
+  descriptionExitAnimation: 'none' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'zoomOut' | 'zoomIn' | 'rotateOut' | 'dissolve' | 'cinematicZoomOut';
   
   // Тіні та ефекти
   title3DDepth: number;
@@ -186,10 +189,11 @@ const defaultSettings: IntroSettings = {
   subtitleFontStyle: 'normal',
   descriptionFontStyle: 'normal',
   
-  // Анімації
+  // Анімації - вхідні
   titleAnimation: 'fadeIn',
-  subtitleAnimation: 'slideUp',
+  subtitleAnimation: 'slideDown',
   descriptionAnimation: 'fadeIn',
+  // Анімації - вихідні
   titleExitAnimation: 'fadeOut',
   subtitleExitAnimation: 'slideDown',
   descriptionExitAnimation: 'fadeOut',
@@ -319,10 +323,9 @@ const defaultSettings: IntroSettings = {
 };
 
 const IntroScreenPreview = ({ className }: IntroScreenPreviewProps) => {
-  const [step, setStep] = useState<number>(0);
   const [introSettings, setIntroSettings] = useState<IntroSettings>(defaultSettings);
   const [windowWidth, setWindowWidth] = useState<number>(1200); // Default desktop width
-  const controls = useAnimation();
+  const [animationKey, setAnimationKey] = useState(0);
 
   // Детекція розміру екрану
   useEffect(() => {
@@ -357,6 +360,7 @@ const IntroScreenPreview = ({ className }: IntroScreenPreviewProps) => {
     
     // Debounced слухач для оновлення даних з конструктора інтро
     const handleIntroSettingsUpdate = (event: CustomEvent) => {
+
       const newSettings = event.detail;
       
       // Очищуємо попередній timeout
@@ -432,93 +436,7 @@ const IntroScreenPreview = ({ className }: IntroScreenPreviewProps) => {
     }
   };
 
-  // Генерація варіантів анімації для кожного елементу
-  const getAnimationVariants = (animationType: string, exitAnimationType: string) => {
-    const baseVariants: any = {
-      initial: { opacity: 0 },
-      animate: { opacity: 1 },
-      exit: { opacity: 0 }
-    };
 
-    // Анімації входу
-    switch (animationType) {
-      case 'slideUp':
-        baseVariants.initial = { opacity: 0, y: 50 };
-        baseVariants.animate = { opacity: 1, y: 0 };
-        break;
-      case 'slideDown':
-        baseVariants.initial = { opacity: 0, y: -50 };
-        baseVariants.animate = { opacity: 1, y: 0 };
-        break;
-      case 'slideLeft':
-        baseVariants.initial = { opacity: 0, x: 50 };
-        baseVariants.animate = { opacity: 1, x: 0 };
-        break;
-      case 'slideRight':
-        baseVariants.initial = { opacity: 0, x: -50 };
-        baseVariants.animate = { opacity: 1, x: 0 };
-        break;
-      case 'zoomIn':
-        baseVariants.initial = { opacity: 0, scale: 0.8 };
-        baseVariants.animate = { opacity: 1, scale: 1 };
-        break;
-      case 'zoomOut':
-        baseVariants.initial = { opacity: 0, scale: 1.2 };
-        baseVariants.animate = { opacity: 1, scale: 1 };
-        break;
-      case 'rotateIn':
-        baseVariants.initial = { opacity: 0, rotate: -180 };
-        baseVariants.animate = { opacity: 1, rotate: 0 };
-        break;
-      case 'bounce':
-        baseVariants.initial = { opacity: 0, y: -100 };
-        baseVariants.animate = { opacity: 1, y: 0 };
-        break;
-      case 'glow':
-        baseVariants.initial = { opacity: 0, filter: 'brightness(0.5)' };
-        baseVariants.animate = { opacity: 1, filter: 'brightness(1.2)' };
-        break;
-      case 'fadeIn':
-      default:
-        baseVariants.initial = { opacity: 0 };
-        baseVariants.animate = { opacity: 1 };
-        break;
-    }
-
-    // Анімації виходу
-    switch (exitAnimationType) {
-      case 'slideUp':
-        baseVariants.exit = { opacity: 0, y: -50 };
-        break;
-      case 'slideDown':
-        baseVariants.exit = { opacity: 0, y: 50 };
-        break;
-      case 'slideLeft':
-        baseVariants.exit = { opacity: 0, x: -50 };
-        break;
-      case 'slideRight':
-        baseVariants.exit = { opacity: 0, x: 50 };
-        break;
-      case 'zoomOut':
-        baseVariants.exit = { opacity: 0, scale: 0.8 };
-        break;
-      case 'zoomIn':
-        baseVariants.exit = { opacity: 0, scale: 1.2 };
-        break;
-      case 'rotateOut':
-        baseVariants.exit = { opacity: 0, rotate: 180 };
-        break;
-      case 'dissolve':
-        baseVariants.exit = { opacity: 0, filter: 'blur(10px)' };
-        break;
-      case 'fadeOut':
-      default:
-        baseVariants.exit = { opacity: 0 };
-        break;
-    }
-
-    return baseVariants;
-  };
 
   // Генерація стилів тексту з тінями та ефектами
   const getTextStyle = (
@@ -530,7 +448,7 @@ const IntroScreenPreview = ({ className }: IntroScreenPreviewProps) => {
       fontFamily: introSettings[`${element}FontFamily`],
       fontWeight: introSettings[`${element}FontWeight`],
       fontStyle: introSettings[`${element}FontStyle`],
-      fontSize: `${responsiveSettings[`${element}FontSize`]}px`,
+      fontSize: responsiveFontSize(responsiveSettings[`${element}FontSize`]),
       lineHeight: responsiveSettings[`${element}LineHeight`],
       letterSpacing: `${responsiveSettings[`${element}LetterSpacing`]}px`,
       marginBottom: `${responsiveSettings[`${element}MarginBottom`]}px`,
@@ -557,61 +475,187 @@ const IntroScreenPreview = ({ className }: IntroScreenPreviewProps) => {
     return baseStyle;
   };
 
-  // Анімаційна послідовність для превью
+  // useEffect для перезапуску анімацій при зміні налаштувань
   useEffect(() => {
-    let timeoutIds: NodeJS.Timeout[] = [];
-    let isActive = true;
+    setAnimationKey(prev => prev + 1);
+  }, [introSettings.titleAnimation, introSettings.subtitleAnimation, introSettings.descriptionAnimation, introSettings.titleExitAnimation, introSettings.subtitleExitAnimation, introSettings.descriptionExitAnimation, introSettings.animationDuration, introSettings.animationDelay]);
+
+  // useEffect для циклічного показу анімацій вхід -> показ -> вихід -> повтор
+  useEffect(() => {
+    const enterDuration = (introSettings.animationDuration || 800);
+    const maxDelay = (introSettings.animationDelay || 200) * 2; // Максимальна затримка для опису
+    const showTime = 800; // 0.8 секунди показу після входу
+    const totalCycleTime = enterDuration + maxDelay + showTime + enterDuration + 500; // Вхід + показ + вихід + пауза
+
+    const timer = setTimeout(() => {
+      setAnimationKey(prev => prev + 1); // Перезапускаємо цикл
+    }, totalCycleTime);
+
+    return () => clearTimeout(timer);
+  }, [animationKey, introSettings.animationDuration, introSettings.animationDelay]);
+
+  // Функція для отримання варіантів анімацій
+  const getAnimationVariants = (element: 'title' | 'subtitle' | 'description') => {
+    const enterAnimation = element === 'title' ? introSettings.titleAnimation :
+                          element === 'subtitle' ? introSettings.subtitleAnimation :
+                          introSettings.descriptionAnimation;
     
-    const runPreviewAnimation = async () => {
-      if (!isActive) return;
-      
-      try {
-        // Анімація відображення логотипу та заголовку
-        await controls.start({
-          opacity: 1,
-          scale: 1,
-          transition: { 
-            duration: introSettings.animationDuration / 1000, 
-            delay: introSettings.animationDelay / 1000,
-            ease: [0.25, 0.46, 0.45, 0.94] 
+    const exitAnimation = element === 'title' ? introSettings.titleExitAnimation :
+                         element === 'subtitle' ? introSettings.subtitleExitAnimation :
+                         introSettings.descriptionExitAnimation;
+    
+    console.log(`🎭 IntroScreenPreview: getAnimationVariants для ${element}:`, {
+      enterAnimation,
+      exitAnimation,
+      settingsAnimations: {
+        titleAnimation: introSettings.titleAnimation,
+        subtitleAnimation: introSettings.subtitleAnimation,
+        descriptionAnimation: introSettings.descriptionAnimation,
+        titleExitAnimation: introSettings.titleExitAnimation,
+        subtitleExitAnimation: introSettings.subtitleExitAnimation,
+        descriptionExitAnimation: introSettings.descriptionExitAnimation
+      }
+    });
+
+    // Якщо анімація 'none' або не задана, повертаємо статичну анімацію
+    if (!enterAnimation || enterAnimation === 'none') {
+      console.log(`🎭 IntroScreenPreview: No animation for ${element}, returning static`);
+      return {
+        initial: { opacity: 1 },
+        animate: { opacity: 1 },
+        exit: { opacity: 1 },
+        transition: { duration: 0 }
+      };
+    }
+
+    const duration = (introSettings.animationDuration || 800) / 1000;
+    const delay = (introSettings.animationDelay || 200) / 1000;
+
+    const variants: any = {
+      hidden: { opacity: 0 },
+      visible: { opacity: 1 },
+      exit: { opacity: 0 }
+    };
+
+    // Налаштування входу
+    switch (enterAnimation) {
+      case 'fadeIn':
+        variants.hidden = { opacity: 0 };
+        variants.visible = { opacity: 1 };
+        break;
+      case 'slideUp':
+        variants.hidden = { opacity: 0, y: 50 };
+        variants.visible = { opacity: 1, y: 0 };
+        break;
+      case 'slideDown':
+        variants.hidden = { opacity: 0, y: -50 };
+        variants.visible = { opacity: 1, y: 0 };
+        break;
+      case 'slideLeft':
+        variants.hidden = { opacity: 0, x: 50 };
+        variants.visible = { opacity: 1, x: 0 };
+        break;
+      case 'slideRight':
+        variants.hidden = { opacity: 0, x: -50 };
+        variants.visible = { opacity: 1, x: 0 };
+        break;
+      case 'zoomIn':
+        variants.hidden = { opacity: 0, scale: 0.8 };
+        variants.visible = { opacity: 1, scale: 1 };
+        break;
+      case 'zoomOut':
+        variants.hidden = { opacity: 0, scale: 1.2 };
+        variants.visible = { opacity: 1, scale: 1 };
+        break;
+      case 'rotateIn':
+        variants.hidden = { opacity: 0, rotate: -180 };
+        variants.visible = { opacity: 1, rotate: 0 };
+        break;
+      case 'bounce':
+        variants.hidden = { opacity: 0, y: 50 };
+        variants.visible = { 
+          opacity: 1, 
+          y: 0,
+          transition: {
+            type: 'spring',
+            stiffness: 300,
+            damping: 20
           }
-        });
-        
-        if (!isActive) return;
-        
-        // Показуємо підзаголовок
-        timeoutIds.push(setTimeout(() => {
-          if (!isActive) return;
-          setStep(1);
-          
-          // Показуємо опис
-          timeoutIds.push(setTimeout(() => {
-            if (!isActive) return;
-            setStep(2);
-            
-            // Перезапускаємо анімацію
-            timeoutIds.push(setTimeout(() => {
-              if (!isActive) return;
-              setStep(0);
-              controls.set({ opacity: 0, scale: 0.9 });
-              runPreviewAnimation();
-            }, 3000));
-          }, 800));
-        }, 600));
-      } catch (error) {
-        console.error('Animation error:', error);
+        };
+        break;
+      case 'typewriter':
+        variants.hidden = { opacity: 0, width: 0 };
+        variants.visible = { opacity: 1, width: 'auto' };
+        break;
+      case 'glow':
+        variants.hidden = { opacity: 0, textShadow: '0 0 0px rgba(255,255,255,0)' };
+        variants.visible = { opacity: 1, textShadow: '0 0 20px rgba(255,255,255,0.8)' };
+        break;
+      case 'cinematicZoom':
+        variants.hidden = { opacity: 0, scale: 1.5, filter: 'blur(10px)' };
+        variants.visible = { opacity: 1, scale: 1, filter: 'blur(0px)' };
+        break;
+      default:
+        variants.hidden = { opacity: 0 };
+        variants.visible = { opacity: 1 };
+    }
+
+    // Налаштування виходу
+    if (exitAnimation && exitAnimation !== 'none') {
+      switch (exitAnimation) {
+        case 'fadeOut':
+          variants.exit = { opacity: 0 };
+          break;
+        case 'slideUp':
+          variants.exit = { opacity: 0, y: -50 };
+          break;
+        case 'slideDown':
+          variants.exit = { opacity: 0, y: 50 };
+          break;
+        case 'slideLeft':
+          variants.exit = { opacity: 0, x: -50 };
+          break;
+        case 'slideRight':
+          variants.exit = { opacity: 0, x: 50 };
+          break;
+        case 'zoomOut':
+          variants.exit = { opacity: 0, scale: 0.8 };
+          break;
+        case 'zoomIn':
+          variants.exit = { opacity: 0, scale: 1.2 };
+          break;
+        case 'rotateOut':
+          variants.exit = { opacity: 0, rotate: 180 };
+          break;
+        case 'dissolve':
+          variants.exit = { opacity: 0, filter: 'blur(10px)' };
+          break;
+        case 'cinematicZoomOut':
+          variants.exit = { opacity: 0, scale: 1.5, filter: 'blur(10px)' };
+          break;
+        default:
+          variants.exit = { opacity: 0 };
+      }
+    }
+
+    const animationConfig = {
+      initial: 'hidden',
+      animate: 'visible',
+      exit: 'exit',
+      variants,
+      transition: {
+        duration,
+        delay: delay * (element === 'title' ? 0 : element === 'subtitle' ? 1 : 2),
+        type: enterAnimation === 'bounce' ? 'spring' : 'tween',
+        stiffness: enterAnimation === 'bounce' ? 300 : undefined,
+        damping: enterAnimation === 'bounce' ? 20 : undefined
       }
     };
+
+    console.log(`🎭 IntroScreenPreview: Animation config for ${element}:`, animationConfig);
     
-    runPreviewAnimation();
-    
-    // Cleanup function
-    return () => {
-      isActive = false;
-      timeoutIds.forEach(id => clearTimeout(id));
-      controls.stop();
-    };
-  }, [controls, introSettings]);
+    return animationConfig;
+  };
 
   const responsiveSettings = getResponsiveSettings();
 
@@ -633,6 +677,10 @@ const IntroScreenPreview = ({ className }: IntroScreenPreviewProps) => {
         marginBottom: `${responsiveSettings.containerMarginBottom}px`
       }}
     >
+      {/* Індикатор анімації */}
+      <div className="absolute top-2 right-2 z-50 bg-black/50 text-white text-xs px-2 py-1 rounded">
+        🎬 Preview
+      </div>
       {/* Background video */}
       {introSettings.backgroundType === 'video' && introSettings.backgroundVideo && (
         <video
@@ -737,91 +785,75 @@ const IntroScreenPreview = ({ className }: IntroScreenPreviewProps) => {
           <motion.div
             className="flex flex-col items-center text-center"
             initial={{ opacity: 0, scale: 0.9 }}
-            animate={controls}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
           >
             {/* Logo */}
             {introSettings.logoUrl && (
-              <motion.img
-                src={introSettings.logoUrl}
-                alt="Logo"
-                className="w-12 h-12 object-contain mb-4"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-              />
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={`logo-${animationKey}`}
+                  src={introSettings.logoUrl}
+                  alt="Logo"
+                  className="w-auto h-auto object-contain mb-4"
+                  style={{ 
+                    maxWidth: `${introSettings.logoSize || 96}px`, 
+                    maxHeight: `${introSettings.logoSize || 96}px`,
+                    width: 'auto',
+                    height: 'auto'
+                  }}
+                  {...getAnimationVariants('title')}
+                />
+              </AnimatePresence>
             )}
 
             {/* Title */}
-            <motion.h1 
-              style={getTextStyle('title', responsiveSettings)}
-              className="font-bold tracking-tighter drop-shadow-lg"
-              variants={getAnimationVariants(introSettings.titleAnimation, introSettings.titleExitAnimation)}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ 
-                duration: introSettings.animationDuration / 1000, 
-                ease: [0.25, 0.46, 0.45, 0.94] 
-              }}
-            >
-              {introSettings.title}
-            </motion.h1>
+            <AnimatePresence mode="wait">
+              <motion.h1
+                key={`title-${animationKey}`}
+                style={getTextStyle('title', responsiveSettings)}
+                className="font-bold tracking-tighter drop-shadow-lg"
+                {...getAnimationVariants('title')}
+              >
+                {introSettings.title}
+              </motion.h1>
+            </AnimatePresence>
             
             {/* Subtitle */}
-            <motion.h2 
-              style={getTextStyle('subtitle', responsiveSettings)}
-              className="tracking-tight drop-shadow-md"
-              variants={getAnimationVariants(introSettings.subtitleAnimation, introSettings.subtitleExitAnimation)}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ 
-                duration: introSettings.animationDuration / 1000, 
-                delay: 0.2,
-                ease: [0.25, 0.46, 0.45, 0.94] 
-              }}
-            >
-              {introSettings.subtitle}
-            </motion.h2>
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={`subtitle-${animationKey}`}
+                style={getTextStyle('subtitle', responsiveSettings)}
+                className="tracking-tight drop-shadow-md"
+                {...getAnimationVariants('subtitle')}
+              >
+                {introSettings.subtitle}
+              </motion.p>
+            </AnimatePresence>
             
             {/* Description */}
-            {step >= 1 && (
+            <AnimatePresence mode="wait">
               <motion.p
+                key={`description-${animationKey}`}
                 style={getTextStyle('description', responsiveSettings)}
                 className="max-w-md text-center drop-shadow-md opacity-80"
-                variants={getAnimationVariants(introSettings.descriptionAnimation, introSettings.descriptionExitAnimation)}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ 
-                  duration: introSettings.animationDuration / 1000, 
-                  delay: 0.4,
-                  ease: [0.25, 0.46, 0.45, 0.94] 
-                }}
+                {...getAnimationVariants('description')}
               >
                 {introSettings.description}
               </motion.p>
-            )}
+            </AnimatePresence>
             
             {/* Decorative line */}
-            {step >= 2 && (
+            <AnimatePresence mode="wait">
               <motion.div
+                key={`line-${animationKey}`}
                 className="w-[60px] h-[2px] rounded-full mt-4 mb-1"
                 style={{ 
                   background: `linear-gradient(to right, ${introSettings.textColor}, ${introSettings.textColor}70)` 
                 }}
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ 
-                  width: 60, 
-                  opacity: 1,
-                  transition: { 
-                    duration: 0.6, 
-                    ease: [0.1, 0.4, 0.2, 1.0], 
-                    delay: 0.1 
-                  }
-                }}
+                {...getAnimationVariants('description')}
               />
-            )}
+            </AnimatePresence>
           </motion.div>
         </div>
       </motion.div>

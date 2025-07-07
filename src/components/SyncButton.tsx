@@ -126,13 +126,13 @@ const SyncButton: React.FC<SyncButtonProps> = ({ className = '' }) => {
         }
 
         .sync-button:hover:not(:disabled) {
-          transform: translateY(-2px);
+          transform: translateY(-2px) scale(1.05);
           box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
           background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
         }
 
         .sync-button:active:not(:disabled) {
-          transform: translateY(0px);
+          transform: translateY(0px) scale(1.02);
           box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
         }
 

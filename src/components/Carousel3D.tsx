@@ -16,6 +16,7 @@ interface Carousel3DProps {
   onHoverSound?: () => void;
   onClickSound?: () => void;
   onTransitionSound?: () => void;
+  onActiveIndexChange?: (index: number) => void;
 }
 
 const Carousel3D = ({ 
@@ -29,7 +30,8 @@ const Carousel3D = ({
   accentColor = '#3b82f6',
   onHoverSound,
   onClickSound,
-  onTransitionSound
+  onTransitionSound,
+  onActiveIndexChange
 }: Carousel3DProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
@@ -391,26 +393,28 @@ const Carousel3D = ({
     setActiveIndex(newIndex);
     setExpandedCard(null);
     onTransitionSound?.();
+    onActiveIndexChange?.(newIndex);
     
     // Відстежуємо навігацію каруселі
     const nextItem = items[newIndex];
     if (nextItem) {
       trackClick('#carousel-next', `Next to ${nextItem.title} - Navigation`);
     }
-  }, [activeIndex, items, onTransitionSound, trackClick]);
+  }, [activeIndex, items, onTransitionSound, onActiveIndexChange, trackClick]);
 
   const goToPrev = useCallback(() => {
     const newIndex = (activeIndex - 1 + items.length) % items.length;
     setActiveIndex(newIndex);
     setExpandedCard(null);
     onTransitionSound?.();
+    onActiveIndexChange?.(newIndex);
     
     // Відстежуємо навігацію каруселі
     const prevItem = items[newIndex];
     if (prevItem) {
       trackClick('#carousel-prev', `Previous to ${prevItem.title} - Navigation`);
     }
-  }, [activeIndex, items, onTransitionSound, trackClick]);
+  }, [activeIndex, items, onTransitionSound, onActiveIndexChange, trackClick]);
 
   const handleItemClick = useCallback((index: number) => {
     // Don't handle click if we were dragging
@@ -434,8 +438,9 @@ const Carousel3D = ({
     } else {
       setActiveIndex(index);
       setExpandedCard(null);
+      onActiveIndexChange?.(index);
     }
-  }, [activeIndex, expandedCard, isDragging, onClickSound, items, trackClick]);
+  }, [activeIndex, expandedCard, isDragging, onClickSound, items, trackClick, onActiveIndexChange]);
 
   const handleCTAClick = useCallback((item: CarouselItem, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -882,43 +887,7 @@ const Carousel3D = ({
             </div>
           </div>
           
-          {/* Simple dot indicators з покращеним центруванням */}
-          <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-1/2 transform -translate-x-1/2 z-10">
-            <div className="flex items-center justify-center space-x-2">
-              {items.map((item, index) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveIndex(index);
-                    setExpandedCard(null);
-                    onClickSound?.();
-                    onTransitionSound?.();
-                  }}
-                  onMouseEnter={onHoverSound}
-                  className={`w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 rounded-full smooth-transition ${
-                    index === activeIndex 
-                      ? 'bg-white scale-125' 
-                      : 'bg-white/50 hover:bg-white/70'
-                  }`}
-                  style={{
-                    boxShadow: index === activeIndex 
-                      ? '0 2px 8px rgba(0,0,0,0.3)' 
-                      : '0 1px 4px rgba(0,0,0,0.2)'
-                  }}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
-          </div>
 
-          {/* Swipe hint для мобільних користувачів з покращеним центруванням */}
-          <div className="absolute bottom-16 sm:bottom-20 lg:bottom-24 left-1/2 transform -translate-x-1/2 z-10 sm:hidden">
-            <div className="flex items-center justify-center space-x-2 text-white/60 text-xs px-4 py-2 rounded-full bg-black/20 backdrop-blur-sm">
-              <span>←</span>
-              <span>Гортайте пальцем</span>
-              <span>→</span>
-            </div>
-          </div>
         </>
       )}
     </div>

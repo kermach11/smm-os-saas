@@ -1,8 +1,64 @@
+/* CSS Reset для кращої сумісності браузерів */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Попередження браузерного zoom та scroll проблем */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Видаляємо фіксовані розміри для root */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Responsive зображення */
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive текст */
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Touch optimization для мобільних */
+button, a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Попередження focus проблем */
+button:focus-visible, a:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
 }
 
 .logo {
@@ -39,4 +95,69 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Фіксація проблем з layout в мобільній версії */
+.main-screen-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Спеціальні стилі для мобільних пристроїв */
+@media (max-width: 767px) {
+  .main-screen-container {
+    /* Примусово встановлюємо розміри для мобільної версії */
+    width: 100vw !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    max-height: 100vh !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  
+  /* Фіксація проблем з Framer Motion в мобільній версії */
+  .main-screen-container > div {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100vh !important;
+  }
+  
+  /* Попередження проблем з transform та GPU acceleration */
+  .main-screen-container * {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+  
+  /* Фіксація проблем з viewport units */
+  .main-screen-container {
+    /* Fallback для старих браузерів */
+    height: 100vh;
+    /* Новий стандарт для мобільних */
+    height: 100dvh;
+  }
+  
+  /* Фіксація адмін панелі для мобільних пристроїв */
+  .admin-panel-mobile {
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    position: fixed !important;
+    border-radius: 0 !important;
+    
+    /* Підтримка safe-area для iOS */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
 }

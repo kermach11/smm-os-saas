@@ -166,9 +166,9 @@ const SupabaseUploader: React.FC<SupabaseUploaderProps> = ({
 
   const getAcceptTypes = (): string => {
     const mimeTypes: { [key: string]: string } = {
-      image: 'image/*',
-      video: 'video/*',
-      audio: 'audio/*',
+      image: '.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,image/*',
+      video: '.mp4,.avi,.mov,.wmv,.mkv,.webm,.m4v,video/*',
+      audio: '.mp3,.wav,.ogg,.m4a,.aac,.flac,.wma,audio/*',
       document: '.pdf,.doc,.docx,.txt'
     };
     
