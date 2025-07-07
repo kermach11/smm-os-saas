@@ -4,7 +4,7 @@ import { CarouselItem } from '../types/types';
 import SoundToggle from "./SoundToggle";
 import { playSound, preloadSound } from '../utils/audioUtils';
 import { useGlobalAudio } from '../hooks/useGlobalAudio';
-import { useSimpleAdminSession } from '../hooks/useSimpleAdminSession';
+import { useAdminPanelV2 } from '../hooks/admin-v2/useAdminPanelV2';
 import SimpleAdminLogin from './SimpleAdminLogin';
 import AdminPanelWrapper from './admin-v2/AdminPanelWrapper';
 import indexedDBService from '../services/IndexedDBService';
@@ -404,7 +404,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
     logout, 
     shouldShowAdminButton,
     checkAdminUrlParameter
-  } = useSimpleAdminSession();
+  } = useAdminPanelV2();
   
   // Аналітика
   const { trackClick, cleanupRemovedCarouselItems } = useAnalytics();
