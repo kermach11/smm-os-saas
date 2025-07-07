@@ -1,8 +1,7 @@
 import React from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useAdminPanelV2 } from '../../hooks/admin-v2/useAdminPanelV2';
-import AdminPanel from '../AdminPanel'; // Поточна v1 панель
-import AdminPanelV2 from './AdminPanelV2'; // Нова v2 панель
+import AdminPanelV2 from './AdminPanelV2'; // V2 панель тепер єдина версія
 
 interface AdminPanelWrapperProps {
   isOpen: boolean;
@@ -11,17 +10,16 @@ interface AdminPanelWrapperProps {
 }
 
 /**
- * 🎯 ADMIN PANEL WRAPPER - Обгортка для безпечного перемикання версій
+ * 🎯 ADMIN PANEL WRAPPER - V2 Only Architecture
  * 
- * Цей компонент керує перемиканням між V1 та V2 версіями адмін панелі.
- * V1 залишається основною версією, V2 - для тестування.
+ * Цей компонент тепер використовує виключно V2 версію адмін панелі.
+ * V1 повністю видалено з проекту.
  * 
  * Особливості:
- * - Безпечне перемикання версій
- * - V1 як основна версія
- * - V2 для тестування та розробки
+ * - Тільки V2 архітектура
+ * - Повноцінна респонсивна підтримка
  * - Переклад інтерфейсу
- * - Переключення версій поза панеллю
+ * - Development mode switcher (для майбутніх версій)
  */
 const AdminPanelWrapper: React.FC<AdminPanelWrapperProps> = ({ 
   isOpen, 
@@ -37,86 +35,50 @@ const AdminPanelWrapper: React.FC<AdminPanelWrapperProps> = ({
     deviceType
   } = useAdminPanelV2();
 
-  // Обробка перемикання версій
+  // Обробка перемикання версій (зараз завжди V2)
   const handleVersionSwitch = (version: 'v1' | 'v2') => {
-    if (version === 'v1') {
-      forceV1();
-    } else if (version === 'v2') {
-      testV2();
-    }
+    // V1 видалено, завжди перенаправляємо на V2
+    testV2();
   };
 
-  // Рендер відповідної версії
+  // Рендер відповідної версії (тільки V2)
   const renderAdminPanel = () => {
-    switch (currentVersion) {
-      case 'v1':
-        return (
-          <AdminPanel
-            isOpen={isOpen}
-            onClose={onClose}
-            onLogout={onLogout}
-          />
-        );
-      
-      case 'v2':
-        return (
-          <AdminPanelV2
-            isOpen={isOpen}
-            onClose={onClose}
-            onLogout={onLogout}
-            onVersionSwitch={handleVersionSwitch}
-            currentVersion={currentVersion}
-          />
-        );
-      
-      default:
-        // Fallback на V1 якщо щось пішло не так
-        return (
-          <AdminPanel
-            isOpen={isOpen}
-            onClose={onClose}
-            onLogout={onLogout}
-          />
-        );
-    }
+    // Завжди рендеримо V2 незалежно від currentVersion
+    return (
+      <AdminPanelV2
+        isOpen={isOpen}
+        onClose={onClose}
+        onLogout={onLogout}
+        onVersionSwitch={handleVersionSwitch}
+        currentVersion="v2" // Завжди V2
+      />
+    );
   };
 
   return (
     <div className="admin-panel-wrapper">
-      {/* 🎯 Рендер активної версії */}
+      {/* 🎯 Рендер V2 панелі */}
       {renderAdminPanel()}
       
-      {/* 🔄 VERSION SWITCHER - ЗАВЖДИ ВИДИМИЙ ПІД ЧАС РОЗРОБКИ */}
+      {/* 🔄 VERSION SWITCHER - ТІЛЬКИ ДЛЯ DEVELOPMENT */}
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-2xl border border-gray-200 z-[65]">
           <div className="flex flex-col gap-3">
             <div className="text-sm font-bold text-gray-800 flex items-center gap-2">
-              🔄 {t('admin.panel.version.switcher')}
+              ✅ Admin Panel V2 Active
             </div>
             
             <div className="flex gap-2">
               <button
-                onClick={() => handleVersionSwitch('v1')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  currentVersion === 'v1'
-                    ? 'bg-green-500 text-white shadow-lg'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+                disabled={true}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-300 text-gray-500 cursor-not-allowed"
               >
-                {t('admin.panel.version.v1')}
+                V1 (Removed)
               </button>
               <button
-                onClick={() => handleVersionSwitch('v2')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  currentVersion === 'v2'
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-500 text-white shadow-lg"
               >
-                {t('admin.panel.version.v2')} 
-                <span className="text-xs bg-orange-500 text-white px-1 rounded ml-1">
-                  {t('admin.panel.beta.badge')}
-                </span>
+                V2 (Active)
               </button>
             </div>
             
@@ -127,21 +89,21 @@ const AdminPanelWrapper: React.FC<AdminPanelWrapperProps> = ({
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-green-500">✅</span>
-                <span>{t('admin.panel.all.functions')}</span>
+                <span>V1 компоненти видалено, тільки V2</span>
               </div>
             </div>
           </div>
         </div>
       )}
       
-      {/* 🎯 INFO MESSAGE - Коли активна V2 */}
-      {process.env.NODE_ENV === 'development' && currentVersion === 'v2' && isOpen && (
-        <div className="fixed top-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-lg shadow-lg z-[65]">
+      {/* 🎯 SUCCESS MESSAGE - V2 Active */}
+      {process.env.NODE_ENV === 'development' && isOpen && (
+        <div className="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg z-[65]">
           <div className="text-sm font-medium flex items-center gap-2">
-            🧪 Тестування Admin Panel V2
+            ✅ Admin Panel V2 - Production Ready
           </div>
           <div className="text-xs mt-1">
-            {t('admin.panel.new.responsive')} • {t('admin.panel.safe.testing')}
+            V1 повністю видалено • Респонсивний дизайн • Стабільна версія
           </div>
         </div>
       )}
