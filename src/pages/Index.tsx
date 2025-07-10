@@ -104,12 +104,13 @@ const Index = () => {
   // Стан для переходного затемнення
   const [isTransitioning, setIsTransitioning] = useState(false);
   
-  // Захист від "застрягання" затемнення - автоматично прибираємо через 5 секунд
+  // Захист від "застрягання" затемнення - автоматично прибираємо через 2 секунди
   useEffect(() => {
     if (isTransitioning) {
       const clearTransitionTimer = setTimeout(() => {
+        console.log('🛡️ Index: Захист від застрягання - прибираємо затемнення');
         setIsTransitioning(false);
-      }, 5000); // 5 секунд максимум
+      }, 2000); // 2 секунди максимум (достатньо для переходу 300ms + 300ms)
       
       return () => clearTimeout(clearTransitionTimer);
     }
@@ -186,116 +187,135 @@ const Index = () => {
       setIsTransitioning(true);
     }
     
-    // Завантажуємо налаштування головної сторінки для перевірки autoStartAfterWelcome
-    const mainSettings = await indexedDBService.loadSettings('mainPageSettings');
-    const backgroundMusic = mainSettings?.audioSettings?.backgroundMusic;
-    
-    if (backgroundMusic?.enabled && backgroundMusic?.autoStartAfterWelcome) {
-      console.log('🎵 Index: Запуск постійної фонової музики після Welcome');
-      // Запускаємо фонову музику головної сторінки
-      if (backgroundMusic?.url) {
-        try {
-          await webAudioManager.loadAudio(backgroundMusic.url, 'background-music');
-          await webAudioManager.playAudio('background-music', {
-            loop: backgroundMusic.loop,
-            volume: backgroundMusic.volume
-          });
-          console.log('✅ Index: Фонова музика запущена після Welcome');
-        } catch (error) {
-          console.log('⚠️ Index: Не вдалося запустити фонову музику:', error);
-        }
-      }
-      
-      // Зупиняємо Welcome музику
-      const welcomeAudio = document.querySelectorAll('audio');
-      welcomeAudio.forEach(audio => {
-        if (!audio.paused) {
-          audio.pause();
-          audio.currentTime = 0;
-          console.log('🔇 Index: Зупинено Welcome аудіо');
-        }
-      });
-    } else {
-      console.log('🎵 Index: Режим окремої музики - зупиняємо Welcome музику');
-      // Зупиняємо всю музику з Welcome Screen
-      const welcomeAudio = document.querySelectorAll('audio');
-      welcomeAudio.forEach(audio => {
-        if (!audio.paused) {
-          audio.pause();
-          audio.currentTime = 0;
-          console.log('🔇 UnifiedPage: Зупинено Welcome аудіо');
-        }
-      });
-    }
-    
     // Позначаємо що користувач вже взаємодіяв зі сторінкою
     setUserInteracted(true);
     
-    // Додаємо затримку для плавного переходу
-    setTimeout(() => {
-      setScreenState('intro');
-      // Приховуємо затемнення після переходу
+    try {
+      // Паралельно виконуємо всі асинхронні операції
+      const [mainSettings] = await Promise.all([
+        indexedDBService.loadSettings('mainPageSettings'),
+        // Додаємо мінімальну затримку для плавності
+        new Promise(resolve => setTimeout(resolve, 300))
+      ]);
+      
+      const backgroundMusic = mainSettings?.audioSettings?.backgroundMusic;
+      
+      // Обробка аудіо в background (не блокує перехід)
+      Promise.resolve().then(async () => {
+        if (backgroundMusic?.enabled && backgroundMusic?.autoStartAfterWelcome) {
+          console.log('🎵 Index: Запуск постійної фонової музики після Welcome');
+          if (backgroundMusic?.url) {
+            try {
+              await webAudioManager.loadAudio(backgroundMusic.url, 'background-music');
+              await webAudioManager.playAudio('background-music', {
+                loop: backgroundMusic.loop,
+                volume: backgroundMusic.volume
+              });
+              console.log('✅ Index: Фонова музика запущена після Welcome');
+            } catch (error) {
+              console.log('⚠️ Index: Не вдалося запустити фонову музику:', error);
+            }
+          }
+        }
+        
+        // Зупиняємо Welcome музику
+        const welcomeAudio = document.querySelectorAll('audio');
+        welcomeAudio.forEach(audio => {
+          if (!audio.paused) {
+            audio.pause();
+            audio.currentTime = 0;
+            console.log('🔇 Index: Зупинено Welcome аудіо');
+          }
+        });
+      });
+      
+      // Стандартизований тайминг: 300ms для переходу
       setTimeout(() => {
-        setIsTransitioning(false);
-      }, 200);
-    }, 600);
+        setScreenState('intro');
+        // Приховуємо затемнення через 300ms (синхронізовано з Framer Motion)
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 300);
+      }, 300);
+      
+    } catch (error) {
+      console.error('❌ Index: Помилка в handleWelcomeComplete:', error);
+      // Fallback: продовжуємо перехід навіть при помилці
+      setTimeout(() => {
+        setScreenState('intro');
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 300);
+      }, 300);
+    }
   };
 
   // Handle intro screen completion
   const handleIntroComplete = async () => {
-    // Показуємо затемнення тільки якщо не на головній сторінці
-    if (screenState !== 'main') {
-      setIsTransitioning(true);
-    }
+    console.log('🎵 Index: Обробка завершення Intro екрану');
     
-    // Завантажуємо налаштування головної сторінки для перевірки autoStartAfterWelcome
-    const mainSettings = await indexedDBService.loadSettings('mainPageSettings');
-    const backgroundMusic = mainSettings?.audioSettings?.backgroundMusic;
+    // Показуємо затемнення для переходу на MainScreen
+    setIsTransitioning(true);
     
-    if (backgroundMusic?.enabled && backgroundMusic?.autoStartAfterWelcome) {
-      console.log('🎵 Index: Режим постійної фонової музики - запускаємо фонову музику');
-      // Запускаємо фонову музику головної сторінки
-      if (backgroundMusic?.url) {
-        try {
-          await webAudioManager.loadAudio(backgroundMusic.url, 'background-music');
-          await webAudioManager.playAudio('background-music', {
-            loop: backgroundMusic.loop,
-            volume: backgroundMusic.volume
-          });
-          console.log('✅ Index: Фонова музика запущена після Intro');
-        } catch (error) {
-          console.log('⚠️ Index: Не вдалося запустити фонову музику:', error);
-        }
-      }
+    try {
+      // Паралельно виконуємо всі асинхронні операції
+      const [mainSettings] = await Promise.all([
+        indexedDBService.loadSettings('mainPageSettings'),
+        // Додаємо мінімальну затримку для плавності
+        new Promise(resolve => setTimeout(resolve, 300))
+      ]);
       
-      // Зупиняємо Intro музику
-      const introAudio = document.querySelectorAll('audio');
-      introAudio.forEach(audio => {
-        if (!audio.paused) {
-          audio.pause();
-          audio.currentTime = 0;
+      const backgroundMusic = mainSettings?.audioSettings?.backgroundMusic;
+      
+      // Обробка аудіо в background (не блокує перехід)
+      Promise.resolve().then(async () => {
+        if (backgroundMusic?.enabled && backgroundMusic?.autoStartAfterWelcome) {
+          console.log('🎵 Index: Режим постійної фонової музики - запускаємо фонову музику');
+          if (backgroundMusic?.url) {
+            try {
+              await webAudioManager.loadAudio(backgroundMusic.url, 'background-music');
+              await webAudioManager.playAudio('background-music', {
+                loop: backgroundMusic.loop,
+                volume: backgroundMusic.volume
+              });
+              console.log('✅ Index: Фонова музика запущена після Intro');
+            } catch (error) {
+              console.log('⚠️ Index: Не вдалося запустити фонову музику:', error);
+            }
+          }
         }
+        
+        // Зупиняємо Intro музику
+        const introAudio = document.querySelectorAll('audio');
+        introAudio.forEach(audio => {
+          if (!audio.paused) {
+            audio.pause();
+            audio.currentTime = 0;
+          }
+        });
       });
-    } else {
-      console.log('🎵 Index: Режим окремої музики - зупиняємо Intro музику');
-      // Зупиняємо всю музику з Intro Screen (тільки один раз)
-      const introAudio = document.querySelectorAll('audio');
-      introAudio.forEach(audio => {
-        if (!audio.paused) {
-          audio.pause();
-          audio.currentTime = 0;
-        }
-      });
-    }
-    
-    setTimeout(() => {
-      setScreenState('main');
-      hasInitialLoadCompleted = true; // Позначаємо, що початкове завантаження завершено
-      // Приховуємо затемнення після переходу
+      
+      // Стандартизований тайминг: 300ms для переходу
       setTimeout(() => {
-        setIsTransitioning(false);
+        setScreenState('main');
+        hasInitialLoadCompleted = true;
+        // Приховуємо затемнення через 300ms (синхронізовано з Framer Motion)
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 300);
       }, 300);
-    }, 800); // Збільшуємо затримку для плавнішого переходу
+      
+    } catch (error) {
+      console.error('❌ Index: Помилка в handleIntroComplete:', error);
+      // Fallback: продовжуємо перехід навіть при помилці
+      setTimeout(() => {
+        setScreenState('main');
+        hasInitialLoadCompleted = true;
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 300);
+      }, 300);
+    }
   };
 
   // Fallback: Try to start audio on any user interaction (if not started yet)
@@ -528,19 +548,22 @@ const Index = () => {
           userInteracted={userInteracted} 
         />
         
-        {/* Затемнення під час переходів - повністю чорне */}
-        {isTransitioning && screenState !== 'main' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="fixed inset-0 bg-black z-[100] pointer-events-none"
-            style={{
-              backgroundColor: '#000000'
-            }}
-          />
-        )}
+        {/* Затемнення під час переходу - з AnimatePresence для правильного exit */}
+        <AnimatePresence>
+          {isTransitioning && (
+            <motion.div
+              key="transition-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="fixed inset-0 bg-black z-[100] pointer-events-none"
+              style={{
+                backgroundColor: '#000000'
+              }}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </AudioContext.Provider>
   );
