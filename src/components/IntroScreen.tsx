@@ -5,10 +5,8 @@ import SplineAnimation from "./SplineAnimation";
 import indexedDBService from '../services/IndexedDBService';
 import syncService from '../services/SyncService';
 import domainSyncService from '../services/DomainSyncService';
-import { webAudioManager, VideoManager } from '../utils/webAudioUtils';
-
-// Ініціалізуємо глобальний VideoManager для інтро
-const introVideoManager = new VideoManager();
+import { webAudioManager } from '../utils/webAudioUtils';
+import StandardVideoPlayer from './StandardVideoPlayer';
 
 interface IntroScreenProps {
   visible: boolean;
@@ -25,6 +23,7 @@ interface IntroSettings {
   accentColor: string;
   textColor: string;
   logoUrl: string;
+  logoSize: number;
   backgroundType: 'color' | 'gradient' | 'image' | 'video';
   backgroundColor: string;
   gradientFrom: string;
@@ -153,6 +152,7 @@ const defaultSettings: IntroSettings = {
   accentColor: "#3b82f6",
   textColor: "#ffffff",
   logoUrl: "",
+  logoSize: 64,
   backgroundType: 'gradient',
   backgroundColor: "#1a1a1a",
   gradientFrom: "#1a1a1a",
@@ -274,92 +274,13 @@ const defaultSettings: IntroSettings = {
 const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
   const [introSettings, setIntroSettings] = useState<IntroSettings>(defaultSettings);
   const [animationKey, setAnimationKey] = useState(1); // Починаємо з 1 для запуску анімацій
+  const [isTextExiting, setIsTextExiting] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
 
 
-  // 🎬 АГРЕСИВНИЙ АВТОЗАПУСК ВІДЕО ДЛЯ INTRO SCREEN
-  useEffect(() => {
-    const initIntroVideo = async () => {
-      if (introSettings.backgroundType === 'video' && introSettings.backgroundVideo) {
-        console.log('🎬 IntroScreen: Ініціалізація фонового відео після переходу з Welcome:', introSettings.backgroundVideo);
-        
-        // Детекція мобільного пристрою
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-        console.log('📱 IntroScreen: Мобільний пристрій:', isMobile);
-        
-        // Чекаємо поки відео елемент буде створений
-        setTimeout(async () => {
-          const videoElement = document.querySelector('video[data-intro-video="true"]') as HTMLVideoElement;
-          
-          if (videoElement) {
-            console.log('🎬 IntroScreen: Знайдено відео елемент, налаштовуємо агресивний автозапуск');
-            
-            // Агресивні налаштування для автозапуску
-            videoElement.muted = true;
-            videoElement.autoplay = true;
-            videoElement.loop = true;
-            videoElement.playsInline = true;
-            videoElement.preload = 'auto';
-            
-            // Додаткові мобільні атрибути для приховування контролів
-            if (isMobile) {
-              videoElement.setAttribute('webkit-playsinline', 'true');
-              videoElement.setAttribute('playsinline', 'true');
-              videoElement.setAttribute('controls', 'false');
-              videoElement.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback');
-              videoElement.style.pointerEvents = 'none';
-              // ВИПРАВЛЕННЯ: Агресивне приховування контролів на мобільних
-              videoElement.style.outline = 'none';
-              videoElement.style.border = 'none';
-              videoElement.style.webkitAppearance = 'none';
-              videoElement.style.appearance = 'none';
-            }
-            
-            // Спробуємо запустити відразу (користувач вже взаємодіяв на Welcome Screen)
-            try {
-              await videoElement.play();
-              console.log('✅ IntroScreen: Відео запущено автоматично після переходу з Welcome');
-            } catch (error) {
-              console.log('⚠️ IntroScreen: Автозапуск заблоковано, додаємо слухачі взаємодії');
-              
-              // Функція для запуску відео при взаємодії
-              const playVideo = async () => {
-                try {
-                  await videoElement.play();
-                  console.log('✅ IntroScreen: Відео запущено через взаємодію');
-                  // Видаляємо слухачі після успішного запуску
-                  document.removeEventListener('touchstart', playVideo);
-                  document.removeEventListener('touchend', playVideo);
-                  document.removeEventListener('click', playVideo);
-                  document.removeEventListener('mousemove', playVideo);
-                } catch (err) {
-                  console.log('⚠️ IntroScreen: Спроба запуску відео не вдалася:', err);
-                }
-              };
-              
-              // Додаємо слухачі для всіх можливих взаємодій
-              document.addEventListener('touchstart', playVideo, { once: true, passive: true });
-              document.addEventListener('touchend', playVideo, { once: true, passive: true });
-              document.addEventListener('click', playVideo, { once: true, passive: true });
-              document.addEventListener('mousemove', playVideo, { once: true, passive: true });
-              
-              // Також додаємо слухач безпосередньо на відео елемент
-              videoElement.addEventListener('touchstart', playVideo, { once: true, passive: true });
-              videoElement.addEventListener('click', playVideo, { once: true, passive: true });
-            }
-          } else {
-            console.log('⚠️ IntroScreen: Відео елемент не знайдено, спробуємо ще раз');
-            // Повторна спроба через більший інтервал
-            setTimeout(() => initIntroVideo(), 500);
-          }
-        }, 100);
-      }
-    };
-
-    initIntroVideo();
-  }, [introSettings.backgroundType, introSettings.backgroundVideo]);
+  // Відео тепер обробляється StandardVideoPlayer компонентом
 
   // Простий фікс - тільки приховання скролбарів
   useEffect(() => {
@@ -392,6 +313,7 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
         accentColor: extendedSettings.accentColor || defaultSettings.accentColor,
         textColor: extendedSettings.textColor || defaultSettings.textColor,
         logoUrl: extendedSettings.logoUrl || defaultSettings.logoUrl,
+        logoSize: extendedSettings.logoSize || defaultSettings.logoSize,
         backgroundType: extendedSettings.backgroundType || defaultSettings.backgroundType,
         backgroundColor: extendedSettings.backgroundColor || defaultSettings.backgroundColor,
         gradientFrom: extendedSettings.gradientFrom || defaultSettings.gradientFrom,
@@ -508,6 +430,7 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
           accentColor: indexedDBSettings.accentColor || defaultSettings.accentColor,
           textColor: indexedDBSettings.textColor || defaultSettings.textColor,
           logoUrl: indexedDBSettings.logoUrl || defaultSettings.logoUrl,
+          logoSize: indexedDBSettings.logoSize || defaultSettings.logoSize,
           backgroundType: indexedDBSettings.backgroundType || defaultSettings.backgroundType,
           backgroundColor: indexedDBSettings.backgroundColor || defaultSettings.backgroundColor,
           gradientFrom: indexedDBSettings.gradientFrom || defaultSettings.gradientFrom,
@@ -601,6 +524,7 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
           accentColor: settings.accentColor || defaultSettings.accentColor,
           textColor: settings.textColor || defaultSettings.textColor,
           logoUrl: settings.logoUrl || defaultSettings.logoUrl,
+          logoSize: settings.logoSize || defaultSettings.logoSize,
           backgroundType: settings.backgroundType || defaultSettings.backgroundType,
           backgroundColor: settings.backgroundColor || defaultSettings.backgroundColor,
           gradientFrom: settings.gradientFrom || defaultSettings.gradientFrom,
@@ -796,49 +720,49 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
 
     const duration = (introSettings.animationDuration || 800) / 1000;
     const delay = (introSettings.animationDelay || 200) / 1000;
-
+    
     const variants: any = {
       hidden: { opacity: 0 },
       visible: { opacity: 1 },
       exit: { opacity: 0 }
     };
-
+    
     // Налаштування входу
-    switch (enterAnimation) {
+      switch (enterAnimation) {
       case 'fadeIn':
         variants.hidden = { opacity: 0 };
         variants.visible = { opacity: 1 };
         break;
       case 'slideUp':
-        variants.hidden = { opacity: 0, y: 50 };
+        variants.hidden = { opacity: 0, y: '100vh' };
         variants.visible = { opacity: 1, y: 0 };
         break;
       case 'slideDown':
-        variants.hidden = { opacity: 0, y: -50 };
+        variants.hidden = { opacity: 0, y: '-100vh' };
         variants.visible = { opacity: 1, y: 0 };
         break;
       case 'slideLeft':
-        variants.hidden = { opacity: 0, x: 50 };
+        variants.hidden = { opacity: 0, x: '100vw' };
         variants.visible = { opacity: 1, x: 0 };
         break;
       case 'slideRight':
-        variants.hidden = { opacity: 0, x: -50 };
+        variants.hidden = { opacity: 0, x: '-100vw' };
         variants.visible = { opacity: 1, x: 0 };
         break;
       case 'zoomIn':
-        variants.hidden = { opacity: 0, scale: 0.8 };
+        variants.hidden = { opacity: 0, scale: 0.5 };
         variants.visible = { opacity: 1, scale: 1 };
         break;
       case 'zoomOut':
-        variants.hidden = { opacity: 0, scale: 1.2 };
+        variants.hidden = { opacity: 0, scale: 1.5 };
         variants.visible = { opacity: 1, scale: 1 };
         break;
       case 'rotateIn':
-        variants.hidden = { opacity: 0, rotate: -180 };
+        variants.hidden = { opacity: 0, rotate: -360 };
         variants.visible = { opacity: 1, rotate: 0 };
         break;
       case 'bounce':
-        variants.hidden = { opacity: 0, y: 50 };
+        variants.hidden = { opacity: 0, y: '100vh' };
         variants.visible = { 
           opacity: 1, 
           y: 0,
@@ -855,17 +779,17 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
         break;
       case 'glow':
         variants.hidden = { opacity: 0, textShadow: '0 0 0px rgba(255,255,255,0)' };
-        variants.visible = { opacity: 1, textShadow: '0 0 20px rgba(255,255,255,0.8)' };
+        variants.visible = { opacity: 1, textShadow: '0 0 40px rgba(255,255,255,0.9)' };
         break;
       case 'cinematicZoom':
-        variants.hidden = { opacity: 0, scale: 1.5, filter: 'blur(10px)' };
+        variants.hidden = { opacity: 0, scale: 2.0, filter: 'blur(20px)' };
         variants.visible = { opacity: 1, scale: 1, filter: 'blur(0px)' };
         break;
       default:
         variants.hidden = { opacity: 0 };
         variants.visible = { opacity: 1 };
     }
-
+    
     // Налаштування виходу
     if (exitAnimation && exitAnimation !== 'none') {
       switch (exitAnimation) {
@@ -873,40 +797,39 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
           variants.exit = { opacity: 0 };
           break;
         case 'slideUp':
-          variants.exit = { opacity: 0, y: -50 };
+          variants.exit = { opacity: 0, y: '-100vh' };
           break;
         case 'slideDown':
-          variants.exit = { opacity: 0, y: 50 };
+          variants.exit = { opacity: 0, y: '100vh' };
           break;
         case 'slideLeft':
-          variants.exit = { opacity: 0, x: -50 };
+          variants.exit = { opacity: 0, x: '-100vw' };
           break;
         case 'slideRight':
-          variants.exit = { opacity: 0, x: 50 };
+          variants.exit = { opacity: 0, x: '100vw' };
           break;
         case 'zoomOut':
-          variants.exit = { opacity: 0, scale: 0.8 };
+          variants.exit = { opacity: 0, scale: 0.5 };
           break;
         case 'zoomIn':
-          variants.exit = { opacity: 0, scale: 1.2 };
+          variants.exit = { opacity: 0, scale: 1.5 };
           break;
         case 'rotateOut':
-          variants.exit = { opacity: 0, rotate: 180 };
+          variants.exit = { opacity: 0, rotate: 360 };
           break;
         case 'dissolve':
-          variants.exit = { opacity: 0, filter: 'blur(10px)' };
+          variants.exit = { opacity: 0, filter: 'blur(20px)' };
           break;
         case 'cinematicZoomOut':
-          variants.exit = { opacity: 0, scale: 1.5, filter: 'blur(10px)' };
+          variants.exit = { opacity: 0, scale: 2.0, filter: 'blur(20px)' };
           break;
         default:
           variants.exit = { opacity: 0 };
       }
     }
-
     const animationConfig = {
       initial: 'hidden',
-      animate: 'visible',
+      animate: isTextExiting ? 'exit' : 'visible',
       exit: 'exit',
       variants,
       transition: {
@@ -973,19 +896,27 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
     handleIntroMusic();
   }, [visible, introSettings.hasMusic, introSettings.musicUrl]);
 
-  // Автоматичне завершення інтро через 4 секунди
+  // Автоматичне завершення інтро через 4 секунди + exit анімація тексту через 3 секунди
   useEffect(() => {
-    if (!visible) return;
+    if (!visible) {
+      setIsTextExiting(false);
+      return;
+    }
 
-    const timer = setTimeout(() => {
+    // Таймер для початку exit анімації тексту на 2.5 секунді
+    const exitTimer = setTimeout(() => {
+      setIsTextExiting(true);
+    }, 2500);
+
+    // Таймер для завершення інтро на 4 секунді
+    const completeTimer = setTimeout(() => {
       // Зупиняємо аудіо і відео перед переходом на MainScreen
       if (audioRef.current && !audioRef.current.paused) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
       
-      // Зупиняємо відео через VideoManager
-      introVideoManager.stopVideo('intro-background');
+      // Зупиняємо відео безпосередньо
       
       // Також зупиняємо стандартне відео якщо воно є
       if (videoRef.current && !videoRef.current.paused) {
@@ -993,76 +924,54 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
         videoRef.current.currentTime = 0;
       }
       
-      // Завершуємо інтро
+      // Завершуємо інтро - exit анімація відбудеться автоматично
       onComplete();
-    }, 4000);
+    }, 4000); // Завершуємо на 4 секунді
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(exitTimer);
+      clearTimeout(completeTimer);
+    };
   }, [visible, onComplete]);
 
   return (
-    <AnimatePresence>
-      <motion.div 
-        className="intro-screen-container fixed inset-0 flex flex-col items-center justify-center z-50 overflow-hidden"
-        style={{
-          ...getBackgroundStyle(),
-          display: visible ? 'flex' : 'none',
-          pointerEvents: visible ? 'auto' : 'none'
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ 
-          opacity: visible ? 1 : 0,
-          transition: {
-            duration: 1.4,
-            ease: [0.25, 0.1, 0.25, 1.0] // Плавніша крива анімації
-          }
-        }}
-        exit={{ 
-          opacity: 0,
-          transition: { 
-            duration: 1.0, 
-            ease: [0.25, 0.1, 0.25, 1.0] 
-          }
-        }}
-      >
-        {/* Фонове відео для IntroScreen - БЕЗ контролів на мобільних */}
+    <AnimatePresence mode="wait">
+      {visible && (
+        <motion.div 
+          key={`intro-container-${animationKey}`}
+          className="intro-screen-container fixed inset-0 flex flex-col items-center justify-center z-50 overflow-visible"
+          style={{
+            ...getBackgroundStyle(),
+            pointerEvents: 'auto'
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ 
+            opacity: 1,
+            transition: {
+              duration: 0.6,
+              ease: [0.25, 0.1, 0.25, 1.0] // Плавніша крива анімації
+            }
+          }}
+          exit={{ 
+            opacity: 0,
+            transition: { 
+              duration: 0.4, 
+              ease: [0.25, 0.1, 0.25, 1.0] 
+            }
+          }}
+        >
+        {/* Фонове відео для IntroScreen - Стандартний підхід */}
         {introSettings.backgroundType === 'video' && introSettings.backgroundVideo && (
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            webkit-playsinline="true"
-            controls={false}
-            controlsList="nodownload nofullscreen noremoteplayback"
-            disablePictureInPicture
-            disableRemotePlayback
-            data-intro-video="true"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ 
-              pointerEvents: 'none',
-              objectFit: 'cover',
-              zIndex: -1,
-              // ВИПРАВЛЕННЯ: Приховуємо всі контроли на мобільних
-              WebkitAppearance: 'none',
-              appearance: 'none',
-              outline: 'none',
-              border: 'none'
-            } as React.CSSProperties}
-            ref={videoRef}
-            onLoadStart={() => console.log('🎬 IntroScreen: Відео почало завантажуватися')}
-            onCanPlay={() => console.log('🎬 IntroScreen: Відео готове до відтворення')}
+          <StandardVideoPlayer
+            src={introSettings.backgroundVideo}
+            context="IntroScreen"
             onPlay={() => console.log('🎬 IntroScreen: Відео почало відтворюватися')}
             onError={(e) => console.error('❌ IntroScreen: Помилка відео:', e)}
+            onLoadStart={() => console.log('🎬 IntroScreen: Відео почало завантажуватися')}
+            onCanPlay={() => console.log('🎬 IntroScreen: Відео готове до відтворення')}
             onLoadedData={() => console.log('🎬 IntroScreen: Відео дані завантажені')}
             onCanPlayThrough={() => console.log('🎬 IntroScreen: Відео може відтворюватися повністю')}
-            // ВИПРАВЛЕННЯ: Додаткові атрибути для приховування контролів
-            onContextMenu={(e) => e.preventDefault()}
-            onDoubleClick={(e) => e.preventDefault()}
-          >
-            <source src={introSettings.backgroundVideo} type="video/mp4" />
-          </video>
+          />
         )}
 
         {/* Particles */}
@@ -1129,15 +1038,21 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
               {/* Logo */}
               {introSettings.logoUrl && (
                 <motion.img
+                  key={`logo-${animationKey}`}
                   src={introSettings.logoUrl}
                   alt="Logo"
-                  className="w-16 h-16 object-contain mb-6"
+                  className="object-contain mb-6"
+                  style={{
+                    width: `${introSettings.logoSize}px`,
+                    height: `${introSettings.logoSize}px`
+                  }}
                   {...getAnimationVariants('title')}
                 />
               )}
 
               {/* Title */}
               <motion.h1 
+                key={`title-${animationKey}`}
                 className="text-4xl md:text-5xl font-light mb-6 text-center leading-tight"
                 style={getTextStyle('title')}
                 {...getAnimationVariants('title')}
@@ -1147,6 +1062,7 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
               
               {/* Subtitle */}
               <motion.h2 
+                key={`subtitle-${animationKey}`}
                 className="text-lg md:text-xl mb-8 text-center leading-relaxed"
                 style={getTextStyle('subtitle')}
                 {...getAnimationVariants('subtitle')}
@@ -1156,6 +1072,7 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
               
               {/* Description */}
               <motion.p 
+                key={`description-${animationKey}`}
                 className="text-base md:text-lg mb-8 text-center leading-relaxed max-w-md mx-auto"
                 style={getTextStyle('description')}
                 {...getAnimationVariants('description')}
@@ -1165,6 +1082,7 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
               
               {/* Decorative line */}
               <motion.div
+                key={`line-${animationKey}`}
                 className="w-[80px] h-[3px] rounded-full mt-8 mb-1"
                 style={{ 
                   background: `linear-gradient(to right, ${introSettings.textColor}, ${introSettings.textColor}70)` 
@@ -1182,6 +1100,7 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
           </audio>
         )}
       </motion.div>
+      )}
     </AnimatePresence>
   );
 };

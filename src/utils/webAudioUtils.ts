@@ -229,38 +229,24 @@ export class VideoManager {
     video.setAttribute('disablePictureInPicture', 'true');
     video.setAttribute('disableRemotePlayback', 'true');
     
-    // МАКСИМАЛЬНО АГРЕСИВНІ СТИЛІ - ГАРАНТОВАНА ВИДИМІСТЬ
+    // СТАНДАРТНІ СТИЛІ ДЛЯ ФОНОВОГО ВІДЕО
     video.style.cssText = `
-      position: fixed !important;
+      position: absolute !important;
       top: 0 !important;
       left: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      min-width: 100vw !important;
-      min-height: 100vh !important;
-      max-width: none !important;
-      max-height: none !important;
+      width: 100% !important;
+      height: 100% !important;
       object-fit: cover !important;
       z-index: -1 !important;
       pointer-events: none !important;
       display: block !important;
       visibility: visible !important;
       opacity: 1 !important;
-      background: red !important;
-      border: 5px solid lime !important;
-      transform: none !important;
-      clip: none !important;
-      clip-path: none !important;
-      overflow: visible !important;
-      margin: 0 !important;
-      padding: 0 !important;
     `;
     
-    // Додаємо CSS класи для додаткового форсування
-    video.className = 'force-video-visible';
+    // Додаємо CSS класи для фонового відео
+    video.className = 'background-video';
     video.setAttribute('data-video-id', id);
-    
-    console.log(`🎬 VideoManager: АГРЕСИВНІ CSS встановлено: червоний фон + зелена рамка для дебагу`);
     
     // Додаємо слухачі подій
     video.addEventListener('loadstart', () => {
@@ -289,8 +275,8 @@ export class VideoManager {
     // Додаємо БЕЗПОСЕРЕДНЬО в body на початок
     document.body.insertBefore(video, document.body.firstChild);
     
-    // Додаємо CSS правило в head для форсування
-    this.addForceVideoCSS();
+    // Додаємо CSS правило в head для фонового відео
+    this.addBackgroundVideoCSS();
     
     this.videoElements.set(id, video);
     
@@ -325,61 +311,45 @@ export class VideoManager {
     return video;
   }
 
-  // Додаємо CSS правило для форсування видимості
-  private addForceVideoCSS(): void {
-    const existingStyle = document.getElementById('force-video-style');
+  // Додаємо CSS правило для фонового відео
+  private addBackgroundVideoCSS(): void {
+    const existingStyle = document.getElementById('background-video-style');
     if (existingStyle) return;
     
     const style = document.createElement('style');
-    style.id = 'force-video-style';
+    style.id = 'background-video-style';
     style.textContent = `
-      .force-video-visible {
-        position: fixed !important;
+      .background-video {
+        position: absolute !important;
         top: 0 !important;
         left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
+        width: 100% !important;
+        height: 100% !important;
         z-index: -1 !important;
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
-        background: red !important;
-        border: 5px solid lime !important;
         object-fit: cover !important;
         pointer-events: none !important;
       }
       
-      /* Перевизначаємо будь-які можливі конфлікти */
+      /* Забезпечуємо правильне позиціонування */
       video[data-video-id] {
-        position: fixed !important;
+        position: absolute !important;
         top: 0 !important;
         left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
+        width: 100% !important;
+        height: 100% !important;
         z-index: -1 !important;
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
-        background: red !important;
-        border: 5px solid lime !important;
-        transform: none !important;
-        clip: none !important;
-        clip-path: none !important;
-        overflow: visible !important;
-      }
-      
-      /* Блокуємо всі можливі приховування */
-      body > video:first-child {
-        position: fixed !important;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        z-index: -1 !important;
+        object-fit: cover !important;
+        pointer-events: none !important;
       }
     `;
     
     document.head.appendChild(style);
-    console.log('🎬 VideoManager: CSS правила форсування додано в head');
   }
 
   // Примусове відтворення відео

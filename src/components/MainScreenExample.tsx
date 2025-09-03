@@ -96,7 +96,6 @@ export const MainScreenExample: React.FC<MainScreenExampleProps> = ({
         logoSize={config.logoSize}
         onMouseEnter={playHoverSound}
         onClick={() => {
-          console.log('🖼️ MainScreen: Клік по логотипу, deviceType:', deviceType, 'logoUrl:', logoUrl);
           trackClick('#main-logo', 'Main Logo Click');
         }}
       >
@@ -201,8 +200,8 @@ export const MainScreenExample: React.FC<MainScreenExampleProps> = ({
           opacity: 0
         }}
         src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWRhdGEAAAABAAEAAAEAA"
-        onCanPlay={() => console.log('🎬 Невидиме відео: готове до програвання')}
-        onPlay={() => console.log('✅ Невидиме відео: грає - активую аудіо контекст')}
+        onCanPlay={() => {}}
+        onPlay={() => {}}
       />
     </div>
   );
@@ -271,7 +270,6 @@ export const ComparisonExample = () => {
   logoSize={config.logoSize}
   onMouseEnter={playHoverSound}
   onClick={() => {
-    console.log('🖼️ MainScreen: Клік по логотипу');
     trackClick('#main-logo', 'Main Logo Click');
   }}
 />

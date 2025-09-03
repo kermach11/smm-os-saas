@@ -1046,18 +1046,36 @@ const IntroCustomizer: React.FC = () => {
                           onChange={(e) => updateTypographyValue('fontFamily', e.target.value)}
                           className="w-full px-2 lg:px-4 py-1.5 lg:py-3 bg-white border border-slate-200 rounded-sm lg:rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-xs lg:text-sm transition-all duration-200 min-h-[36px] lg:min-h-[auto]"
                         >
-                          <option value="Inter">Inter</option>
-                          <option value="Arial">Arial</option>
-                          <option value="Helvetica">Helvetica</option>
-                          <option value="Times New Roman">Times New Roman</option>
-                          <option value="Georgia">Georgia</option>
-                          <option value="Roboto">Roboto</option>
-                          <option value="Open Sans">Open Sans</option>
-                          <option value="Lato">Lato</option>
-                          <option value="Montserrat">Montserrat</option>
-                          <option value="Poppins">Poppins</option>
-                          <option value="Playfair Display">Playfair Display</option>
-                          <option value="Oswald">Oswald</option>
+                          <optgroup label="🔥 Сучасні Sans-Serif (з кирилицею)">
+                            <option value="Inter">Inter</option>
+                            <option value="Source Sans Pro">Source Sans Pro</option>
+                            <option value="Nunito">Nunito</option>
+                            <option value="IBM Plex Sans">IBM Plex Sans</option>
+                            <option value="Fira Sans">Fira Sans</option>
+                          </optgroup>
+                          <optgroup label="📖 Класичні Sans-Serif (з кирилицею)">
+                            <option value="Roboto">Roboto</option>
+                            <option value="Open Sans">Open Sans</option>
+                            <option value="Lato">Lato</option>
+                            <option value="Montserrat">Montserrat</option>
+                            <option value="Poppins">Poppins</option>
+                            <option value="Oswald">Oswald</option>
+                          </optgroup>
+                          <optgroup label="✍️ Елегантні Serif (з кирилицею)">
+                            <option value="Source Serif Pro">Source Serif Pro</option>
+                            <option value="Lora">Lora</option>
+                            <option value="IBM Plex Serif">IBM Plex Serif</option>
+                            <option value="Georgia">Georgia</option>
+                          </optgroup>
+                          <optgroup label="🎨 Декоративні (обмежена кирилиця)">
+                            <option value="Playfair Display">Playfair Display</option>
+                          </optgroup>
+                          <optgroup label="💻 Спеціальні (з кирилицею)">
+                            <option value="JetBrains Mono">JetBrains Mono (моноширинний)</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Helvetica">Helvetica</option>
+                          </optgroup>
                         </select>
                       </div>
 

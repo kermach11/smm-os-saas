@@ -677,16 +677,14 @@ const IntroScreenPreview = ({ className }: IntroScreenPreviewProps) => {
         marginBottom: `${responsiveSettings.containerMarginBottom}px`
       }}
     >
-      {/* Індикатор анімації */}
-      <div className="absolute top-2 right-2 z-50 bg-black/50 text-white text-xs px-2 py-1 rounded">
-        🎬 Preview
-      </div>
+
       {/* Background video */}
       {introSettings.backgroundType === 'video' && introSettings.backgroundVideo && (
         <video
           autoPlay
           muted
           loop
+          playsInline
           className="absolute inset-0 w-full h-full object-cover"
         >
           <source src={introSettings.backgroundVideo} type="video/mp4" />

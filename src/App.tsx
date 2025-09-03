@@ -11,6 +11,7 @@ import LinkCore from "./pages/LinkCore";
 import CaseMachine from "./pages/CaseMachine";
 import BookMe from "./pages/BookMe";
 import NotFound from "./pages/NotFound";
+import PocketBaseTestPage from "./components/PocketBaseTestPage";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => {
               <Route path="/linkcore" element={<LinkCore />} />
               <Route path="/casemachine" element={<CaseMachine />} />
               <Route path="/bookme" element={<BookMe />} />
+              <Route path="/test-pocketbase" element={<PocketBaseTestPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

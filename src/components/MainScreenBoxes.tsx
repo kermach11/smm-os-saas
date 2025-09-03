@@ -34,15 +34,7 @@ const createResponsiveBox = (boxName: keyof MainScreenBoxes) => {
       boxConfig
     } = useResponsiveBox(boxName);
 
-    // Діагностика для кожного боксу
-    console.log(`📦 ${boxName} Debug:`, {
-      deviceType,
-      boxConfig,
-      boxStyles,
-      boxClasses,
-      className,
-      style
-    });
+
 
     const animation = getAnimation();
     
@@ -68,11 +60,6 @@ const createResponsiveBox = (boxName: keyof MainScreenBoxes) => {
     };
     
     const finalClasses = `${boxClasses} ${className}`.trim();
-
-    console.log(`📦 ${boxName} Final Styles:`, {
-      finalStyles,
-      finalClasses
-    });
 
     return (
       <DraggableBox
@@ -150,15 +137,7 @@ export const SmartLogoBox: React.FC<LogoBoxProps> = ({
   
   const actualLogoSize = logoSize || 48; // fallback size
 
-  // Діагностика
-  console.log('🖼️ SmartLogoBox Debug:', {
-    deviceType,
-    boxConfig,
-    boxStyles,
-    boxClasses,
-    actualLogoSize,
-    logoUrl
-  });
+
 
   return (
     <ConstructorWrapper

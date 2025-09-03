@@ -99,15 +99,8 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [isConstructorUpdate, setIsConstructorUpdate] = useState(false);
 
-  // Базові налаштування без агресивних фіксів
-  useEffect(() => {
-    // Базові налаштування для MainScreen
-    document.body.style.overflowX = 'hidden';
-    
-    return () => {
-      document.body.style.overflowX = '';
-    };
-  }, []);
+  // ВИДАЛЕНО: Базові налаштування без агресивних фіксів - не заважаємо адмін панелі
+  // Тепер браузер сам керує всіма body стилями без нашого втручання
 
   // 🎯 KEYBOARD SHORTCUTS ДЛЯ КОНСТРУКТОРА
   useEffect(() => {
@@ -367,37 +360,12 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
   }, [adminSettings]);
 
   // Додатковий ефект для обробки змін deviceType
-  useEffect(() => {
-    if (deviceType === 'mobile') {
-      // Додаткові налаштування для мобільної версії
-      const timer = setTimeout(() => {
-        // Примусово оновлюємо layout після зміни deviceType
-        forceLayoutUpdate();
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [deviceType]);
+  // ВИДАЛЕНО: Умовні body стилі для мобільної версії - не заважаємо адмін панелі
+  // Тепер браузер сам керує всіма overflow стилями без нашого втручання
 
-  // Слухач для змін орієнтації екрана - НОВА АДАПТИВНА СИСТЕМА
-  useEffect(() => {
-    const handleOrientationChange = () => {
-      if (deviceType === 'mobile') {
-        console.log('📱 MainScreen: Зміна орієнтації екрана, оновлюємо layout');
-        setTimeout(() => {
-          forceLayoutUpdate();
-        }, 300); // Даємо час браузеру перерахувати розміри
-      }
-    };
-
-    window.addEventListener('orientationchange', handleOrientationChange);
-    window.addEventListener('resize', handleOrientationChange);
-    
-    return () => {
-      window.removeEventListener('orientationchange', handleOrientationChange);
-      window.removeEventListener('resize', handleOrientationChange);
-    };
-  }, [deviceType]);
+  // ВИДАЛЕНО: Слухач для змін орієнтації екрана - повністю прибрали щоб не заважати браузеру
+  // Тепер браузер сам без втручання обробляє зміни орієнтації та розмірів
+  // Це має виправити проблеми з позиціюванням адмін панелі на телефоні
   const { 
     isAdmin, 
     login, 
@@ -454,20 +422,19 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
     }
 
     const autoStartBackgroundMusic = async () => {
-      console.log('🎵 MainScreen: Перевіряємо автозапуск фонової музики');
-      console.log('🎵 MainScreen: autoStartAfterWelcome:', audioSettings.backgroundMusic.autoStartAfterWelcome);
+      
       
       if (audioSettings.backgroundMusic.autoStartAfterWelcome) {
         // Режим "постійної фонової музики" - музика запускається після Welcome і грає постійно
-        console.log('🎵 MainScreen: Режим постійної фонової музики - музика має грати з Welcome');
+  
         // Перевіряємо чи вже грає музика (запущена з Welcome)
         if (webAudioManager.isAudioPlaying('background-music')) {
-          console.log('🎵 MainScreen: Фонова музика вже грає з Welcome - встановлюємо стан');
+  
           setIsBackgroundMusicEnabled(true);
         }
       } else {
         // Режим "музика тільки на головній сторінці" - автозапуск при відкритті головної
-        console.log('🎵 MainScreen: Режим музики тільки на головній - автозапуск при відкритті');
+
         setIsBackgroundMusicEnabled(true);
         
         // Запускаємо музику автоматично
@@ -477,9 +444,9 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
               loop: audioSettings.backgroundMusic.loop,
               volume: audioSettings.backgroundMusic.volume
             });
-            console.log('✅ MainScreen: Фонова музика запущена автоматично');
+  
           } catch (error) {
-            console.log('⚠️ MainScreen: Автозапуск музики заблоковано браузером - чекаємо взаємодії');
+  
           }
         }
       }
@@ -495,7 +462,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
   useEffect(() => {
     if (!visible && audioSettings.backgroundMusic.enabled && !audioSettings.backgroundMusic.autoStartAfterWelcome) {
       // Зупиняємо музику тільки якщо це не режим постійної музики
-      console.log('🎵 MainScreen: Зупиняємо фонову музику при виході з головної сторінки');
+      
       setIsBackgroundMusicEnabled(false);
       if (webAudioManager.isAudioPlaying('background-music')) {
         webAudioManager.stopAudio('background-music');
@@ -503,206 +470,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
     }
   }, [visible, audioSettings.backgroundMusic.enabled, audioSettings.backgroundMusic.autoStartAfterWelcome]);
 
-  // 🎬 АВТОМАТИЧНЕ ЗАВАНТАЖЕННЯ І ЗАПУСК ВІДЕО
-  useEffect(() => {
-    const initBackgroundVideo = async () => {
-      if (backgroundSettings.backgroundType === 'video' && backgroundSettings.backgroundVideo) {
-        console.log('🎬 MainScreen: Ініціалізація фонового відео:', backgroundSettings.backgroundVideo);
-        
-        // Детекція мобільного пристрою - НОВА АДАПТИВНА СИСТЕМА
-        const isMobile = deviceType === 'mobile';
-        console.log('📱 MainScreen: Мобільний пристрій:', isMobile);
-        
-        // Знаходимо відео елемент
-        const videoElement = document.querySelector('video[src*="' + backgroundSettings.backgroundVideo + '"], video source[src*="' + backgroundSettings.backgroundVideo + '"]')?.closest('video') as HTMLVideoElement;
-        
-        if (videoElement) {
-          console.log('🎬 MainScreen: Знайдено відео елемент, налаштовуємо автозапуск');
-          
-          // Агресивні налаштування для автозапуску
-          videoElement.muted = true;
-          videoElement.autoplay = true;
-          videoElement.loop = true;
-          videoElement.playsInline = true;
-          videoElement.preload = 'auto';
-          
-          // Додаткові мобільні атрибути
-          if (isMobile) {
-            videoElement.setAttribute('webkit-playsinline', 'true');
-            videoElement.setAttribute('playsinline', 'true');
-            videoElement.setAttribute('controls', 'false');
-            // НЕ блокуємо pointer events на мобільних - це може заважати
-            videoElement.style.pointerEvents = 'auto';
-            // Але додаємо спеціальні стилі для запобігання показу контролів
-            (videoElement.style as any).webkitTouchCallout = 'none';
-            (videoElement.style as any).webkitUserSelect = 'none';
-            videoElement.style.userSelect = 'none';
-            videoElement.style.outline = 'none';
-          } else {
-            // На десктопі можемо блокувати pointer events
-            videoElement.style.pointerEvents = 'none';
-          }
-          
-          // Спробуємо запустити відразу
-          try {
-            await videoElement.play();
-            console.log('✅ MainScreen: Відео запущено автоматично');
-          } catch (error) {
-            console.log('⚠️ MainScreen: Автозапуск відео заблоковано, налаштовуємо слухачі');
-            
-            // Регістрируємо колбек для запуску при взаємодії через webAudioManager
-            webAudioManager.onActivation(async () => {
-              try {
-                await videoElement.play();
-                console.log('✅ MainScreen: Відео запущено через доміно ефект');
-              } catch (err) {
-                console.error('❌ MainScreen: Помилка запуску відео через доміно ефект:', err);
-              }
-            });
-            
-            // 📱 СПЕЦІАЛЬНА ЛОГІКА ДЛЯ МОБІЛЬНИХ
-            if (isMobile) {
-              console.log('📱 MainScreen: Додаємо мобільні слухачі подій для відео');
-              
-              // Функція для запуску відео
-              const playVideo = async (event: Event) => {
-                // Перевіряємо чи подія відбулася всередині адмін панелі
-                const target = event.target as HTMLElement;
-                const isAdminPanel = target?.closest('.admin-panel-v2, [class*="admin-panel"], .fixed[class*="admin"], .simple-admin-panel-container, [class*="backdrop-blur"]');
-                
-                // Якщо це адмін панель - не блокуємо touch події
-                if (isAdminPanel) {
-                  console.log('🎯 MainScreen: Touch подія в адмін панелі - не блокуємо');
-                  return;
-                }
-                
-                // Запобігаємо відкриттю контролів відео
-                event.preventDefault();
-                event.stopPropagation();
-                
-                try {
-                  await videoElement.play();
-                  console.log('✅ MainScreen: Відео запущено через мобільну взаємодію');
-                  // Видаляємо слухачі після успішного запуску
-                  document.removeEventListener('touchstart', playVideo);
-                  document.removeEventListener('click', playVideo);
-                  videoElement.removeEventListener('touchstart', playVideo);
-                  videoElement.removeEventListener('click', playVideo);
-                } catch (err) {
-                  console.log('⚠️ MainScreen: Спроба запуску відео через мобільну взаємодію не вдалася:', err);
-                }
-              };
-              
-              // Додаємо слухачі тільки на документ, не на відео елемент
-              document.addEventListener('touchstart', playVideo, { once: true, passive: false });
-              document.addEventListener('click', playVideo, { once: true, passive: false });
-              
-              // Додаємо спеціальний слухач на відео для запобігання показу контролів
-              const preventVideoControls = (event: Event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                return false;
-              };
-              
-              videoElement.addEventListener('contextmenu', preventVideoControls);
-              videoElement.addEventListener('webkitfullscreenchange', preventVideoControls);
-              videoElement.addEventListener('fullscreenchange', preventVideoControls);
-            }
-          }
-        } else {
-          console.log('⚠️ MainScreen: Відео елемент не знайдено, чекаємо на завантаження');
-          
-          // Якщо елемент ще не створений, чекаємо і пробуємо знову
-          setTimeout(() => {
-            const delayedVideoElement = document.querySelector('video[src*="' + backgroundSettings.backgroundVideo + '"], video source[src*="' + backgroundSettings.backgroundVideo + '"]')?.closest('video') as HTMLVideoElement;
-            
-            if (delayedVideoElement) {
-              console.log('🎬 MainScreen: Знайдено відео елемент з затримкою, налаштовуємо автозапуск');
-              
-              delayedVideoElement.muted = true;
-              delayedVideoElement.autoplay = true;
-              delayedVideoElement.loop = true;
-              delayedVideoElement.playsInline = true;
-              delayedVideoElement.preload = 'auto';
-              
-              // Додаткові мобільні атрибути
-              if (isMobile) {
-                delayedVideoElement.setAttribute('webkit-playsinline', 'true');
-                delayedVideoElement.setAttribute('playsinline', 'true');
-                delayedVideoElement.setAttribute('controls', 'false');
-                delayedVideoElement.style.pointerEvents = 'auto';
-                (delayedVideoElement.style as any).webkitTouchCallout = 'none';
-                (delayedVideoElement.style as any).webkitUserSelect = 'none';
-                delayedVideoElement.style.userSelect = 'none';
-                delayedVideoElement.style.outline = 'none';
-              } else {
-                delayedVideoElement.style.pointerEvents = 'none';
-              }
-              
-              // Спробуємо запустити
-              delayedVideoElement.play().then(() => {
-                console.log('✅ MainScreen: Відео запущено з затримкою');
-              }).catch(() => {
-                console.log('⚠️ MainScreen: Автозапуск відео з затримкою заблоковано, додаємо до доміно ефекту');
-                
-                webAudioManager.onActivation(async () => {
-                  try {
-                    await delayedVideoElement.play();
-                    console.log('✅ MainScreen: Відео запущено через доміно ефект (з затримкою)');
-                  } catch (err) {
-                    console.error('❌ MainScreen: Помилка запуску відео через доміно ефект (з затримкою):', err);
-                  }
-                });
-                
-                // Мобільні слухачі для затриманого елемента
-                if (isMobile) {
-                  const playDelayedVideo = async (event: Event) => {
-                    // Перевіряємо чи подія відбулася всередині адмін панелі
-                    const target = event.target as HTMLElement;
-                    const isAdminPanel = target?.closest('.admin-panel-v2, [class*="admin-panel"], .fixed[class*="admin"], .simple-admin-panel-container, [class*="backdrop-blur"]');
-                    
-                    // Якщо це адмін панель - не блокуємо touch події
-                    if (isAdminPanel) {
-                      console.log('🎯 MainScreen: Touch подія в адмін панелі (delayed) - не блокуємо');
-                      return;
-                    }
-                    
-                    event.preventDefault();
-                    event.stopPropagation();
-                    
-                    try {
-                      await delayedVideoElement.play();
-                      console.log('✅ MainScreen: Затримане відео запущено через мобільну взаємодію');
-                      document.removeEventListener('touchstart', playDelayedVideo);
-                      document.removeEventListener('click', playDelayedVideo);
-                    } catch (err) {
-                      console.log('⚠️ MainScreen: Спроба запуску затриманого відео не вдалася:', err);
-                    }
-                  };
-                  
-                  document.addEventListener('touchstart', playDelayedVideo, { once: true, passive: false });
-                  document.addEventListener('click', playDelayedVideo, { once: true, passive: false });
-                  
-                  // Запобігаємо показу контролів на затриманому відео
-                  const preventControls = (event: Event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    return false;
-                  };
-                  
-                  delayedVideoElement.addEventListener('contextmenu', preventControls);
-                  delayedVideoElement.addEventListener('webkitfullscreenchange', preventControls);
-                  delayedVideoElement.addEventListener('fullscreenchange', preventControls);
-                }
-              });
-            }
-          }, 1000);
-        }
-      }
-    };
-
-    initBackgroundVideo();
-  }, [backgroundSettings.backgroundType, backgroundSettings.backgroundVideo]);
+  // Відео тепер використовує стандартний HTML5 approach без складної логіки
 
   // Логування налаштувань аудіо (відключено для чистоти консолі)
   // useEffect(() => {
@@ -1225,12 +993,11 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
         }
       }
       
-      // Скидаємо прапорець через невеликий час та примусово оновлюємо layout
+      // Скидаємо прапорець через невеликий час (без агресивного форсингу layout)
       setTimeout(() => {
         setIsConstructorUpdate(false);
         
-        // Викликаємо функцію примусового оновлення layout
-        forceLayoutUpdate();
+        // Видалили агресивний форсинг layout - тепер система працює природно
       }, 1000);
     };
 
@@ -1256,16 +1023,11 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
     };
   }, [isDataLoaded]);
 
-  // Ефект для обробки видимості компонента
+  // Ефект для обробки видимості компонента - СПРОЩЕНИЙ БЕЗ АГРЕСИВНОГО ФОРСИНГУ
   useEffect(() => {
     if (visible && deviceType === 'mobile') {
-      // Коли компонент стає видимим на мобільному пристрої, примусово оновлюємо layout
+      // Видалили агресивний форсинг layout - тепер компонент працює природно
       console.log('📱 MainScreen: Мобільна версія стала видимою, logoUrl:', logoUrl, 'logoSize:', logoSize);
-      const timer = setTimeout(() => {
-        forceLayoutUpdate();
-      }, 300);
-      
-      return () => clearTimeout(timer);
     }
   }, [visible, deviceType, logoUrl, logoSize]);
 
@@ -1343,67 +1105,65 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
     }
   };
 
-  // Функція для примусового оновлення layout в мобільній версії - НОВА АДАПТИВНА СИСТЕМА
-  const forceLayoutUpdate = () => {
-    if (deviceType === 'mobile') {
-      console.log('📱 MainScreen: Примусове оновлення layout для мобільної версії');
-      
-      // Примусово перерахуємо розміри
-      window.dispatchEvent(new Event('resize'));
-      
-      // Примусово перемалюємо компонент
-      const mainContainer = document.querySelector('.main-screen-container');
-      if (mainContainer) {
-        const element = mainContainer as HTMLElement;
-        
-        // Зберігаємо поточні стилі
-        const currentDisplay = element.style.display;
-        const currentTransform = element.style.transform;
-        
-        // Примусово викликаємо reflow
-        element.style.display = 'none';
-        element.offsetHeight; // Trigger reflow
-        element.style.display = currentDisplay || 'block';
-        
-        // Додаткові стилі для стабільності
-        element.style.height = '100vh';
-        element.style.minHeight = '100vh';
-        element.style.width = '100vw';
-        element.style.position = 'relative';
-        element.style.overflow = 'hidden';
-        
-        // Використовуємо GPU acceleration для плавності
-        element.style.transform = 'translateZ(0)';
-        requestAnimationFrame(() => {
-          element.style.transform = currentTransform || '';
-        });
-      }
-      
-      // Також оновлюємо всі дочірні елементи з motion
-      const motionElements = document.querySelectorAll('.main-screen-container [data-framer-motion], .main-screen-container > div');
-      motionElements.forEach(el => {
-        const element = el as HTMLElement;
-        const currentTransform = element.style.transform;
-        element.style.transform = 'translateZ(0)';
-        requestAnimationFrame(() => {
-          element.style.transform = currentTransform || '';
-        });
-      });
-      
-      // Додатковий фікс для Framer Motion компонентів
-      setTimeout(() => {
-        const motionDivs = document.querySelectorAll('.main-screen-container > div');
-        motionDivs.forEach(div => {
-          const element = div as HTMLElement;
-          element.style.width = '100%';
-          element.style.height = '100%';
-          element.style.minHeight = '100vh';
-        });
-      }, 100);
-      
-      console.log('✅ MainScreen: Layout оновлено для мобільної версії');
-    }
-  };
+  // БЕКАП: Функція для примусового оновлення layout видалена через проблеми з мобільним скролінгом
+  // Створюємо нову адаптивну систему яка не заважатиме скролінгу та позиціюванню
+  // 
+  // const forceLayoutUpdate = () => {
+  //   if (deviceType === 'mobile') {
+  //     // Примусово перерахуємо розміри
+  //     window.dispatchEvent(new Event('resize'));
+  //     
+  //     // Примусово перемалюємо компонент
+  //     const mainContainer = document.querySelector('.main-screen-container');
+  //     if (mainContainer) {
+  //       const element = mainContainer as HTMLElement;
+  //       
+  //       // Зберігаємо поточні стилі
+  //       const currentDisplay = element.style.display;
+  //       const currentTransform = element.style.transform;
+  //       
+  //       // Примусово викликаємо reflow
+  //       element.style.display = 'none';
+  //       element.offsetHeight; // Trigger reflow
+  //       element.style.display = currentDisplay || 'block';
+  //       
+  //       // Додаткові стилі для стабільності
+  //       element.style.height = '100vh';
+  //       element.style.minHeight = '100vh';
+  //       element.style.width = '100vw';
+  //       element.style.position = 'relative';
+  //       element.style.overflow = 'hidden';
+  //       
+  //       // Використовуємо GPU acceleration для плавності
+  //       element.style.transform = 'translateZ(0)';
+  //       requestAnimationFrame(() => {
+  //         element.style.transform = currentTransform || '';
+  //       });
+  //     }
+  //     
+  //     // Також оновлюємо всі дочірні елементи з motion
+  //     const motionElements = document.querySelectorAll('.main-screen-container [data-framer-motion], .main-screen-container > div');
+  //     motionElements.forEach(el => {
+  //       const element = el as HTMLElement;
+  //       const currentTransform = element.style.transform;
+  //       element.style.transform = 'translateZ(0)';
+  //       requestAnimationFrame(() => {
+  //         element.style.transform = currentTransform || '';
+  //       });
+  //     });
+  //     
+  //     // Додатковий фікс для Framer Motion компонентів
+  //     setTimeout(() => {
+  //       const motionDivs = document.querySelectorAll('.main-screen-container > div');
+  //       motionDivs.forEach(div => {
+  //         const element = div as HTMLElement;
+  //         element.style.width = '100%';
+  //         element.style.height = '100%';
+  //         element.style.minHeight = '100vh';
+  //       });
+  //     }, 100);
+  //   }
+  // };
 
   // Функція для toggle фонової музики через Web Audio API
   const toggleBackgroundMusic = () => {
@@ -1433,40 +1193,33 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
 
   return (
     <div 
-      className="main-screen-container overflow-hidden"
+      className="main-screen-container"
       style={{
         ...getBackgroundStyle(),
         position: 'relative',
-        width: '100vw',
-        height: '100vh',
-        minHeight: '100vh',
+        width: '100%',
+        height: '100%',
+        minHeight: '100vh', // Повертаємо viewport height для адмін панелі
         display: visible ? 'block' : 'none',
         pointerEvents: visible ? 'auto' : 'none'
       }}
     >
       {/* Фонове відео якщо вибрано */}
       {backgroundSettings.backgroundType === 'video' && backgroundSettings.backgroundVideo && (
-        <>
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            webkit-playsinline="true"
-            controls={false}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ pointerEvents: 'none' }}
-            onPlay={() => {
-              // Відео запустилося успішно
-            }}
-            onError={(e) => console.error('❌ MainScreen: Помилка відео:', e)}
-          >
-            <source src={backgroundSettings.backgroundVideo} type="video/mp4" />
-          </video>
-          
-
-        </>
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          controls={false}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ pointerEvents: 'none' }}
+          onPlay={() => console.log('🎬 MainScreen: Відео запустилося успішно')}
+          onError={(e) => console.error('❌ MainScreen: Помилка відео:', e)}
+        >
+          <source src={backgroundSettings.backgroundVideo} type="video/mp4" />
+        </video>
       )}
 
 
@@ -1491,13 +1244,13 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
         animate={{ opacity: visible ? 1 : 0 }}
         exit={{ opacity: 0 }}
         transition={{ 
-          duration: 1.6, 
+          duration: 0.8, 
           ease: [0.25, 0.1, 0.25, 1.0] // Плавніша крива анімації
         }}
         className="relative w-full h-full z-10"
         style={{
           backgroundColor: 'transparent',
-          minHeight: '100vh'
+          minHeight: 'auto' // Автоматична висота - не заважаємо адмін панелі
         }}
       >
         {/* Background pattern overlay - ВІДКЛЮЧЕНО для чистого фону */}
@@ -1518,7 +1271,6 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
           logoSize={logoSize}
           onMouseEnter={playHoverSound}
           onClick={() => {
-            console.log('🖼️ MainScreen: Клік по логотипу, deviceType:', deviceType, 'logoUrl:', logoUrl);
             trackClick('#main-logo', 'Main Logo Click');
           }}
         />
@@ -1542,8 +1294,8 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
         
 
 
-        {/* Центрований контейнер для всього контенту */}
-        <div className="flex flex-col items-center justify-center min-h-screen px-4 lg:px-8 xl:px-12 pt-20 lg:pt-24 xl:pt-28">
+        {/* Центрований контейнер для всього контенту - БЕЗ ВПЛИВУ НА АДМІН ПАНЕЛЬ */}
+        <div className="flex flex-col items-center justify-center min-h-[50vh] px-4 lg:px-8 xl:px-12 pt-20 lg:pt-24 xl:pt-28">
           {/* 🚀 НОВИЙ HEADER TEXT БЛОК */}
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
@@ -1626,7 +1378,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
         <AnimatePresence>
           {isConstructorMode && (
             <motion.div
-              className="fixed bottom-6 left-6 z-30 flex flex-col gap-3"
+              className="fixed bottom-15 left-6 z-30 flex flex-col gap-3"
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0 }}

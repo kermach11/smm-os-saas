@@ -156,56 +156,17 @@ const defaultSettings: WelcomeSettings = {
 };
 
 const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
-  console.log('🎬 WelcomeScreenPreview: Component rendering');
   const [settings, setSettings] = useState<WelcomeSettings>(defaultSettings);
   const [animationKey, setAnimationKey] = useState(0);
   
   // Завантаження налаштувань
   useEffect(() => {
-    console.log('🔄 WelcomeScreenPreview: useEffect triggered, loading settings...');
     loadWelcomeSettings();
 
     // Слухаємо оновлення налаштувань
     const handleSettingsUpdate = (event: CustomEvent) => {
-      console.log('🔄 WelcomeScreenPreview: Отримано оновлення налаштувань:', {
-        titleFontSize: event.detail.titleFontSize,
-        titleFontFamily: event.detail.titleFontFamily,
-        titleFontWeight: event.detail.titleFontWeight,
-        titleText: event.detail.title,
-        // Додаю логи для тіней
-        titleShadowIntensity: event.detail.titleShadowIntensity,
-        titleShadowColor: event.detail.titleShadowColor,
-        title3DDepth: event.detail.title3DDepth,
-        subtitleShadowIntensity: event.detail.subtitleShadowIntensity,
-        descriptionShadowIntensity: event.detail.descriptionShadowIntensity,
-        // Додаю логи для анімацій
-        titleAnimation: event.detail.titleAnimation,
-        subtitleAnimation: event.detail.subtitleAnimation,
-        descriptionAnimation: event.detail.descriptionAnimation,
-        animationDuration: event.detail.animationDuration,
-        animationDelay: event.detail.animationDelay,
-        // ПОВНИЙ ОБ'ЄКТ для діагностики
-        fullDetailKeys: Object.keys(event.detail),
-        fullDetail: event.detail
-      });
-      setSettings(prev => {
+              setSettings(prev => {
         const newSettings = { ...prev, ...event.detail };
-        console.log('🔄 WelcomeScreenPreview: Нові налаштування після мержингу:', {
-          titleFontSize: newSettings.titleFontSize,
-          titleFontFamily: newSettings.titleFontFamily,
-          titleFontWeight: newSettings.titleFontWeight,
-          title: newSettings.title,
-          // Додаю логи для тіней
-          titleShadowIntensity: newSettings.titleShadowIntensity,
-          titleShadowColor: newSettings.titleShadowColor,
-          title3DDepth: newSettings.title3DDepth,
-          // Додаю логи для анімацій
-          titleAnimation: newSettings.titleAnimation,
-          subtitleAnimation: newSettings.subtitleAnimation,
-          descriptionAnimation: newSettings.descriptionAnimation,
-          animationDuration: newSettings.animationDuration,
-          animationDelay: newSettings.animationDelay
-        });
         return newSettings;
       });
     };
@@ -220,18 +181,14 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
   // Перезапуск анімацій при зміні налаштувань
   useEffect(() => {
     setAnimationKey(prev => prev + 1);
-    console.log('🎭 WelcomeScreenPreview: Animation key updated:', animationKey + 1);
   }, [settings.titleAnimation, settings.subtitleAnimation, settings.descriptionAnimation, settings.animationDuration, settings.animationDelay]);
 
   const loadWelcomeSettings = async () => {
-    console.log('📥 WelcomeScreenPreview: loadWelcomeSettings called');
     try {
       // Load from IndexedDB first
       const indexedDBSettings = await indexedDBService.loadSettings('welcomeSettings');
-      console.log('📂 WelcomeScreenPreview: IndexedDB result:', indexedDBSettings);
       
       if (indexedDBSettings) {
-        console.log('✅ WelcomeScreenPreview: Settings found in IndexedDB');
         const safeSettings = {
           ...defaultSettings,
           ...indexedDBSettings,
@@ -241,7 +198,6 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
           }
         };
         
-        console.log('🔧 WelcomeScreenPreview: Merged settings:', safeSettings.splineSettings);
         setSettings(safeSettings);
         return;
       }
@@ -313,17 +269,7 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
     const shadowColor = settings[`${element}ShadowColor`] || '#000000';
     const depth3D = settings[`${element}3DDepth`] || 0;
 
-    // Додаю логи для діагностики
-    console.log(`🌟 WelcomeScreenPreview getTextStyle для ${element}:`, {
-      shadowIntensity,
-      shadowColor,
-      depth3D,
-      fullSettings: {
-        titleShadowIntensity: settings.titleShadowIntensity,
-        subtitleShadowIntensity: settings.subtitleShadowIntensity,
-        descriptionShadowIntensity: settings.descriptionShadowIntensity
-      }
-    });
+
 
     const hexToRgb = (hex: string) => {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -338,13 +284,13 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
         `${i + 1}px ${i + 1}px 0 ${shadowColor}`
       ).join(', ');
       baseStyle.textShadow = shadows;
-      console.log(`🌟 WelcomeScreenPreview: Застосовано 3D тінь для ${element}:`, shadows);
+
     } else if (shadowIntensity > 0) {
       // Звичайна тінь
       const offset = Math.round(shadowIntensity * 4);
       const blur = Math.round(shadowIntensity * 8);
       baseStyle.textShadow = `${offset}px ${offset}px ${blur}px rgba(${hexToRgb(shadowColor)}, ${shadowIntensity})`;
-      console.log(`🌟 WelcomeScreenPreview: Застосовано звичайну тінь для ${element}:`, baseStyle.textShadow);
+
     }
 
     return baseStyle;
@@ -356,18 +302,10 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
                           element === 'subtitle' ? settings.subtitleAnimation :
                           settings.descriptionAnimation;
     
-    console.log(`🎭 WelcomeScreenPreview: getAnimationVariants для ${element}:`, {
-      enterAnimation,
-      settingsAnimations: {
-        titleAnimation: settings.titleAnimation,
-        subtitleAnimation: settings.subtitleAnimation,
-        descriptionAnimation: settings.descriptionAnimation
-      }
-    });
+
 
     // Якщо анімація 'none' або не задана, повертаємо статичну анімацію
     if (!enterAnimation || enterAnimation === 'none') {
-      console.log(`🎭 WelcomeScreenPreview: No animation for ${element}, returning static`);
       return {
         initial: { opacity: 1 },
         animate: { opacity: 1 },
@@ -459,12 +397,10 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
       }
     };
 
-    console.log(`🎭 WelcomeScreenPreview: Animation config for ${element}:`, animationConfig);
-    
     return animationConfig;
   };
 
-  console.log('🎨 WelcomeScreenPreview: Rendering with settings:', settings.splineSettings);
+
 
   return (
     <motion.div
@@ -489,13 +425,6 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
 
       {/* Spline 3D Animation */}
       {(() => {
-        console.log('🔍 WelcomeScreenPreview: Spline debug:', {
-          hasSplineSettings: !!settings.splineSettings,
-          enabled: settings.splineSettings?.enabled,
-          sceneUrl: settings.splineSettings?.sceneUrl,
-          fullSettings: settings.splineSettings
-        });
-        
         return settings.splineSettings?.enabled && (
           <SplineAnimation
             sceneUrl={settings.splineSettings.sceneUrl}

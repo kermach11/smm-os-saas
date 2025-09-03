@@ -4,6 +4,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { AdminTabId } from './AdminContentAdapter';
 import AdminContentAdapter from './AdminContentAdapter';
 import { DeviceType } from '../../config/admin-v2/responsiveConfig';
+import { useAdminPanelV2 } from '../../hooks/admin-v2/useAdminPanelV2';
 
 interface AdminPanelMobileProps {
   isOpen: boolean;
@@ -27,8 +28,7 @@ const AdminPanelMobile: React.FC<AdminPanelMobileProps> = ({
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<AdminTabId>('preview');
-
-
+  const { config } = useAdminPanelV2();
 
 
   const tabs = [
@@ -57,9 +57,10 @@ const AdminPanelMobile: React.FC<AdminPanelMobileProps> = ({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="bg-gradient-to-br from-slate-50 to-white rounded-none lg:rounded-2xl shadow-2xl w-full max-w-[1400px] h-[100dvh] lg:h-[90vh] flex flex-col overflow-hidden border-0 lg:border border-slate-200/50"
+            className="bg-gradient-to-br from-slate-50 to-white rounded-none lg:rounded-2xl shadow-2xl w-full max-w-[1400px] lg:h-[90vh] flex flex-col overflow-hidden border-0 lg:border border-slate-200/50"
             style={{ 
-              marginBottom: '0' 
+              marginBottom: '0',
+              height: config.height
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -162,8 +163,8 @@ const AdminPanelMobile: React.FC<AdminPanelMobileProps> = ({
               })}
             </div>
 
-            {/* Mobile Content - точно як у V1 */}
-            <div className="flex-1 overflow-y-auto bg-white">
+            {/* Mobile Content - точно як у V1 + розширена полоска знизу проти сліпої зони */}
+            <div className="flex-1 overflow-y-auto bg-white pb-24 md:pb-0">
               <AdminContentAdapter
                 activeTab={activeTab}
                 deviceType={deviceType}

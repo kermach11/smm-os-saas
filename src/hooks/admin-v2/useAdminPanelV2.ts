@@ -180,10 +180,10 @@ export const useAdminPanelV2 = () => {
       return true;
     }
     
-    // V2: Додаткова перевірка для development mode
-    if (process.env.NODE_ENV === 'development') {
-      return true;
-    }
+    // ❌ ВИДАЛЕНО: V2: Додаткова перевірка для development mode
+    // if (process.env.NODE_ENV === 'development') {
+    //   return true;
+    // }
     
     return false;
   }, []);
@@ -225,16 +225,16 @@ export const useAdminPanelV2 = () => {
     };
   }, [config]);
 
-  // 🔄 Перемикання між версіями
+  // 🔄 Перемикання між версіями (V1 ВИДАЛЕНО - завжди V2)
   const toggleVersionSafely = useCallback(() => {
-    const newVersion: AdminPanelVersion = state.currentVersion === 'v1' ? 'v2' : 'v1';
-    switchVersion(newVersion);
-  }, [state.currentVersion, switchVersion]);
+    console.log('ℹ️ V1 видалено - використовується тільки V2');
+    switchVersion('v2'); // Завжди переключаємо на V2
+  }, [switchVersion]);
 
-  // 🚨 Аварійне повернення до v1
+  // 🚨 Аварійне повернення до v1 (V1 ВИДАЛЕНО - функція застаріла)
   const forceV1 = useCallback(() => {
-    switchVersion('v1');
-    console.log('🚨 Forced switch to Admin Panel V1');
+    console.log('⚠️ V1 компоненти видалено - використовується тільки V2');
+    switchVersion('v2'); // Примусово переключаємо на V2
   }, [switchVersion]);
 
   // 🧪 Тестування нової версії

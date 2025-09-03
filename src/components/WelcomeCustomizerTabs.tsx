@@ -245,7 +245,7 @@ export const DesignTab: React.FC<TabsProps> = ({ settings, updateSettings }) => 
               <div className="text-xs text-slate-500 mt-1">{settings.titleFontSize || 32}px</div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Шрифт</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Сімейство шрифтів</label>
               <select
                 value={settings.titleFontFamily || 'Inter'}
                 onChange={(e) => updateSettings({ titleFontFamily: e.target.value })}

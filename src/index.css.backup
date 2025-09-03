@@ -1,0 +1,11 @@
+/* 🔒 Фіксована головна сторінка без свайпів */
+.main-screen-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  touch-action: none; /* Забороняє touch gestures */
+  overscroll-behavior: none; /* Забороняє bounce scroll */
+  -webkit-overflow-scrolling: touch;
+  background: transparent; /* Прозорий фон для відео */
+} 

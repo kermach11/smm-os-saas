@@ -65,22 +65,13 @@ export const useResponsive = (): UseResponsiveReturn => {
     document.documentElement.setAttribute('data-device-type', newDeviceType);
     document.documentElement.setAttribute('data-orientation', newIsLandscape ? 'landscape' : 'portrait');
     
-    // Логування для дебагу
-    console.log('📱 ResponsiveHook:', {
-      width,
-      height,
-      deviceType: newDeviceType,
-      isLandscape: newIsLandscape,
-      hasAdminSettings: !!adminSettings
-    });
+
   }, [adminSettings]);
 
   // Слухач для оновлень з адмін панелі (інтеграція з MainScreen)
   const handleAdminUpdate = useCallback((event: Event) => {
     const customEvent = event as CustomEvent<Record<string, unknown>>;
     const settings = customEvent.detail;
-    
-    console.log('🔄 useResponsive: Отримано оновлення з адмін панелі:', settings);
     
     // Конвертуємо налаштування з адмін панелі в формат нашої системи
     const newAdminSettings: AdminIntegrationSettings = {
@@ -136,8 +127,6 @@ export const useResponsive = (): UseResponsiveReturn => {
       ...prev,
       ...newAdminSettings
     }));
-
-    console.log('✅ useResponsive: Оновлено налаштування:', newAdminSettings);
   }, [adminSettings]);
 
   // Ініціалізація та слухачі подій
@@ -235,7 +224,6 @@ export const useResponsive = (): UseResponsiveReturn => {
 
   // Функція для ручного оновлення налаштувань адмін панелі
   const updateAdminSettings = useCallback((newSettings: AdminIntegrationSettings) => {
-    console.log('🔧 useResponsive: Ручне оновлення налаштувань:', newSettings);
     setAdminSettings(prev => ({
       ...prev,
       ...newSettings

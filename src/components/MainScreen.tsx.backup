@@ -1,0 +1,13 @@
+// BACKUP - оригінальний стиль MainScreen.tsx
+    <div 
+      className="main-screen-container"
+      style={{
+        ...getBackgroundStyle(),
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        minHeight: '100vh', // Повертаємо viewport height для адмін панелі
+        display: visible ? 'block' : 'none',
+        pointerEvents: visible ? 'auto' : 'none'
+      }}
+    > 

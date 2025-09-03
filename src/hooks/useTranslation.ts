@@ -477,11 +477,16 @@ const translations = {
     'typography.elements.description': 'Опису',
     'typography.settings.for': 'Налаштування для:',
     
+    // Typography основні
+    'typography.font.family': 'Сімейство шрифтів',
+    'typography.font.weight': 'Товщина шрифту',
+    
     // Адаптивні налаштування
     'responsive.title': 'Адаптивні налаштування',
     'responsive.description': 'Налаштування для різних розмірів екрану',
     'responsive.font.size': 'Розмір:',
     'responsive.margin': 'Відступ:',
+    'responsive.margin.bottom': 'Відступ знизу:',
     'responsive.line.height': 'Висота:',
     'responsive.letter.spacing': 'Інтервал:',
 

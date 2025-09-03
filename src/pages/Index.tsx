@@ -190,6 +190,41 @@ const Index = () => {
     // Позначаємо що користувач вже взаємодіяв зі сторінкою
     setUserInteracted(true);
     
+    // 🎵 ПЛАВНИЙ FADE OUT Welcome аудіо замість різкої зупинки
+    const welcomeAudio = document.querySelectorAll('audio');
+    welcomeAudio.forEach(audio => {
+      if (!audio.paused) {
+        console.log('🎵 Index: Запускаємо fade out для Welcome аудіо');
+        
+        // Плавне затихання за 1 секунду
+        const originalVolume = audio.volume;
+        const fadeOutDuration = 1000; // 1 секунда
+        const fadeOutSteps = 20;
+        const volumeStep = originalVolume / fadeOutSteps;
+        const timeStep = fadeOutDuration / fadeOutSteps;
+        
+        let currentStep = 0;
+        const fadeOutInterval = setInterval(() => {
+          currentStep++;
+          const newVolume = Math.max(0, originalVolume - (volumeStep * currentStep));
+          audio.volume = newVolume;
+          
+          if (currentStep >= fadeOutSteps || newVolume <= 0) {
+            clearInterval(fadeOutInterval);
+            // Зупиняємо тільки після повного затихання
+            setTimeout(() => {
+              if (!audio.paused) {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.volume = originalVolume; // Відновлюємо оригінальну гучність для наступного разу
+                console.log('🔇 Index: Welcome аудіо зупинено після fade out');
+              }
+            }, 200);
+          }
+        }, timeStep);
+      }
+    });
+    
     try {
       // Паралельно виконуємо всі асинхронні операції
       const [mainSettings] = await Promise.all([
@@ -200,7 +235,7 @@ const Index = () => {
       
       const backgroundMusic = mainSettings?.audioSettings?.backgroundMusic;
       
-      // Обробка аудіо в background (не блокує перехід)
+      // Обробка нової фонової музики в background (не блокує перехід)
       Promise.resolve().then(async () => {
         if (backgroundMusic?.enabled && backgroundMusic?.autoStartAfterWelcome) {
           console.log('🎵 Index: Запуск постійної фонової музики після Welcome');
@@ -217,16 +252,6 @@ const Index = () => {
             }
           }
         }
-        
-        // Зупиняємо Welcome музику
-        const welcomeAudio = document.querySelectorAll('audio');
-        welcomeAudio.forEach(audio => {
-          if (!audio.paused) {
-            audio.pause();
-            audio.currentTime = 0;
-            console.log('🔇 Index: Зупинено Welcome аудіо');
-          }
-        });
       });
       
       // Стандартизований тайминг: 300ms для переходу
@@ -267,7 +292,42 @@ const Index = () => {
       
       const backgroundMusic = mainSettings?.audioSettings?.backgroundMusic;
       
-      // Обробка аудіо в background (не блокує перехід)
+      // 🎵 ПЛАВНИЙ FADE OUT Intro аудіо замість різкої зупинки
+      const introAudio = document.querySelectorAll('audio');
+      introAudio.forEach(audio => {
+        if (!audio.paused) {
+          console.log('🎵 Index: Запускаємо fade out для Intro аудіо');
+          
+          // Плавне затихання за 800мс (швидше ніж Welcome)
+          const originalVolume = audio.volume;
+          const fadeOutDuration = 800;
+          const fadeOutSteps = 16;
+          const volumeStep = originalVolume / fadeOutSteps;
+          const timeStep = fadeOutDuration / fadeOutSteps;
+          
+          let currentStep = 0;
+          const fadeOutInterval = setInterval(() => {
+            currentStep++;
+            const newVolume = Math.max(0, originalVolume - (volumeStep * currentStep));
+            audio.volume = newVolume;
+            
+            if (currentStep >= fadeOutSteps || newVolume <= 0) {
+              clearInterval(fadeOutInterval);
+              // Зупиняємо тільки після повного затихання
+              setTimeout(() => {
+                if (!audio.paused) {
+                  audio.pause();
+                  audio.currentTime = 0;
+                  audio.volume = originalVolume;
+                  console.log('🔇 Index: Intro аудіо зупинено після fade out');
+                }
+              }, 100);
+            }
+          }, timeStep);
+        }
+      });
+
+      // Обробка нової фонової музики в background (не блокує перехід)
       Promise.resolve().then(async () => {
         if (backgroundMusic?.enabled && backgroundMusic?.autoStartAfterWelcome) {
           console.log('🎵 Index: Режим постійної фонової музики - запускаємо фонову музику');
@@ -284,15 +344,6 @@ const Index = () => {
             }
           }
         }
-        
-        // Зупиняємо Intro музику
-        const introAudio = document.querySelectorAll('audio');
-        introAudio.forEach(audio => {
-          if (!audio.paused) {
-            audio.pause();
-            audio.currentTime = 0;
-          }
-        });
       });
       
       // Стандартизований тайминг: 300ms для переходу

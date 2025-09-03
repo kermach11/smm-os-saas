@@ -4,6 +4,8 @@ import { useTranslation } from '../hooks/useTranslation';
 import { FileItem, ContentManagerProps } from '../types/contentManager';
 import indexedDBService from '../services/IndexedDBService';
 import SupabaseUploader from './SupabaseUploader';
+import PocketBaseUploader from './PocketBaseUploader';
+import CloudStorageManager from './CloudStorageManager';
 import { UploadedFile } from '../services/SupabaseStorageService';
 
 const ContentManager: React.FC<ContentManagerProps> = ({
@@ -1874,20 +1876,10 @@ const ContentManager: React.FC<ContentManagerProps> = ({
         )}
 
         {activeTab === 'cloud' && (
-                     <motion.div
-             key="cloud"
-             initial={{ opacity: 0, y: 20 }}
-             animate={{ opacity: 1, y: 0 }}
-             exit={{ opacity: 0, y: -20 }}
-             className="space-y-2 lg:space-y-6"
-           >
-             <SupabaseUploader 
-               onUpload={handleSupabaseUpload}
-               allowedTypes={allowedTypes}
-               maxFiles={10}
-               maxSize={50}
-             />
-           </motion.div>
+          <CloudStorageManager 
+            onUpload={handleSupabaseUpload}
+            allowedTypes={allowedTypes}
+          />
         )}
       </AnimatePresence>
     </div>

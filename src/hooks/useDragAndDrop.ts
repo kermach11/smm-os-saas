@@ -333,7 +333,7 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
       detail: { isConstructorMode: true } 
     }));
     
-    console.log('🎯 Constructor Mode: УВІМКНЕНО');
+
   }, []);
 
   const disableConstructorMode = useCallback(() => {
@@ -347,7 +347,7 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
       detail: { isConstructorMode: false } 
     }));
     
-    console.log('🎯 Constructor Mode: ВИМКНЕНО');
+
   }, []);
 
   const toggleConstructorMode = useCallback(() => {
@@ -390,12 +390,7 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
     isDraggingRef.current = true;
     document.body.style.cursor = 'grabbing';
     
-    console.log(`🎯 Почато перетягування: ${boxName}`, { 
-      offset, 
-      currentPosition, 
-      mousePosition: { x: event.clientX, y: event.clientY },
-      elementRect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
-    });
+
   }, [isConstructorMode]);
 
   const handleMouseMove = useCallback((event: React.MouseEvent) => {
@@ -474,28 +469,18 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
     // Не зберігаємо під час перетягування (shouldSave = false)
     setBoxPosition(dragState.draggedBox, centerSnappedPosition, false);
     
-          console.log(`🎯 Переміщення: ${dragState.draggedBox}`, {
-        constraints,
-        mousePosition: { x: event.clientX, y: event.clientY },
-        offset: dragState.offset,
-        newPosition,
-        boundedPosition,
-        gridSnappedPosition,
-        centerSnappedPosition
-      });
+
       }, [dragState, deviceType, snapPositionToGrid, snapToCenter]);
 
   const handleMouseUp = useCallback(async () => {
     if (!isDraggingRef.current || !dragState.isDragging) return;
     
-    console.log(`🎯 Завершено перетягування: ${dragState.draggedBox}`, {
-      finalPosition: dragState.currentPosition
-    });
+
     
     // Фінальне збереження позиції після завершення перетягування
     if (dragState.draggedBox && dragState.currentPosition) {
       setBoxPosition(dragState.draggedBox, dragState.currentPosition, true);
-      console.log('💾 Фінальна позиція збережена:', dragState.draggedBox, dragState.currentPosition);
+
       
       // Негайно зберігаємо в IndexedDB після завершення перетягування
       try {
@@ -510,7 +495,7 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
         };
         
         await indexedDBService.saveSettings('boxPositions', updatedPositions, 'constructor');
-        console.log('💾 Негайне збереження позиції в IndexedDB:', dragState.draggedBox, dragState.currentPosition);
+
       } catch (error) {
         console.error('❌ Помилка негайного збереження позиції:', error);
       }
@@ -714,22 +699,14 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
     const key = `${boxName}_${deviceType}`;
     const position = boxPositions[key];
     
-    console.log(`🔍 getBoxPosition для ${boxName}:`, {
-      key,
-      position,
-      allPositions: boxPositions,
-      deviceType
-    });
+
     
     // Якщо позиція не знайдена, повертаємо стандартну
     if (!position) {
       const defaultPos = getDefaultBoxPosition(boxName);
       // 🎯 НОВИЙ: Застосовуємо коригування для paginationBox
       const adjustedDefaultPos = adjustPositionForPagination(defaultPos, boxName);
-      console.log(`🔍 Використовуємо стандартну позицію для ${boxName}:`, {
-        default: defaultPos,
-        adjusted: adjustedDefaultPos
-      });
+
       return adjustedDefaultPos;
     }
     
@@ -742,18 +719,12 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
       const absolutePos = relativeToAbsolute(relativePos);
       // 🎯 НОВИЙ: Застосовуємо коригування для paginationBox
       const adjustedPos = adjustPositionForPagination(absolutePos, boxName);
-      console.log(`🔍 Конвертуємо відносну позицію для ${boxName}:`, {
-        relative: relativePos,
-        absolute: absolutePos,
-        adjusted: adjustedPos,
-        screenSize: { width: window.innerWidth, height: window.innerHeight }
-      });
+
       return adjustedPos;
     }
     
     // Використовуємо абсолютну позицію (застаріла логіка для сумісності)
     const result = { x: position.x, y: position.y };
-    console.log(`🔍 Повертаємо збережену абсолютну позицію для ${boxName}:`, result);
     return result;
   }, [boxPositions, deviceType, getDefaultBoxPosition, relativeToAbsolute, adjustPositionForPagination]);
 
@@ -791,12 +762,7 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
         }
       };
       
-      console.log(`💾 Зберігаємо позицію для ${boxName}:`, {
-        original: position,
-        adjusted: adjustedPosition,
-        relative: relativePosition,
-        screenSize: { width: window.innerWidth, height: window.innerHeight }
-      });
+
       
       // Відправляємо подію для синхронізації (аналогічно до фону)
       if (shouldSave) {
@@ -811,7 +777,7 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
             } 
           });
           window.dispatchEvent(syncEvent);
-          console.log('📡 Відправлено подію boxPositionsUpdated для', boxName);
+
         } catch (error) {
           console.error('❌ Помилка відправки події:', error);
         }
@@ -1066,7 +1032,7 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
 
   // �� НОВИЙ: Функція для міграції старих абсолютних позицій до відносних
   const migrateAbsoluteToRelativePositions = useCallback(async () => {
-    console.log('🔄 Міграція абсолютних позицій до відносних');
+
     
     const updatedPositions = { ...boxPositions };
     let hasUpdates = false;
@@ -1084,10 +1050,7 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
         };
         
         hasUpdates = true;
-        console.log(`🔄 Міграція позиції ${key}:`, {
-          absolute: absolutePos,
-          relative: relativePos
-        });
+
       }
     });
     
@@ -1139,7 +1102,7 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
   // 🎯 НОВИЙ: Обробник зміни розміру вікна для автоматичного перерахунку позицій
   useEffect(() => {
     const handleWindowResize = () => {
-      console.log('📐 Зміна розміру вікна, перерахунок позицій боксів');
+
       
       // Примусово перерендерюємо компоненти, щоб позиції оновилися
       // Це спрацьовує тому, що getBoxPosition тепер використовує відносні координати
