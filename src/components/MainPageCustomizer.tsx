@@ -783,9 +783,12 @@ const MainPageCustomizer: React.FC = () => {
   };
 
   const handleMediaSelect = async (file: FileItem) => {
+    // Отримуємо правильний URL для файлу (PocketBase або звичайний)
+    const fileUrl = file.isPocketBaseFile ? file.pocketbaseData?.publicUrl : file.url;
+    
     switch (mediaSelectorType) {
       case 'backgroundImage':
-        updateSettings({ backgroundImage: file.url, backgroundType: 'image' });
+        updateSettings({ backgroundImage: fileUrl, backgroundType: 'image' });
         break;
       case 'backgroundVideo':
         // Валідація типу файлу для відео
@@ -818,91 +821,97 @@ const MainPageCustomizer: React.FC = () => {
         
         // Для відео файлів завантажуємо повний файл
         if (file.type === 'video') {
-          // Перевіряємо чи файл вже містить повне відео
-          const isFullVideo = file.url && file.url.startsWith('data:video/') && file.url.length > 100000;
-          
-          if (isFullVideo) {
-            console.log('✅ Конструктор: Основний URL вже містить повне відео');
-            updateSettings({ backgroundVideo: file.url, backgroundType: 'video' });
-          } else if (file.fullVideoUrl) {
-            console.log('✅ Конструктор: Використовуємо повний відео файл з fullVideoUrl');
-            updateSettings({ backgroundVideo: file.fullVideoUrl, backgroundType: 'video' });
+          // Для PocketBase файлів використовуємо публічний URL
+          if (file.isPocketBaseFile) {
+            console.log('✅ Конструктор: Використовуємо PocketBase відео файл');
+            updateSettings({ backgroundVideo: fileUrl, backgroundType: 'video' });
           } else {
-            console.log('🔄 Конструктор: Потрібно завантажити повний файл з IndexedDB...');
+            // Перевіряємо чи файл вже містить повне відео
+            const isFullVideo = file.url && file.url.startsWith('data:video/') && file.url.length > 100000;
             
-            // Завантажуємо повний файл з IndexedDB
-            const loadFullVideoFromIndexedDB = async (fileId: string): Promise<string | null> => {
-              return new Promise((resolve) => {
-                try {
-                  const request = indexedDB.open('ContentManagerDB', 2);
-                  
-                  request.onsuccess = (event) => {
-                    const db = (event.target as IDBOpenDBRequest).result;
+            if (isFullVideo) {
+              console.log('✅ Конструктор: Основний URL вже містить повне відео');
+              updateSettings({ backgroundVideo: file.url, backgroundType: 'video' });
+            } else if (file.fullVideoUrl) {
+              console.log('✅ Конструктор: Використовуємо повний відео файл з fullVideoUrl');
+              updateSettings({ backgroundVideo: file.fullVideoUrl, backgroundType: 'video' });
+            } else {
+              console.log('🔄 Конструктор: Потрібно завантажити повний файл з IndexedDB...');
+              
+              // Завантажуємо повний файл з IndexedDB
+              const loadFullVideoFromIndexedDB = async (fileId: string): Promise<string | null> => {
+                return new Promise((resolve) => {
+                  try {
+                    const request = indexedDB.open('ContentManagerDB', 2);
                     
-                    if (!db.objectStoreNames.contains('files')) {
-                      console.warn('⚠️ Конструктор: Об\'єкт-сховище "files" не існує');
-                      db.close();
-                      resolve(null);
-                      return;
-                    }
-                    
-                    const transaction = db.transaction(['files'], 'readonly');
-                    const store = transaction.objectStore('files');
-                    const getRequest = store.get(fileId);
-                    
-                    getRequest.onsuccess = () => {
-                      const fullFile = getRequest.result;
-                      if (fullFile && fullFile.url && 
-                          fullFile.url.startsWith('data:video/') && 
-                          fullFile.url.length > (file.url?.length || 0)) {
-                        console.log(`✅ Конструктор: Повний відео файл завантажено з IndexedDB: ${fullFile.name}`);
-                        console.log(`📊 Розмір превью: ${((file.url?.length || 0) / 1024).toFixed(2)} KB`);
-                        console.log(`📊 Розмір повного файлу: ${(fullFile.url.length / 1024 / 1024).toFixed(2)} MB`);
-                        db.close();
-                        resolve(fullFile.url);
-                      } else {
-                        console.warn('⚠️ Конструктор: Повний відео файл не знайдено або не валідний в IndexedDB', {
-                          hasFile: !!fullFile,
-                          hasUrl: !!fullFile?.url,
-                          isVideoMime: fullFile?.url?.startsWith('data:video/') || false,
-                          urlLength: fullFile?.url?.length || 0
-                        });
+                    request.onsuccess = (event) => {
+                      const db = (event.target as IDBOpenDBRequest).result;
+                      
+                      if (!db.objectStoreNames.contains('files')) {
+                        console.warn('⚠️ Конструктор: Об\'єкт-сховище "files" не існує');
                         db.close();
                         resolve(null);
+                        return;
                       }
+                      
+                      const transaction = db.transaction(['files'], 'readonly');
+                      const store = transaction.objectStore('files');
+                      const getRequest = store.get(fileId);
+                      
+                      getRequest.onsuccess = () => {
+                        const fullFile = getRequest.result;
+                        if (fullFile && fullFile.url && 
+                            fullFile.url.startsWith('data:video/') && 
+                            fullFile.url.length > (file.url?.length || 0)) {
+                          console.log(`✅ Конструктор: Повний відео файл завантажено з IndexedDB: ${fullFile.name}`);
+                          console.log(`📊 Розмір превью: ${((file.url?.length || 0) / 1024).toFixed(2)} KB`);
+                          console.log(`📊 Розмір повного файлу: ${(fullFile.url.length / 1024 / 1024).toFixed(2)} MB`);
+                          db.close();
+                          resolve(fullFile.url);
+                        } else {
+                          console.warn('⚠️ Конструктор: Повний відео файл не знайдено або не валідний в IndexedDB', {
+                            hasFile: !!fullFile,
+                            hasUrl: !!fullFile?.url,
+                            isVideoMime: fullFile?.url?.startsWith('data:video/') || false,
+                            urlLength: fullFile?.url?.length || 0
+                          });
+                          db.close();
+                          resolve(null);
+                        }
+                      };
+                      
+                      getRequest.onerror = () => {
+                        console.error('❌ Конструктор: Помилка завантаження з IndexedDB');
+                        db.close();
+                        resolve(null);
+                      };
                     };
                     
-                    getRequest.onerror = () => {
-                      console.error('❌ Конструктор: Помилка завантаження з IndexedDB');
-                      db.close();
+                    request.onerror = () => {
+                      console.error('❌ Конструктор: Помилка відкриття IndexedDB');
                       resolve(null);
                     };
-                  };
-                  
-                  request.onerror = () => {
-                    console.error('❌ Конструктор: Помилка відкриття IndexedDB');
+                  } catch (error) {
+                    console.error('❌ Конструктор: Помилка завантаження повного відео:', error);
                     resolve(null);
-                  };
-                } catch (error) {
-                  console.error('❌ Конструктор: Помилка завантаження повного відео:', error);
-                  resolve(null);
+                  }
+                });
+              };
+              
+              try {
+                const fullVideoUrl = await loadFullVideoFromIndexedDB(file.id);
+                if (fullVideoUrl) {
+                  console.log('✅ Конструктор: Використовуємо повний відео файл з IndexedDB');
+                  updateSettings({ backgroundVideo: fullVideoUrl, backgroundType: 'video' });
+                } else {
+                  console.warn('⚠️ Конструктор: Не вдалося завантажити повний відео файл, використовуємо превью');
+                  alert('⚠️ Увага: Не вдалося завантажити повний відео файл.\nВикористовується превью, яке може не відтворюватися як відео.');
+                  updateSettings({ backgroundVideo: file.url, backgroundType: 'video' });
                 }
-              });
-            };
-            
-            try {
-              const fullVideoUrl = await loadFullVideoFromIndexedDB(file.id);
-              if (fullVideoUrl) {
-                console.log('✅ Конструктор: Використовуємо повний відео файл з IndexedDB');
-                updateSettings({ backgroundVideo: fullVideoUrl, backgroundType: 'video' });
-              } else {
-                console.warn('⚠️ Конструктор: Не вдалося завантажити повний відео файл, використовуємо превью');
-                alert('⚠️ Увага: Не вдалося завантажити повний відео файл.\nВикористовується превью, яке може не відтворюватися як відео.');
+              } catch (error) {
+                console.error('❌ Конструктор: Помилка завантаження повного відео файлу:', error);
                 updateSettings({ backgroundVideo: file.url, backgroundType: 'video' });
               }
-            } catch (error) {
-              console.error('❌ Конструктор: Помилка завантаження повного відео файлу:', error);
-              updateSettings({ backgroundVideo: file.url, backgroundType: 'video' });
             }
           }
         } else {
@@ -911,29 +920,30 @@ const MainPageCustomizer: React.FC = () => {
         }
         break;
       case 'logo':
-        updateSettings({ logoUrl: file.url });
+        updateSettings({ logoUrl: fileUrl });
         break;
       case 'itemImage':
         if (editingItem) {
           const currentItems = Array.isArray(settings.carouselItems) ? settings.carouselItems : [];
           const updatedItems = currentItems.map(item =>
-            item.id === editingItem.id ? { ...item, imageUrl: file.url } : item
+            item.id === editingItem.id ? { ...item, imageUrl: fileUrl } : item
           );
           updateSettings({ carouselItems: updatedItems });
-          setEditingItem({ ...editingItem, imageUrl: file.url });
+          setEditingItem({ ...editingItem, imageUrl: fileUrl });
         }
         break;
       case 'backgroundMusic':
         console.log('🎵 Конструктор: Оновлюємо фонову музику через handleMediaSelect');
         console.log('  - Файл:', file.name);
-        console.log('  - URL довжина:', file.url.length);
+        console.log('  - URL довжина:', fileUrl?.length || 0);
+        console.log('  - PocketBase файл:', file.isPocketBaseFile);
         console.log('  - Дозволяємо використання того самого файлу в різних блоках');
         updateSettings({ 
           audioSettings: { 
             ...settings.audioSettings, 
             backgroundMusic: { 
               ...settings.audioSettings.backgroundMusic, 
-              url: file.url, 
+              url: fileUrl, 
               enabled: true,
               fileName: file.name // Додаємо ім'я файлу для ідентифікації
             } 
@@ -944,13 +954,14 @@ const MainPageCustomizer: React.FC = () => {
       case 'hoverSound':
         console.log('🎵 Конструктор: Оновлюємо звуки наведення через handleMediaSelect');
         console.log('  - Файл:', file.name);
+        console.log('  - PocketBase файл:', file.isPocketBaseFile);
         console.log('  - Дозволяємо повторне використання файлів');
         updateSettings({ 
           audioSettings: { 
             ...settings.audioSettings, 
             hoverSounds: { 
               ...settings.audioSettings.hoverSounds, 
-              url: file.url, 
+              url: fileUrl, 
               enabled: true,
               fileName: file.name
             } 
@@ -966,7 +977,7 @@ const MainPageCustomizer: React.FC = () => {
             ...settings.audioSettings, 
             clickSounds: { 
               ...settings.audioSettings.clickSounds, 
-              url: file.url, 
+              url: fileUrl, 
               enabled: true,
               fileName: file.name
             } 
@@ -982,7 +993,7 @@ const MainPageCustomizer: React.FC = () => {
             ...settings.audioSettings, 
             carouselSounds: { 
               ...settings.audioSettings.carouselSounds, 
-              transitionUrl: file.url, 
+              transitionUrl: fileUrl, 
               enabled: true,
               transitionFileName: file.name
             } 
@@ -998,7 +1009,7 @@ const MainPageCustomizer: React.FC = () => {
             ...settings.audioSettings, 
             carouselSounds: { 
               ...settings.audioSettings.carouselSounds, 
-              hoverUrl: file.url, 
+              hoverUrl: fileUrl, 
               enabled: true,
               hoverFileName: file.name
             } 
@@ -1014,7 +1025,7 @@ const MainPageCustomizer: React.FC = () => {
             ...settings.audioSettings, 
             carouselSounds: { 
               ...settings.audioSettings.carouselSounds, 
-              clickUrl: file.url, 
+              clickUrl: fileUrl, 
               enabled: true,
               clickFileName: file.name
             } 
@@ -1027,7 +1038,7 @@ const MainPageCustomizer: React.FC = () => {
             ...settings.audioSettings, 
             uiSounds: { 
               ...settings.audioSettings.uiSounds, 
-              buttonHoverUrl: file.url, 
+              buttonHoverUrl: fileUrl, 
               enabled: true,
               buttonHoverFileName: file.name
             } 
@@ -1040,7 +1051,7 @@ const MainPageCustomizer: React.FC = () => {
             ...settings.audioSettings, 
             uiSounds: { 
               ...settings.audioSettings.uiSounds, 
-              buttonClickUrl: file.url, 
+              buttonClickUrl: fileUrl, 
               enabled: true,
               buttonClickFileName: file.name
             } 
@@ -1053,7 +1064,7 @@ const MainPageCustomizer: React.FC = () => {
             ...settings.audioSettings, 
             uiSounds: { 
               ...settings.audioSettings.uiSounds, 
-              notificationUrl: file.url, 
+              notificationUrl: fileUrl, 
               enabled: true,
               notificationFileName: file.name
             } 

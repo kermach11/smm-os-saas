@@ -14,6 +14,7 @@ interface UploadedFile {
   uploadDate: string;
   bucket: string; // В PocketBase це collection, але ми називаємо bucket для сумісності
   path: string;
+  pocketbaseRecordId?: string; // Реальний record ID в PocketBase
 }
 
 // Конфігурація buckets (collections) ідентична до Supabase
@@ -145,14 +146,18 @@ class PocketBaseStorageService {
 
       const result = await response.json();
       console.log('✅ Success response:', result);
+      console.log('🔍 PocketBase result fields:', Object.keys(result));
+      console.log('🔍 PocketBase file field:', result.file);
 
-      // Формуємо публічний URL (як в Supabase)
-      const fileName = filePath.split('/').pop();
-      const publicUrl = `${this.pocketbaseUrl}/api/files/${bucket}/${result.id}/${fileName}`;
+      // Формуємо публічний URL використовуючи РЕАЛЬНЕ ім'я файлу з PocketBase
+      const actualFileName = result.file || filePath.split('/').pop();
+      const publicUrl = `${this.pocketbaseUrl}/api/files/${bucket}/${result.id}/${actualFileName}`;
+      
+      console.log('🌐 Generated publicUrl:', publicUrl);
 
       // Формуємо результат у форматі ідентичному до Supabase
       const uploadedFile: UploadedFile = {
-        id: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
+        id: result.id, // Використовуємо реальний PocketBase record ID
         name: file.name.split('.')[0],
         originalName: file.name,
         type,
@@ -162,7 +167,8 @@ class PocketBaseStorageService {
         mimeType: file.type,
         uploadDate: new Date().toISOString(),
         bucket,
-        path: filePath
+        path: filePath,
+        pocketbaseRecordId: result.id // Зберігаємо для майбутнього використання
       };
 
       console.log(`✅ PocketBaseStorage: Файл успішно завантажено:`, uploadedFile);

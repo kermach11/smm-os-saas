@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '../hooks/useTranslation';
 import { FileItem, ContentManagerProps } from '../types/contentManager';
 import indexedDBService from '../services/IndexedDBService';
+import { pocketbaseCleanupService } from '../services/PocketBaseCleanupService';
 import SupabaseUploader from './SupabaseUploader';
 import PocketBaseUploader from './PocketBaseUploader';
 import CloudStorageManager from './CloudStorageManager';
@@ -74,6 +75,50 @@ const ContentManager: React.FC<ContentManagerProps> = ({
     }
   };
 
+
+
+  // Обробник завантажених файлів з PocketBase
+  const handlePocketBaseUpload = async (uploadedFiles: any[]) => {
+    console.log('🗄️ ContentManager: Отримано файли з PocketBase Storage:', uploadedFiles);
+    
+    try {
+      // Конвертуємо PocketBase файли в FileItem формат
+      const newFiles: FileItem[] = uploadedFiles
+        .filter(file => ['image', 'audio', 'video'].includes(file.type))
+        .map(file => ({
+          id: file.id,
+          name: file.name,
+          type: file.type as 'image' | 'audio' | 'video',
+          size: file.size,
+          url: file.publicUrl, // Використовуємо публічний URL з PocketBase
+          optimized: false,
+          uploadDate: file.uploadDate,
+          originalName: file.originalName,
+          isPocketBaseFile: true, // Позначаємо як файл з PocketBase
+          pocketbaseData: {
+            collection: file.bucket, // В PocketBase це collection
+            path: file.path,
+            publicUrl: file.publicUrl
+          }
+        }));
+
+      // Додаємо файли до локального списку та IndexedDB для кешування
+      const updatedFiles = [...files, ...newFiles];
+      setFiles(updatedFiles);
+      
+      // Зберігаємо в IndexedDB для кешування (тільки метадані, не контент)
+      await saveFilesToStorage(updatedFiles);
+      
+      console.log(`✅ ContentManager: Додано ${newFiles.length} файлів з PocketBase Storage`);
+      
+      // Переключаємось на галерею, щоб показати завантажені файли
+      setActiveTab('gallery');
+      
+    } catch (error) {
+      console.error('❌ ContentManager: Помилка обробки файлів з PocketBase:', error);
+    }
+  };
+
   // Ініціалізація файлів при завантаженні компонента
   useEffect(() => {
     const initializeFiles = async () => {
@@ -86,6 +131,8 @@ const ContentManager: React.FC<ContentManagerProps> = ({
         if (indexedDBFiles.length > 0) {
           console.log(`📂 ContentManager: Завантажено ${indexedDBFiles.length} файлів з IndexedDB`);
           setFiles(indexedDBFiles);
+          // Запускаємо глобальне очищення недоступних PocketBase файлів
+          pocketbaseCleanupService.scheduleCleanup(2000);
         } else {
           // Якщо в IndexedDB немає файлів, перевіряємо localStorage
           await loadFilesFromLocalStorage();
@@ -98,6 +145,25 @@ const ContentManager: React.FC<ContentManagerProps> = ({
     };
 
     initializeFiles();
+  }, []);
+
+  // Слухач для оновлення файлів після очищення
+  useEffect(() => {
+    const handleCleanupCompleted = async (event: CustomEvent) => {
+      const { removed } = event.detail;
+      if (removed > 0) {
+        console.log(`🔄 ContentManager: Оновлюємо файли після очищення (видалено ${removed})`);
+        // Перезавантажуємо файли з IndexedDB
+        const updatedFiles = await indexedDBService.loadFiles();
+        setFiles(updatedFiles);
+      }
+    };
+
+    window.addEventListener('pocketbaseCleanupCompleted', handleCleanupCompleted as EventListener);
+    
+    return () => {
+      window.removeEventListener('pocketbaseCleanupCompleted', handleCleanupCompleted as EventListener);
+    };
   }, []);
 
   // Резервне завантаження з localStorage (для міграції)
@@ -1737,19 +1803,22 @@ const ContentManager: React.FC<ContentManagerProps> = ({
                     >
                       {/* Превью файлу - компактне */}
                       <div className="aspect-square bg-slate-100 rounded-md lg:rounded-lg mb-2 lg:mb-3 overflow-hidden relative">
-                        {file.type === 'image' && file.url ? (
+                        {file.type === 'image' && (file.url || file.pocketbaseData?.publicUrl) ? (
                           <img
-                            src={file.url}
+                            src={file.isPocketBaseFile ? file.pocketbaseData?.publicUrl : file.url}
                             alt={file.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              console.error(`Помилка завантаження зображення: ${file.name}`);
+                              console.error(`Помилка завантаження зображення: ${file.name}`, {
+                                isPocketBase: file.isPocketBaseFile,
+                                url: file.isPocketBaseFile ? file.pocketbaseData?.publicUrl : file.url
+                              });
                               (e.target as HTMLImageElement).style.display = 'none';
                             }}
                           />
-                        ) : file.type === 'video' && file.url ? (
+                        ) : file.type === 'video' && (file.url || file.pocketbaseData?.publicUrl) ? (
                           <img
-                            src={file.url}
+                            src={file.isPocketBaseFile ? file.pocketbaseData?.publicUrl : file.url}
                             alt={file.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -1856,6 +1925,8 @@ const ContentManager: React.FC<ContentManagerProps> = ({
                           <div className="flex items-center gap-1 lg:gap-2">
                             <span className="text-xs lg:text-base">{getFileIcon(file.type)}</span>
                             <span className="capitalize text-xs lg:text-sm">{file.type}</span>
+                            {file.isPocketBaseFile && <span className="text-blue-500 text-xs lg:text-sm" title="PocketBase Storage">🗄️</span>}
+                            {file.isSupabaseFile && <span className="text-green-500 text-xs lg:text-sm" title="Supabase Storage">🟢</span>}
                             {file.optimized && <span className="text-green-500 text-xs lg:text-sm" title={t('content.manager.status.optimized')}>✨</span>}
                           </div>
                           <div className="text-xs lg:text-sm">{formatFileSize(file.size)}</div>
@@ -1877,7 +1948,8 @@ const ContentManager: React.FC<ContentManagerProps> = ({
 
         {activeTab === 'cloud' && (
           <CloudStorageManager 
-            onUpload={handleSupabaseUpload}
+            onSupabaseUpload={handleSupabaseUpload}
+            onPocketBaseUpload={handlePocketBaseUpload}
             allowedTypes={allowedTypes}
           />
         )}

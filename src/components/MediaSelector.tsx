@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileItem } from '../types/contentManager';
 import indexedDBService from '../services/IndexedDBService';
+import { pocketbaseCleanupService } from '../services/PocketBaseCleanupService';
 import { useTranslation } from '../hooks/useTranslation';
 
 interface MediaSelectorProps {
@@ -39,6 +40,28 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
     }
   }, [isOpen]);
 
+  // Слухач для оновлення файлів після очищення
+  useEffect(() => {
+    const handleCleanupCompleted = async (event: CustomEvent) => {
+      const { removed } = event.detail;
+      if (removed > 0 && isOpen) {
+        console.log(`🔄 MediaSelector: Оновлюємо файли після очищення (видалено ${removed})`);
+        // Перезавантажуємо файли з IndexedDB
+        const updatedFiles = await indexedDBService.loadFiles();
+        const correctedFiles = await fixIncorrectFileTypes(updatedFiles);
+        setFiles(correctedFiles);
+      }
+    };
+
+    window.addEventListener('pocketbaseCleanupCompleted', handleCleanupCompleted as EventListener);
+    
+    return () => {
+      window.removeEventListener('pocketbaseCleanupCompleted', handleCleanupCompleted as EventListener);
+    };
+  }, [isOpen]);
+
+
+
   const loadFiles = async () => {
     try {
       setIsLoading(true);
@@ -51,7 +74,11 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
         
         // Автоматично виправляємо неправильно збережені файли
         const correctedFiles = await fixIncorrectFileTypes(indexedDBFiles);
+        
         setFiles(correctedFiles);
+        
+        // Запускаємо глобальне очищення (якщо ще не запущене)
+        pocketbaseCleanupService.scheduleCleanup(500);
       } else {
         // Якщо IndexedDB порожній, пробуємо localStorage як резерв
         const savedFiles = localStorage.getItem('smartContentManager_v2');
@@ -61,9 +88,13 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
           
           // Виправляємо файли та мігруємо в IndexedDB
           const correctedFiles = await fixIncorrectFileTypes(allFiles);
+          
           await indexedDBService.saveFiles(correctedFiles);
           
           setFiles(correctedFiles);
+          
+          // Запускаємо глобальне очищення
+          pocketbaseCleanupService.scheduleCleanup(500);
           console.log('✅ MediaSelector: Міграція та виправлення завершено');
         } else {
           setFiles([]);

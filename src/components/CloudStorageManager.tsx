@@ -7,14 +7,16 @@ import { storageServiceSwitcher } from '../services/StorageServiceSwitcher';
 import { UploadedFile } from '../services/SupabaseStorageService';
 
 interface CloudStorageManagerProps {
-  onUpload: (files: UploadedFile[]) => void;
+  onSupabaseUpload: (files: UploadedFile[]) => void;
+  onPocketBaseUpload: (files: any[]) => void;
   allowedTypes?: ('image' | 'video' | 'audio' | 'document')[];
 }
 
 type StorageProvider = 'supabase' | 'pocketbase' | 'auto';
 
 const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
-  onUpload,
+  onSupabaseUpload,
+  onPocketBaseUpload,
   allowedTypes = ['image', 'video', 'audio']
 }) => {
   const { t } = useTranslation();
@@ -25,7 +27,7 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
     try {
       console.log('🔄 CloudStorageManager: Використовуємо автоматичне перемикання');
       
-      const results: UploadedFile[] = [];
+      const results: any[] = [];
       
       for (const file of files) {
         try {
@@ -39,7 +41,14 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
       
       if (results.length > 0) {
         console.log(`✅ Автоматично завантажено ${results.length} файлів`);
-        onUpload(results);
+        
+        // Визначаємо провайдера з результатів та викликаємо відповідний обробник
+        const provider = results[0]?.provider || 'pocketbase';
+        if (provider === 'pocketbase') {
+          onPocketBaseUpload(results);
+        } else {
+          onSupabaseUpload(results);
+        }
       }
     } catch (error) {
       console.error('❌ Помилка автоматичного завантаження:', error);
@@ -150,7 +159,7 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
             transition={{ duration: 0.2 }}
           >
             <SupabaseUploader 
-              onUpload={onUpload}
+              onUpload={onSupabaseUpload}
               allowedTypes={allowedTypes}
               maxFiles={10}
               maxSize={50}
@@ -167,7 +176,7 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
             transition={{ duration: 0.2 }}
           >
             <PocketBaseUploader 
-              onUpload={onUpload}
+              onUpload={onPocketBaseUpload}
               allowedTypes={allowedTypes}
               maxFiles={10}
               maxSize={50}

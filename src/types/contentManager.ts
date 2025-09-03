@@ -19,6 +19,12 @@ export interface FileItem {
     path: string;
     publicUrl: string;
   };
+  isPocketBaseFile?: boolean; // Чи файл завантажений через PocketBase Storage
+  pocketbaseData?: {
+    collection: string;
+    path: string;
+    publicUrl: string;
+  };
 }
 
 export interface ContentManagerProps {
