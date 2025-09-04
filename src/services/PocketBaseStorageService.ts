@@ -15,6 +15,10 @@ interface UploadedFile {
   bucket: string; // В PocketBase це collection, але ми називаємо bucket для сумісності
   path: string;
   pocketbaseRecordId?: string; // Реальний record ID в PocketBase
+  // Розширені метадані для кращого відображення
+  sizeFormatted?: string; // Форматований розмір (наприклад, "2.5 MB")
+  uploadDateFormatted?: string; // Форматована дата (наприклад, "2 хв. тому")
+  fileExtension?: string; // Розширення файлу (.jpg, .mp4, тощо)
 }
 
 // Конфігурація buckets (collections) ідентична до Supabase
@@ -92,6 +96,35 @@ class PocketBaseStorageService {
     return `${this.siteId}/${type}/${fileName}`;
   }
 
+  // Утилітні функції для форматування метаданих
+  private formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  private formatUploadDate(dateString: string): string {
+    const now = new Date();
+    const uploadDate = new Date(dateString);
+    const diffMs = now.getTime() - uploadDate.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'щойно';
+    if (diffMins < 60) return `${diffMins} хв. тому`;
+    if (diffHours < 24) return `${diffHours} год. тому`;
+    if (diffDays < 7) return `${diffDays} д. тому`;
+    return uploadDate.toLocaleDateString('uk-UA');
+  }
+
+  private getFileExtension(fileName: string): string {
+    const extension = fileName.split('.').pop();
+    return extension ? `.${extension.toLowerCase()}` : '';
+  }
+
   // Завантаження файлу в PocketBase Storage через REST API (як в Supabase)
   async uploadFile(file: File): Promise<UploadedFile> {
     try {
@@ -109,12 +142,18 @@ class PocketBaseStorageService {
       
       console.log(`📁 PocketBaseStorage: Завантажуємо в bucket: ${bucket}, шлях: ${filePath}`);
       
-      // Створюємо FormData для завантаження (мінімальний робочий варіант)
+      // Створюємо FormData для завантаження з повними метаданими
       const formData = new FormData();
       formData.append('file', file);
       
-      // PocketBase працює з мінімальними даними - тільки файл обов'язковий
-      // Додаткові поля можна додати пізніше через UPDATE API якщо потрібно
+      // Додаємо метадані файлу для збереження в PocketBase
+      formData.append('original_name', file.name);
+      formData.append('file_size', file.size.toString());
+      formData.append('file_type', type);
+      formData.append('mime_type', file.type);
+      formData.append('upload_date', new Date().toISOString());
+      formData.append('site_id', this.siteId);
+      formData.append('file_path', filePath);
       
       // Детальне логування FormData для діагностики
       const formDataEntries: { [key: string]: any } = {};
@@ -155,7 +194,8 @@ class PocketBaseStorageService {
       
       console.log('🌐 Generated publicUrl:', publicUrl);
 
-      // Формуємо результат у форматі ідентичному до Supabase
+      // Формуємо результат у форматі ідентичному до Supabase з розширеними метаданими
+      const uploadDate = new Date().toISOString();
       const uploadedFile: UploadedFile = {
         id: result.id, // Використовуємо реальний PocketBase record ID
         name: file.name.split('.')[0],
@@ -165,10 +205,14 @@ class PocketBaseStorageService {
         publicUrl: publicUrl,
         size: file.size,
         mimeType: file.type,
-        uploadDate: new Date().toISOString(),
+        uploadDate: uploadDate,
         bucket,
         path: filePath,
-        pocketbaseRecordId: result.id // Зберігаємо для майбутнього використання
+        pocketbaseRecordId: result.id, // Зберігаємо для майбутнього використання
+        // Розширені метадані для кращого відображення
+        sizeFormatted: this.formatFileSize(file.size),
+        uploadDateFormatted: this.formatUploadDate(uploadDate),
+        fileExtension: this.getFileExtension(file.name)
       };
 
       console.log(`✅ PocketBaseStorage: Файл успішно завантажено:`, uploadedFile);
@@ -235,6 +279,36 @@ class PocketBaseStorageService {
       
     } catch (error) {
       console.error(`❌ PocketBaseStorage: Помилка видалення файлу:`, error);
+      return false;
+    }
+  }
+
+  // Видалення файлу за record ID (оптимізований метод для PocketBase)
+  async deleteFileByRecordId(recordId: string, bucket: string): Promise<boolean> {
+    try {
+      console.log(`🗑️ PocketBaseStorage: Видалення файлу за recordId: ${recordId} з bucket: ${bucket}`);
+      
+      if (!this.pocketbaseUrl) {
+        throw new Error('PocketBase credentials не налаштовані');
+      }
+      
+      const deleteUrl = `${this.pocketbaseUrl}/api/collections/${bucket}/records/${recordId}`;
+      
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ PocketBaseStorage: Помилка видалення (${response.status}):`, errorText);
+        throw new Error(`Помилка видалення: ${response.status} - ${errorText}`);
+      }
+
+      console.log(`✅ PocketBaseStorage: Файл успішно видалено за recordId: ${recordId}`);
+      return true;
+      
+    } catch (error) {
+      console.error(`❌ PocketBaseStorage: Помилка видалення файлу за recordId:`, error);
       return false;
     }
   }

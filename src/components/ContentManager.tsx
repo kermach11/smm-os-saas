@@ -82,7 +82,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({
     console.log('🗄️ ContentManager: Отримано файли з PocketBase Storage:', uploadedFiles);
     
     try {
-      // Конвертуємо PocketBase файли в FileItem формат
+      // Конвертуємо PocketBase файли в FileItem формат з розширеними метаданими
       const newFiles: FileItem[] = uploadedFiles
         .filter(file => ['image', 'audio', 'video'].includes(file.type))
         .map(file => ({
@@ -98,8 +98,13 @@ const ContentManager: React.FC<ContentManagerProps> = ({
           pocketbaseData: {
             collection: file.bucket, // В PocketBase це collection
             path: file.path,
-            publicUrl: file.publicUrl
-          }
+            publicUrl: file.publicUrl,
+            recordId: file.pocketbaseRecordId // Для видалення файлу
+          },
+          // Передаємо розширені метадані з PocketBase
+          sizeFormatted: file.sizeFormatted,
+          uploadDateFormatted: file.uploadDateFormatted,
+          fileExtension: file.fileExtension
         }));
 
       // Додаємо файли до локального списку та IndexedDB для кешування
@@ -1084,6 +1089,32 @@ const ContentManager: React.FC<ContentManagerProps> = ({
   const deleteFile = async (fileId: string) => {
     if (confirm('Ви впевнені, що хочете видалити цей файл?')) {
       try {
+        // Знаходимо файл для отримання метаданих
+        const fileToDelete = files.find(file => file.id === fileId);
+        
+        // Якщо це PocketBase файл, видаляємо його з PocketBase
+        if (fileToDelete?.isPocketBaseFile && fileToDelete.pocketbaseData?.recordId) {
+          console.log(`🗑️ ContentManager: Видалення PocketBase файлу: ${fileToDelete.name}`);
+          
+          try {
+            const { pocketbaseStorageService } = await import('../services/PocketBaseStorageService');
+            
+            const success = await pocketbaseStorageService.deleteFileByRecordId(
+              fileToDelete.pocketbaseData.recordId,
+              fileToDelete.pocketbaseData.collection
+            );
+            
+            if (success) {
+              console.log(`✅ ContentManager: PocketBase файл успішно видалено з сервера`);
+            } else {
+              console.warn(`⚠️ ContentManager: Не вдалося видалити файл з PocketBase, але видаляємо локально`);
+            }
+          } catch (pocketbaseError) {
+            console.error('❌ ContentManager: Помилка видалення з PocketBase:', pocketbaseError);
+            console.warn('⚠️ ContentManager: Продовжуємо видалення локально незважаючи на помилку PocketBase');
+          }
+        }
+        
         // Видаляємо з IndexedDB
         await indexedDBService.deleteFile(fileId);
         
@@ -1095,6 +1126,14 @@ const ContentManager: React.FC<ContentManagerProps> = ({
         await saveFilesToStorage(updatedFiles);
         
         console.log(`🗑️ ContentManager: Файл видалено: ${fileId}`);
+        
+        // Показуємо успішне повідомлення
+        if (fileToDelete?.isPocketBaseFile) {
+          alert('✅ Файл успішно видалено з галереї та PocketBase!');
+        } else {
+          alert('✅ Файл успішно видалено з галереї!');
+        }
+        
       } catch (error) {
         console.error('❌ ContentManager: Помилка видалення файлу:', error);
         alert('❌ Помилка видалення файлу');
@@ -1925,12 +1964,17 @@ const ContentManager: React.FC<ContentManagerProps> = ({
                           <div className="flex items-center gap-1 lg:gap-2">
                             <span className="text-xs lg:text-base">{getFileIcon(file.type)}</span>
                             <span className="capitalize text-xs lg:text-sm">{file.type}</span>
+                            {file.fileExtension && <span className="text-slate-400 text-xs">{file.fileExtension}</span>}
                             {file.isPocketBaseFile && <span className="text-blue-500 text-xs lg:text-sm" title="PocketBase Storage">🗄️</span>}
                             {file.isSupabaseFile && <span className="text-green-500 text-xs lg:text-sm" title="Supabase Storage">🟢</span>}
                             {file.optimized && <span className="text-green-500 text-xs lg:text-sm" title={t('content.manager.status.optimized')}>✨</span>}
                           </div>
-                          <div className="text-xs lg:text-sm">{formatFileSize(file.size)}</div>
-                          <div className="text-xs lg:text-sm hidden lg:block">{new Date(file.uploadDate).toLocaleDateString()}</div>
+                          <div className="text-xs lg:text-sm font-medium">
+                            {file.sizeFormatted || formatFileSize(file.size)}
+                          </div>
+                          <div className="text-xs lg:text-sm text-slate-400">
+                            {file.uploadDateFormatted || new Date(file.uploadDate).toLocaleDateString()}
+                          </div>
                           {file.optimized && (
                             <div className="text-xs text-green-600 bg-green-50 px-1 lg:px-2 py-0.5 lg:py-1 rounded">
                               {t('content.manager.auto.optimized')}

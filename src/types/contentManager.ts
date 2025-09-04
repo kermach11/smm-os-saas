@@ -24,7 +24,12 @@ export interface FileItem {
     collection: string;
     path: string;
     publicUrl: string;
+    recordId?: string; // PocketBase record ID для видалення
   };
+  // Розширені метадані для кращого відображення
+  sizeFormatted?: string; // Форматований розмір (наприклад, "2.5 MB")
+  uploadDateFormatted?: string; // Форматована дата (наприклад, "2 хв. тому")
+  fileExtension?: string; // Розширення файлу (.jpg, .mp4, тощо)
 }
 
 export interface ContentManagerProps {

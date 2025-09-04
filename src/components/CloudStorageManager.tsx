@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '../hooks/useTranslation';
 import SupabaseUploader from './SupabaseUploader';
 import PocketBaseUploader from './PocketBaseUploader';
-import { storageServiceSwitcher } from '../services/StorageServiceSwitcher';
+// import { storageServiceSwitcher } from '../services/StorageServiceSwitcher'; // Removed due to empty file
 import { UploadedFile } from '../services/SupabaseStorageService';
 
 interface CloudStorageManagerProps {
@@ -31,8 +31,10 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
       
       for (const file of files) {
         try {
-          const result = await storageServiceSwitcher.uploadFile(file);
-          results.push(result);
+          // TODO: Implement unified storage service switcher
+          console.warn('⚠️ CloudStorageManager: storageServiceSwitcher not available');
+          // const result = await storageServiceSwitcher.uploadFile(file);
+          // results.push(result);
         } catch (error) {
           console.error(`❌ Помилка завантаження файлу ${file.name}:`, error);
           throw error;

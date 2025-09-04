@@ -464,7 +464,15 @@ const Carousel3D = ({
       navigate("/bookme");
     } else {
       // Open external link for other items
-      window.open(item.url, "_blank");
+      let fixedUrl = item.url;
+      
+      // Авто-виправлення URL: додаємо https:// якщо протокол відсутній
+      if (fixedUrl && !fixedUrl.startsWith('http://') && !fixedUrl.startsWith('https://')) {
+        fixedUrl = 'https://' + fixedUrl;
+        console.log(`🔗 Carousel3D: Авто-виправлення URL: "${item.url}" → "${fixedUrl}"`);
+      }
+      
+      window.open(fixedUrl, "_blank");
     }
   }, [navigate, trackClick, onClickSound]);
 
@@ -802,6 +810,9 @@ const Carousel3D = ({
                                 {isActive && !isExpanded && (
                                   <button 
                                     className="flex items-center text-sm opacity-80 hover:opacity-100 smooth-transition"
+                                    style={{
+                                      color: carouselStyle === 'glass' ? '#000000' : 'inherit'
+                                    }}
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setExpandedCard(index);

@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { pocketbaseStorageService } from '../services/PocketBaseStorageService';
 import { supabaseStorageService } from '../services/SupabaseStorageService';
-import { storageServiceSwitcher } from '../services/StorageServiceSwitcher';
+// import { storageServiceSwitcher } from '../services/StorageServiceSwitcher'; // Disabled due to empty file
 
 interface TestResult {
   provider: string;
@@ -79,12 +79,14 @@ const PocketBaseTestPage: React.FC = () => {
     setIsLoading(true);
     const results: TestResult[] = [];
 
-    // Встановлюємо провайдер в switcher
-    storageServiceSwitcher.setProvider(currentProvider);
+    // // Встановлюємо провайдер в switcher
+    // storageServiceSwitcher.setProvider(currentProvider);
 
     const uploadStart = Date.now();
     try {
-      const result = await storageServiceSwitcher.uploadFile(selectedFile);
+      // const result = await storageServiceSwitcher.uploadFile(selectedFile);
+      console.warn('⚠️ PocketBaseTestPage: storageServiceSwitcher disabled');
+      const result = { provider: 'disabled', success: false, message: 'Service switcher disabled' };
       
       results.push({
         provider: `StorageSwitcher (${result.provider})`,
@@ -126,7 +128,9 @@ const PocketBaseTestPage: React.FC = () => {
     for (const provider of providers) {
       const uploadStart = Date.now();
       try {
-        const result = await storageServiceSwitcher.uploadFile(selectedFile, provider);
+        // const result = await storageServiceSwitcher.uploadFile(selectedFile, provider);
+        console.warn('⚠️ PocketBaseTestPage: storageServiceSwitcher disabled for provider test');
+        const result = { provider: 'disabled', success: false, message: 'Service switcher disabled' };
         
         results.push({
           provider: `${provider} (прямий тест)`,
@@ -162,9 +166,12 @@ const PocketBaseTestPage: React.FC = () => {
   const getProvidersStatus = async () => {
     setIsLoading(true);
     
-    await storageServiceSwitcher.refreshProvidersHealth();
-    const status = storageServiceSwitcher.getProvidersStatus();
-    const recommendations = storageServiceSwitcher.getProviderRecommendations();
+    // await storageServiceSwitcher.refreshProvidersHealth();
+    // const status = storageServiceSwitcher.getProvidersStatus();
+    // const recommendations = storageServiceSwitcher.getProviderRecommendations();
+    console.warn('⚠️ PocketBaseTestPage: storageServiceSwitcher provider status disabled');
+    const status = new Map();
+    const recommendations = [];
 
     console.log('📊 Статус провайдерів:', Object.fromEntries(status));
     console.log('🎯 Рекомендації:', recommendations);

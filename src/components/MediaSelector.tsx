@@ -611,8 +611,15 @@ const MediaSelector: React.FC<MediaSelectorProps> = ({
     }
     
     // Якщо файл має URL, вибираємо його відразу
-    if (file.url && file.url.length > 100) {
-      console.log(`✅ MediaSelector: Файл має повний URL, вибираємо: ${file.name}`);
+    // Для PocketBase файлів URL коротший, тому перевіряємо інакше
+    const isPocketBaseFile = file.isPocketBaseFile || (file.url && file.url.includes('api.pocketbasemax.cc'));
+    const isValidUrl = file.url && (
+      file.url.length > 100 || // Звичайні файли (data URL або Supabase)
+      isPocketBaseFile // PocketBase файли завжди валідні якщо мають URL
+    );
+    
+    if (isValidUrl) {
+      console.log(`✅ MediaSelector: Файл має валідний URL, вибираємо: ${file.name} (PocketBase: ${isPocketBaseFile})`);
       onSelect(file);
       onClose();
       return;
