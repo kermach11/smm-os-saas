@@ -87,76 +87,66 @@ interface WelcomeSettings {
 
 // Мінімальні дефолтні налаштування тільки для темного фону під час завантаження
 const minimalDefaultSettings: WelcomeSettings = {
-  title: "",
-  subtitle: "",
-  description: "",
-  buttonText: "Почати",
-  hintText: "",
-  backgroundType: 'color',
-  backgroundColor: '#000000',
-  gradientFrom: '#000000',
-  gradientTo: '#000000',
-  backgroundImage: '',
-  backgroundVideo: '',
-  textColor: '#ffffff',
-  subtitleColor: '#ffffff',
-  descriptionColor: '#ffffff',
-  buttonColor: '#000000',
-  buttonTextColor: '#ffffff',
-  logoUrl: '',
-  showLogo: false,
-  hasMusic: false,
-  musicUrl: '',
+  title: undefined,           // ✍️ Контролюється конструктором
+  subtitle: undefined,        // ✍️ Контролюється конструктором
+  description: undefined,     // ✍️ Контролюється конструктором
+  buttonText: undefined,      // ✍️ Контролюється конструктором (з fallback)
+  hintText: "",              // ✅ Залишаємо - не в конструкторі
+  backgroundType: undefined,   // 🌅 Контролюється конструктором
+  backgroundColor: '#000000',  // ✅ Залишаємо - для завантаження
+  gradientFrom: undefined,     // 🌅 Контролюється конструктором
+  gradientTo: undefined,       // 🌅 Контролюється конструктором
+  backgroundImage: undefined,  // 🌅 Контролюється конструктором
+  backgroundVideo: undefined,  // 🌅 Контролюється конструктором
+  textColor: '#ffffff',       // 🔧 Мінімальний дефолт
+  subtitleColor: '#ffffff',   // 🔧 Мінімальний дефолт
+  descriptionColor: '#ffffff', // 🔧 Мінімальний дефолт
+  buttonColor: '#000000',     // 🔧 Мінімальний дефолт
+  buttonTextColor: '#ffffff', // 🔧 Мінімальний дефолт
+  logoUrl: undefined,         // ✍️ Контролюється конструктором
+  logoSize: undefined,        // ✍️ Контролюється конструктором
+  showLogo: false,           // ✅ Залишаємо - логіка показу
+  hasMusic: undefined,        // 🎵 Контролюється конструктором  
+  musicUrl: undefined,        // 🎵 Контролюється конструктором
   musicVolume: 0.5,
   musicLoop: true,
   autoPlay: false,
   showParticles: false,
   particleColor: '#ffffff',
   animationSpeed: 'normal',
-  // Дефолтні анімації
-  titleAnimation: 'fadeIn',
-  subtitleAnimation: 'slideUp',
-  descriptionAnimation: 'fadeIn',
-  titleExitAnimation: 'fadeOut',
-  subtitleExitAnimation: 'slideDown',
-  descriptionExitAnimation: 'fadeOut',
-  animationDuration: 800,
-  animationDelay: 200,
-  // Default typography settings
-  titleFontSize: 32,
-  subtitleFontSize: 20,
-  descriptionFontSize: 14,
-  titleFontFamily: 'Inter',
-  subtitleFontFamily: 'Inter',
-  descriptionFontFamily: 'Inter',
-  titleFontWeight: 300,
-  subtitleFontWeight: 300,
-  descriptionFontWeight: 400,
-  titleFontStyle: 'normal',
-  subtitleFontStyle: 'normal',
-  descriptionFontStyle: 'normal',
-  // Тіні та ефекти
-  titleShadowIntensity: 0,
-  subtitleShadowIntensity: 0,
-  descriptionShadowIntensity: 0,
-  titleShadowColor: '#000000',
-  subtitleShadowColor: '#000000',
-  descriptionShadowColor: '#000000',
-  title3DDepth: 0,
-  subtitle3DDepth: 0,
-  description3DDepth: 0,
-  splineSettings: {
-    enabled: false,
-    sceneUrl: "",
-    embedCode: "",
-    localFile: "",
-    position: 'background',
-    opacity: 1,
-    scale: 1,
-    autoplay: false,
-    controls: false,
-    method: 'component'
-  }
+  // Анімації - мінімальні дефолти для безпеки
+  titleAnimation: 'fadeIn',         // 🔧 Мінімальний дефолт
+  subtitleAnimation: 'fadeIn',      // 🔧 Мінімальний дефолт
+  descriptionAnimation: 'fadeIn',   // 🔧 Мінімальний дефолт
+  titleExitAnimation: 'fadeOut',    // 🔧 Мінімальний дефолт
+  subtitleExitAnimation: 'fadeOut', // 🔧 Мінімальний дефолт
+  descriptionExitAnimation: 'fadeOut', // 🔧 Мінімальний дефолт
+  animationDuration: 800,           // 🔧 Мінімальний дефолт
+  animationDelay: 200,              // 🔧 Мінімальний дефолт
+  // Typography settings - мінімальні дефолти для безпеки
+  titleFontSize: 32,            // 🔧 Мінімальний дефолт
+  subtitleFontSize: 20,         // 🔧 Мінімальний дефолт
+  descriptionFontSize: 14,      // 🔧 Мінімальний дефолт
+  titleFontFamily: 'Inter',     // 🔧 Мінімальний дефолт
+  subtitleFontFamily: 'Inter',  // 🔧 Мінімальний дефолт
+  descriptionFontFamily: 'Inter', // 🔧 Мінімальний дефолт
+  titleFontWeight: undefined,   // ✅ Контролюється конструктором
+  subtitleFontWeight: undefined, // ✅ Контролюється конструктором
+  descriptionFontWeight: undefined, // ✅ Контролюється конструктором
+  titleFontStyle: 'normal',     // 🔧 Мінімальний дефолт
+  subtitleFontStyle: 'normal',  // 🔧 Мінімальний дефолт
+  descriptionFontStyle: 'normal', // 🔧 Мінімальний дефолт
+  // Тіні та ефекти - контролюються конструктором
+  titleShadowIntensity: undefined,    // 🌟 Контролюється конструктором
+  subtitleShadowIntensity: undefined, // 🌟 Контролюється конструктором
+  descriptionShadowIntensity: undefined, // 🌟 Контролюється конструктором
+  titleShadowColor: undefined,        // 🌟 Контролюється конструктором
+  subtitleShadowColor: undefined,     // 🌟 Контролюється конструктором
+  descriptionShadowColor: undefined,  // 🌟 Контролюється конструктором
+  title3DDepth: undefined,            // 🌟 Контролюється конструктором
+  subtitle3DDepth: undefined,         // 🌟 Контролюється конструктором
+  description3DDepth: undefined,      // 🌟 Контролюється конструктором
+  splineSettings: undefined     // 🌐 Контролюється конструктором
 };
 
 const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSettings }: WelcomeScreenProps) => {
@@ -389,17 +379,16 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
       color: element === 'title' ? settings.textColor : 
              element === 'subtitle' ? settings.subtitleColor : 
              settings.descriptionColor,
-      fontFamily: settings[`${element}FontFamily`] || 'Inter',
-      fontWeight: settings[`${element}FontWeight`] || (element === 'description' ? 400 : 300),
-      fontStyle: settings[`${element}FontStyle`] || 'normal',
-      fontSize: responsiveFontSize(settings[`${element}FontSize`] || 
-                (element === 'title' ? 32 : element === 'subtitle' ? 20 : 14))
+      fontFamily: settings[`${element}FontFamily`],
+      fontWeight: settings[`${element}FontWeight`],
+      fontStyle: settings[`${element}FontStyle`],
+      fontSize: responsiveFontSize(settings[`${element}FontSize`])
     };
 
     // Додавання тіней
-    const shadowIntensity = settings[`${element}ShadowIntensity`] || 0;
-    const shadowColor = settings[`${element}ShadowColor`] || '#000000';
-    const depth3D = settings[`${element}3DDepth`] || 0;
+    const shadowIntensity = settings[`${element}ShadowIntensity`];
+    const shadowColor = settings[`${element}ShadowColor`];
+    const depth3D = settings[`${element}3DDepth`];
 
     const hexToRgb = (hex: string) => {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -453,8 +442,8 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
                          element === 'subtitle' ? settings.subtitleExitAnimation :
                          settings.descriptionExitAnimation;
 
-    const duration = (settings.animationDuration || 800) / 1000;
-    const delay = (settings.animationDelay || 200) / 1000;
+    const duration = settings.animationDuration ? settings.animationDuration / 1000 : 0.8;
+    const delay = settings.animationDelay ? settings.animationDelay / 1000 : 0.2;
 
     const variants: any = {
       hidden: { opacity: 0 },
@@ -607,8 +596,8 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
                 alt="Logo" 
                 className="w-auto h-auto object-contain"
                 style={{ 
-                  maxWidth: `${settings.logoSize || 96}px`, 
-                  maxHeight: `${settings.logoSize || 96}px`,
+                  maxWidth: settings.logoSize ? `${settings.logoSize}px` : '96px', 
+                  maxHeight: settings.logoSize ? `${settings.logoSize}px` : '96px',
                   width: 'auto',
                   height: 'auto'
                 }}
@@ -645,12 +634,12 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
             style={getTextStyle('description')}
             {...getAnimationVariants('description')}
           >
-            {settings.description.split('\n').map((line, index) => (
+            {settings.description ? settings.description.split('\n').map((line, index) => (
               <span key={index}>
                 {line}
                 {index < settings.description.split('\n').length - 1 && <br />}
               </span>
-            ))}
+            )) : ''}
           </motion.p>
         </div>
 
