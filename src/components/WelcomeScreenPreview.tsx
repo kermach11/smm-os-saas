@@ -87,7 +87,7 @@ const defaultSettings: WelcomeSettings = {
   subtitle: undefined,            // 🔴 Контролюється конструктором!
   description: undefined,         // 🔴 Контролюється конструктором!
   buttonText: undefined,          // 🔴 Контролюється конструктором!
-  hintText: "Tap to enter and start music",
+  hintText: undefined,             // 🔴 Контролюється конструктором!
   backgroundType: 'gradient',
   backgroundColor: '#f9fafb',
   gradientFrom: '#f9fafb',
@@ -100,7 +100,7 @@ const defaultSettings: WelcomeSettings = {
   buttonColor: undefined,         // 🎨 Контролюється конструктором!
   buttonTextColor: undefined,     // 🎨 Контролюється конструктором!
   logoUrl: '',
-  showLogo: true,
+  showLogo: false,               // 🔴 Контролюється конструктором!
   hasMusic: false,
   musicUrl: '',
   musicVolume: 0.5,
@@ -308,6 +308,15 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
                           element === 'subtitle' ? settings.subtitleAnimation :
                           settings.descriptionAnimation;
     
+    // 🚫 Якщо анімація не задана в конструкторі - статичний показ
+    if (!enterAnimation) {
+      return {
+        initial: { opacity: 1 },
+        animate: { opacity: 1 },
+        transition: { duration: 0 }
+      };
+    }
+    
 
 
     // Якщо анімація 'none' або не задана, повертаємо статичну анімацію
@@ -410,7 +419,7 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
@@ -452,7 +461,7 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
         <motion.div 
           className="absolute inset-0 opacity-0"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.05 }}
+          animate={{ opacity: 0 }}
           transition={{ duration: 1.5, delay: 0.3 }}
         />
       </div>
@@ -515,11 +524,11 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
           </motion.p>
         </div>
 
-        {/* Enter button */}
+        {/* Enter button - завжди видима, але без дефолтного тексту і анімації */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 1, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
+          transition={{ duration: 0 }}
         >
           <button
             className="relative px-8 py-4 rounded-full font-medium transition-all duration-300 transform scale-100 hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl"
@@ -529,21 +538,20 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
             }}
           >
             <span className="flex items-center gap-3">
-              <span className="text-lg">🎵</span>
-              {settings.buttonText}
+              {settings.buttonText || ''}
             </span>
           </button>
         </motion.div>
 
-        {/* Hint text */}
+        {/* Hint text - завжди видимий, але без дефолтного тексту і анімації */}
         <motion.p
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 1 }}
+          transition={{ duration: 0 }}
           className="text-xs mt-6 sf-body"
           style={{ color: settings.descriptionColor, opacity: 0.7 }}
         >
-          {settings.hintText}
+          {settings.hintText || ''}
         </motion.p>
       </div>
 
