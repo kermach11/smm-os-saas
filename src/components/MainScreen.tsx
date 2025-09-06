@@ -255,7 +255,9 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
     // Кольори тіней
     headerTitleShadowColor: '#000000',
     headerSubtitleShadowColor: '#000000',
-    headerDescriptionShadowColor: '#000000'
+    headerDescriptionShadowColor: '#000000',
+    // Колір тексту
+    textColor: '#ffffff'
   });
 
   // Додаємо стан для фону
@@ -632,6 +634,9 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
         if (settings.headerSubtitleShadowColor) textSettings.headerSubtitleShadowColor = settings.headerSubtitleShadowColor;
         if (settings.headerDescriptionShadowColor) textSettings.headerDescriptionShadowColor = settings.headerDescriptionShadowColor;
         
+        // Колір тексту
+        if (settings.textColor) textSettings.textColor = settings.textColor;
+        
         if (settings.headerTitleAnimation) textSettings.headerTitleAnimation = settings.headerTitleAnimation;
         if (settings.headerSubtitleAnimation) textSettings.headerSubtitleAnimation = settings.headerSubtitleAnimation;
         if (settings.headerDescriptionAnimation) textSettings.headerDescriptionAnimation = settings.headerDescriptionAnimation;
@@ -882,6 +887,12 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
       if (settings.headerTitleFontWeight !== undefined) textSettingsUpdate.headerTitleFontWeight = settings.headerTitleFontWeight;
       if (settings.headerSubtitleFontWeight !== undefined) textSettingsUpdate.headerSubtitleFontWeight = settings.headerSubtitleFontWeight;
       if (settings.headerDescriptionFontWeight !== undefined) textSettingsUpdate.headerDescriptionFontWeight = settings.headerDescriptionFontWeight;
+      
+      // Колір тексту
+      if (settings.textColor !== undefined) {
+        console.log('🎨 MainScreen: Оновлюємо колір тексту з конструктора:', settings.textColor);
+        textSettingsUpdate.textColor = settings.textColor;
+      }
       
       // Стиль шрифтів
       if (settings.headerTitleFontStyle !== undefined) textSettingsUpdate.headerTitleFontStyle = settings.headerTitleFontStyle;

@@ -171,9 +171,10 @@ export const DraggableBox: React.FC<DraggableBoxProps> = ({
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
-        // Анімації
+        // Анімації (не блокуємо hover для текстових елементів)
         animate={{
-          scale: isDragging ? 1.02 : 1,
+          // Не використовуємо scale для headerTextBox щоб не блокувати hover ефекти тексту
+          ...(boxName !== 'headerTextBox' && { scale: isDragging ? 1.02 : 1 }),
           boxShadow: isDragging 
             ? '0 20px 40px rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.1)' 
             : isConstructorMode 

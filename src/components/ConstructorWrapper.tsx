@@ -251,15 +251,19 @@ const ConstructorWrapper: React.FC<ConstructorWrapperProps> = ({
       {/* Обгортка боксу */}
       <motion.div
         className={`relative ${className} ${isConstructorMode ? 'cursor-move' : ''}`}
-        style={constructorStyles}
+        style={{
+          ...constructorStyles,
+          // Дозволяємо hover подіям для дітей headerTextBox в звичайному режимі
+          ...(boxName === 'headerTextBox' && !isConstructorMode && { pointerEvents: 'none' })
+        }}
         onMouseDown={isConstructorMode ? (e) => handleMouseDown(boxName, e) : undefined}
         onTouchStart={isConstructorMode ? (e) => handleTouchStart(boxName, e) : undefined}
         onClick={handleClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        onMouseEnter={isConstructorMode ? handleMouseEnter : undefined}
+        onMouseLeave={isConstructorMode ? handleMouseLeave : undefined}
         onDoubleClick={onDoubleClick}
         onContextMenu={onContextMenu}
-        whileHover={isConstructorMode ? { 
+        whileHover={isConstructorMode && boxName !== 'headerTextBox' ? { 
           boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
           border: '2px dashed rgba(59, 130, 246, 0.8)'
         } : {}}

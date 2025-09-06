@@ -342,7 +342,7 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
       {/* Заголовок */}
       <motion.h1 
         {...titleProps}
-        className={`leading-tight tracking-tight text-balance drop-shadow-lg cursor-pointer select-none text-white font-bold text-center mb-4 ${titleProps.className || ''}`}
+        className={`leading-tight tracking-tight text-balance cursor-pointer select-none font-bold text-center mb-4 ${titleProps.className || ''}`}
         style={{
           fontSize: adaptiveSettings ? `${getAdaptiveValue('headerTitleFontSize')}px` : 
                    (currentDeviceType === 'mobile' ? '32px' : 
@@ -357,9 +357,11 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
                         (currentDeviceType === 'mobile' ? '-0.5px' : 
                          currentDeviceType === 'tablet' ? '-0.3px' : '-0.5px'),
           marginBottom: adaptiveSettings ? `${getAdaptiveValue('headerTitleMarginBottom')}px` : '16px',
-          color: 'white',
+          color: getHeaderSetting('textColor', '#ffffff'),
           // Додаємо тінь для заголовка
           textShadow: `0 2px 4px rgba(0,0,0,${getHeaderSetting('headerTitleShadowIntensity', 0.5)})`,
+          // Увімкнути pointer events для hover ефектів
+          pointerEvents: 'auto',
           ...titleProps.style
         }}
         whileHover={{ scale: 1.025 }}
@@ -387,12 +389,11 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
                          currentDeviceType === 'tablet' ? '0px' : '0px'),
           marginTop: '16px',
           marginBottom: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleMarginBottom')}px` : '12px',
-          background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #ffffff 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
+          color: getHeaderSetting('textColor', '#ffffff'),
           // Додаємо тінь для підзаголовка
           textShadow: `0 2px 4px rgba(0,0,0,${getHeaderSetting('headerSubtitleShadowIntensity', 0.3)})`,
+          // Увімкнути pointer events для hover ефектів
+          pointerEvents: 'auto',
           ...subtitleProps.style
         }}
         whileHover={{ scale: 1.03 }}
@@ -404,7 +405,7 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
       {/* Опис */}
       <motion.p 
         {...descriptionProps}
-        className={`font-light max-w-4xl mx-auto text-balance drop-shadow-md cursor-pointer select-none text-white/80 text-center ${descriptionProps.className || ''}`}
+        className={`font-light max-w-4xl mx-auto text-balance cursor-pointer select-none text-center ${descriptionProps.className || ''}`}
         style={{
           fontSize: adaptiveSettings ? `${getAdaptiveValue('headerDescriptionFontSize')}px` : 
                    (currentDeviceType === 'mobile' ? '14px' : 
@@ -419,9 +420,11 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
                         (currentDeviceType === 'mobile' ? '0.2px' : 
                          currentDeviceType === 'tablet' ? '0.1px' : '0px'),
           marginTop: '16px',
-          color: 'rgba(255, 255, 255, 0.8)',
+          color: getHeaderSetting('textColor', '#ffffff'),
           // Додаємо тінь для опису
           textShadow: `0 1px 2px rgba(0,0,0,${getHeaderSetting('headerDescriptionShadowIntensity', 0.3)})`,
+          // Увімкнути pointer events для hover ефектів
+          pointerEvents: 'auto',
           ...descriptionProps.style
         }}
         whileHover={{ scale: 1.015 }}
