@@ -110,7 +110,7 @@ export const MainScreenExample: React.FC<MainScreenExampleProps> = ({
           isOn={isBackgroundMusicEnabled} 
           onToggle={() => {
             toggleBackgroundMusic();
-            trackClick('#sound-toggle', `Sound Toggle: ${!isBackgroundMusicEnabled ? 'On' : 'Off'}`);
+            trackClick('#sound-toggle', `Sound Toggle: ${!isBackgroundMusicEnabled ? 'On' : 'Off'}`, 'sound');
           }} 
           isLoaded={true}
           onMouseEnter={playHoverSound}
@@ -172,7 +172,7 @@ export const MainScreenExample: React.FC<MainScreenExampleProps> = ({
           onClick={(e) => {
             onAdminButtonClick();
             playClickSound();
-            trackClick('#admin-panel-button', 'Admin Panel Access');
+            trackClick('#admin-panel-button', 'Admin Panel Access', 'admin');
           }}
           onMouseEnter={playHoverSound}
           icon="⚙️"

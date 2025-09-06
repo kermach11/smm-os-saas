@@ -285,16 +285,19 @@ interface HeaderTextBoxProps extends Omit<BaseBoxProps, 'children'> {
     className?: string;
     style?: React.CSSProperties;
     onClick?: () => void;
+    onMouseEnter?: () => void;
   };
   subtitleProps?: {
     className?: string;
     style?: React.CSSProperties;
     onClick?: () => void;
+    onMouseEnter?: () => void;
   };
   descriptionProps?: {
     className?: string;
     style?: React.CSSProperties;
     onClick?: () => void;
+    onMouseEnter?: () => void;
   };
   children?: ReactNode; // Опційні children для header text
   onMouseEnter?: () => void; // Обробник для hover звуків

@@ -745,7 +745,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
     }
     playClickSound();
     playCarouselTransitionSound();
-    trackClick(`#pagination-dot-${index}`, `Pagination Dot ${index + 1} Click`);
+    trackClick(`#pagination-dot-${index}`, `Pagination Dot ${index + 1} Click`, 'pagination');
   };
 
   const handleAdminButtonClick = () => {
@@ -1182,7 +1182,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
     setIsBackgroundMusicEnabled(newState);
     
     // Аналітика
-    trackClick('#sound-toggle', `Sound Toggle: ${newState ? 'On' : 'Off'}`);
+    trackClick('#sound-toggle', `Sound Toggle: ${newState ? 'On' : 'Off'}`, 'sound');
     
     if (newState) {
       // Включаємо музику (тільки якщо вона не грає)
@@ -1295,7 +1295,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
             isOn={isBackgroundMusicEnabled} 
             onToggle={() => {
               toggleBackgroundMusic();
-              trackClick('#sound-toggle', `Sound Toggle: ${!isBackgroundMusicEnabled ? 'On' : 'Off'}`);
+              trackClick('#sound-toggle', `Sound Toggle: ${!isBackgroundMusicEnabled ? 'On' : 'Off'}`, 'sound');
             }} 
             isLoaded={true}
             onMouseEnter={playHoverSound}
@@ -1379,7 +1379,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
             onClick={() => {
               handleAdminButtonClick();
               playClickSound();
-              trackClick('#admin-panel-button', 'Admin Panel Access');
+              trackClick('#admin-panel-button', 'Admin Panel Access', 'admin');
             }}
             onMouseEnter={playHoverSound}
           />

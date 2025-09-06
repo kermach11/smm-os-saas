@@ -448,9 +448,9 @@ const Carousel3D = ({
     // Play click sound
     onClickSound?.();
     
-    // Відстежуємо клік по CTA кнопці
+    // Відстежуємо клік по CTA кнопці (це і є перегляд сторінки!)
     if (item.url) {
-      trackClick(item.url, `${item.title} - CTA Click`);
+      trackClick(item.url, `${item.title} - CTA Click`, 'carousel-card');
     }
     
     if (item.title === "LINKCORE") {

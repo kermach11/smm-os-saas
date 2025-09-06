@@ -1,0 +1,28 @@
+[33mcommit 446c9efd886d3783ce29a584d962880b58e8bedb[m
+Author: kermach11 <paralelnomax@gmail.com>
+Date:   Sat Sep 6 17:38:32 2025 +0200
+
+    Hover Effects & Sound Fix Complete - v2.9.0
+    
+     ВИПРАВЛЕНО КОРІНЬ ПРОБЛЕМИ з hover ефектами та звуковими ефектами:
+    
+     ConstructorWrapper.tsx:
+    - Виправлено блокування onMouseEnter/onMouseLeave в не-конструкторському режимі
+    - onMouseEnter тепер працює завжди, не тільки в isConstructorMode
+    
+     MainScreenBoxes.tsx:
+    - Додано звукові ефекти для всіх текстових елементів
+    - Використання централізованого onMouseEnter пропсу замість прямих обробників
+    
+     РЕЗУЛЬТАТ:
+    - ЗАГОЛОВОК: whileHover scale 1.025 + звук
+    - ПІДЗАГОЛОВОК: whileHover scale 1.03 + звук
+    - ОПИС: whileHover scale 1.015 + звук
+    
+     Всі hover анімації та звукові ефекти тепер працюють на головній сторінці!
+
+dist/assets/howler-z0eq_xoQ.js
+dist/assets/index-egmd7BA9.js
+dist/index.html
+src/components/ConstructorWrapper.tsx
+src/components/MainScreenBoxes.tsx

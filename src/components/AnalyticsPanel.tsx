@@ -20,45 +20,52 @@ interface AnalyticsPanelProps {
   className?: string;
 }
 
-// Статичні дані для демонстрації
-const demoAnalyticsData = {
-  totalViews: 2847,
-  totalClicks: 5234,
-  totalSessions: 892,
-  averageSessionDuration: 285, // секунди
-  topClickedLinks: [
-    { url: 'https://linkcore.com', title: 'LINKCORE', clicks: 1832, percentage: 35 },
-    { url: 'https://casemachine.dev', title: 'CASEMACHINE', clicks: 1466, percentage: 28 },
-    { url: 'https://bookme.ua', title: 'BOOKME', clicks: 1151, percentage: 22 },
-    { url: '#navigation', title: 'Navigation', clicks: 523, percentage: 10 },
-    { url: '#sound-toggle', title: 'Sound Toggle', clicks: 262, percentage: 5 }
-  ],
-  dailyStats: [
-    { date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), views: 342, clicks: 567 },
-    { date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), views: 298, clicks: 423 },
-    { date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), views: 445, clicks: 789 },
-    { date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), views: 523, clicks: 934 },
-    { date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), views: 389, clicks: 645 },
-    { date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), views: 467, clicks: 823 },
-    { date: new Date().toISOString(), views: 383, clicks: 1053 }
-  ],
-  recentClicks: [
-    { id: '1', timestamp: Date.now() - 2 * 60 * 1000, url: 'https://linkcore.com', title: 'LINKCORE' },
-    { id: '2', timestamp: Date.now() - 5 * 60 * 1000, url: 'https://casemachine.dev', title: 'CASEMACHINE' },
-    { id: '3', timestamp: Date.now() - 8 * 60 * 1000, url: 'https://bookme.ua', title: 'BOOKME' },
-    { id: '4', timestamp: Date.now() - 12 * 60 * 1000, url: '#navigation', title: 'Navigation - Next' },
-    { id: '5', timestamp: Date.now() - 15 * 60 * 1000, url: 'https://linkcore.com', title: 'LINKCORE' },
-    { id: '6', timestamp: Date.now() - 18 * 60 * 1000, url: '#sound-toggle', title: 'Sound Toggle' },
-    { id: '7', timestamp: Date.now() - 22 * 60 * 1000, url: 'https://casemachine.dev', title: 'CASEMACHINE' },
-    { id: '8', timestamp: Date.now() - 25 * 60 * 1000, url: 'https://bookme.ua', title: 'BOOKME' },
-    { id: '9', timestamp: Date.now() - 28 * 60 * 1000, url: '#navigation', title: 'Navigation - Previous' },
-    { id: '10', timestamp: Date.now() - 31 * 60 * 1000, url: 'https://linkcore.com', title: 'LINKCORE' }
-  ]
+// Порожні дані для початкового стану (замість фейкових даних для демонстрації)
+const emptyAnalyticsData = {
+  totalViews: 0,
+  totalClicks: 0,
+  totalSessions: 0,
+  averageSessionDuration: 0, // секунди
+  topClickedLinks: [],
+  dailyStats: [],
+  recentClicks: []
 };
 
 const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
   const { t } = useTranslation();
   const { language } = useLanguage();
+  
+  // Отримуємо реальні дані аналітики замість фейкових
+  const { analyticsData, clearAnalytics, exportAnalytics, cleanupRemovedCarouselItems, currentSession, trackClick } = useAnalytics();
+  
+  // Функція для показу дебаг інформації
+  const showDebugInfo = () => {
+    const sessions = JSON.parse(localStorage.getItem('analyticsSessions') || '[]');
+    const clicks = JSON.parse(localStorage.getItem('analyticsClicks') || '[]');
+    
+    const debugInfo = {
+      currentSession,
+      analyticsData,
+      storedSessions: sessions,
+      storedClicks: clicks,
+      localStorage: {
+        analyticsSessions: localStorage.getItem('analyticsSessions'),
+        analyticsClicks: localStorage.getItem('analyticsClicks'),
+        analyticsData: localStorage.getItem('analyticsData')
+      }
+    };
+    
+    console.log('🔍 Analytics Debug Info:', debugInfo);
+    alert('🔍 Дебаг інформація виведена в консоль браузера. Відкрийте DevTools > Console');
+  };
+  
+  // Функція для тестування кліку
+  const testClick = () => {
+    const testTitle = `Test Click - ${new Date().toLocaleTimeString()}`;
+    console.log('🧪 Analytics: Тестування кліку...', { url: '#test-click', title: testTitle });
+    trackClick('#test-click', testTitle);
+    alert('🧪 Тест клік відправлено! Перевірте консоль та оновіть дані');
+  };
   
   // Динамічна локаль для форматування дат
   const getLocale = () => {
@@ -160,12 +167,21 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
         uk: 'Кліки',
         en: 'Clicks',
         ru: 'Клики'
+      },
+      'pageViews': {
+        uk: 'Перегляди сторінок',
+        en: 'Page Views',
+        ru: 'Просмотры страниц'
+      },
+      'visits': {
+        uk: 'Відвідування',
+        en: 'Visits',
+        ru: 'Посещения'
       }
     };
     
     return texts[key] ? texts[key][language] || texts[key]['uk'] : key;
   };
-  const { clearAnalytics, exportAnalytics, cleanupRemovedCarouselItems } = useAnalytics();
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -184,8 +200,8 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
   };
 
   const getClickTrend = () => {
-    const today = demoAnalyticsData.dailyStats[demoAnalyticsData.dailyStats.length - 1];
-    const yesterday = demoAnalyticsData.dailyStats[demoAnalyticsData.dailyStats.length - 2];
+    const today = analyticsData.dailyStats[analyticsData.dailyStats.length - 1];
+    const yesterday = analyticsData.dailyStats[analyticsData.dailyStats.length - 2];
     
     if (!today || !yesterday) return 0;
     
@@ -214,6 +230,20 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
               title={getDynamicText('export.data')}
             >
               <Download className="w-2 h-2 lg:w-3 lg:h-3" />
+            </button>
+            <button
+              onClick={showDebugInfo}
+              className="px-1 lg:px-2 py-1 lg:py-1.5 bg-blue-500/80 hover:bg-blue-600 text-white rounded-md lg:rounded-lg transition-all duration-200 text-xs min-h-[24px] lg:min-h-[32px] touch-manipulation"
+              title="Дебаг інформація"
+            >
+              🔍
+            </button>
+            <button
+              onClick={testClick}
+              className="px-1 lg:px-2 py-1 lg:py-1.5 bg-purple-500/80 hover:bg-purple-600 text-white rounded-md lg:rounded-lg transition-all duration-200 text-xs min-h-[24px] lg:min-h-[32px] touch-manipulation"
+              title="Тест кліку"
+            >
+              🧪
             </button>
             <button
               onClick={() => {
@@ -266,7 +296,7 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
                 <h3 className="text-xs lg:text-sm font-semibold text-slate-600 hidden lg:block">{t('analytics.pageviews')}</h3>
               </div>
             </div>
-            <div className="text-sm lg:text-3xl font-bold text-slate-800">{demoAnalyticsData.totalViews.toLocaleString()}</div>
+            <div className="text-sm lg:text-3xl font-bold text-slate-800">{analyticsData.totalPageViews.toLocaleString()}</div>
             <p className="text-xs text-slate-500 mt-1 lg:mt-2 hidden lg:block">{t('analytics.users')}</p>
           </div>
 
@@ -279,7 +309,7 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
                 <h3 className="text-xs lg:text-sm font-semibold text-slate-600 hidden lg:block">{t('analytics.visits')}</h3>
               </div>
             </div>
-            <div className="text-sm lg:text-3xl font-bold text-slate-800">{demoAnalyticsData.totalClicks.toLocaleString()}</div>
+            <div className="text-sm lg:text-3xl font-bold text-slate-800">{analyticsData.totalVisits.toLocaleString()}</div>
             <div className="flex items-center text-xs text-slate-500 mt-1 lg:mt-2 hidden lg:flex">
               <TrendingUp className="w-2 h-2 lg:w-3 lg:h-3 mr-1" />
               {getClickTrend() > 0 ? '+' : ''}{getClickTrend()}% {getPerDayText()}
@@ -295,7 +325,7 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
                 <h3 className="text-xs lg:text-sm font-semibold text-slate-600 hidden lg:block">{t('analytics.realtime')}</h3>
               </div>
             </div>
-            <div className="text-sm lg:text-3xl font-bold text-slate-800">{demoAnalyticsData.totalSessions.toLocaleString()}</div>
+            <div className="text-sm lg:text-3xl font-bold text-slate-800">{analyticsData.activeSessions.toLocaleString()}</div>
             <p className="text-xs text-slate-500 mt-1 lg:mt-2 hidden lg:block">{t('status.completed')}</p>
           </div>
 
@@ -309,7 +339,7 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
               </div>
             </div>
             <div className="text-sm lg:text-3xl font-bold text-slate-800">
-              {formatDuration(demoAnalyticsData.averageSessionDuration)}
+              {formatDuration(analyticsData.averageSessionDuration)}
             </div>
             <p className="text-xs text-slate-500 mt-1 lg:mt-2 hidden lg:block">{t('form.duration')}</p>
           </div>
@@ -329,23 +359,32 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
               </div>
             </div>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={demoAnalyticsData.dailyStats}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
-                  tickFormatter={(value) => new Date(value).toLocaleDateString(getLocale(), { 
-                    month: 'short', 
-                    day: 'numeric' 
-                  })}
-                  tick={{ fontSize: 10 }}
-                />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip 
-                  labelFormatter={(value) => new Date(value).toLocaleDateString(getLocale())}
-                />
-                <Bar dataKey="views" fill="#8884d8" name={getDynamicText('views')} />
-                <Bar dataKey="clicks" fill="#82ca9d" name={getDynamicText('clicks')} />
-              </BarChart>
+              {analyticsData.dailyStats.length === 0 ? (
+                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                  <div className="text-center">
+                    <div className="text-6xl mb-4">📈</div>
+                    <p className="text-sm">Статистика накопичується щодня</p>
+                  </div>
+                </div>
+              ) : (
+                <BarChart data={analyticsData.dailyStats}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    tickFormatter={(value) => new Date(value).toLocaleDateString(getLocale(), { 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip 
+                    labelFormatter={(value) => new Date(value).toLocaleDateString(getLocale())}
+                  />
+                <Bar dataKey="pageViews" fill="#8884d8" name={getDynamicText('pageViews')} />
+                <Bar dataKey="visits" fill="#82ca9d" name={getDynamicText('visits')} />
+                </BarChart>
+              )}
             </ResponsiveContainer>
           </div>
 
@@ -361,23 +400,32 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
               </div>
             </div>
             <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={demoAnalyticsData.topClickedLinks.slice(0, 5)}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ title, percentage }) => `${title}: ${percentage}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="clicks"
-                >
-                  {demoAnalyticsData.topClickedLinks.slice(0, 5).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
+              {analyticsData.topClickedLinks.length === 0 ? (
+                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                  <div className="text-center">
+                    <div className="text-6xl mb-4">📊</div>
+                    <p className="text-sm">Дані з'являться після кліків</p>
+                  </div>
+                </div>
+              ) : (
+                <PieChart>
+                  <Pie
+                    data={analyticsData.topClickedLinks.slice(0, 5)}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ title, percentage }) => `${title}: ${percentage}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="clicks"
+                  >
+                    {analyticsData.topClickedLinks.slice(0, 5).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              )}
             </ResponsiveContainer>
           </div>
         </div>
@@ -396,7 +444,13 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
               </div>
             </div>
             <div className="space-y-1 lg:space-y-3 max-h-[200px] lg:max-h-[400px] overflow-y-auto">
-              {demoAnalyticsData.topClickedLinks.slice(0, 10).map((link, index) => (
+              {analyticsData.topClickedLinks.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  <div className="text-4xl mb-2">📊</div>
+                  <p className="text-sm">Дані з'являться після початку використання</p>
+                </div>
+              ) : (
+                analyticsData.topClickedLinks.slice(0, 10).map((link, index) => (
                 <motion.div
                   key={link.url}
                   initial={{ opacity: 0, y: 20 }}
@@ -423,7 +477,8 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
                     <p className="text-xs lg:text-sm text-slate-500">{link.percentage}%</p>
                   </div>
                 </motion.div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -439,7 +494,13 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
               </div>
             </div>
             <div className="space-y-1 lg:space-y-3 max-h-[200px] lg:max-h-[400px] overflow-y-auto">
-              {demoAnalyticsData.recentClicks.map((click, index) => (
+              {analyticsData.recentClicks.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  <div className="text-4xl mb-2">⚡</div>
+                  <p className="text-sm">Активність з'явиться після перших кліків</p>
+                </div>
+              ) : (
+                analyticsData.recentClicks.map((click, index) => (
                 <motion.div
                   key={click.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -458,7 +519,8 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
                     </p>
                   </div>
                 </motion.div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

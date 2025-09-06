@@ -6,6 +6,7 @@ export interface ClickEvent {
   userAgent: string;
   referrer: string;
   sessionId: string;
+  clickType: 'carousel-card' | 'navigation' | 'admin' | 'sound' | 'pagination' | 'welcome-entry' | 'other';
 }
 
 export interface SessionData {
@@ -22,9 +23,10 @@ export interface SessionData {
 }
 
 export interface AnalyticsData {
-  totalViews: number;
-  totalClicks: number;
-  totalSessions: number;
+  totalPageViews: number; // Кліки по картках каруселі (посилання)
+  totalVisits: number; // Завантаження + Welcome клік
+  totalSessions: number; // Завершені сесії
+  activeSessions: number; // Поточні активні на головній
   averageSessionDuration: number;
   topClickedLinks: Array<{
     url: string;
@@ -34,12 +36,12 @@ export interface AnalyticsData {
   }>;
   dailyStats: Array<{
     date: string;
-    views: number;
-    clicks: number;
+    pageViews: number; // Кліки по картках
+    visits: number; // Welcome кліки
     sessions: number;
   }>;
   recentClicks: ClickEvent[];
-  activeSessions: SessionData[];
+  allSessions: SessionData[];
 }
 
 export interface AnalyticsConfig {

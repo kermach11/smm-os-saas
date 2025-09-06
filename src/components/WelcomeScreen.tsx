@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import indexedDBService from '../services/IndexedDBService';
 import SplineAnimation from './SplineAnimation';
 import { responsiveFontSize } from '../lib/utils';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 interface WelcomeScreenProps {
   visible: boolean;
@@ -157,6 +158,9 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
   const [animationKey, setAnimationKey] = useState(0);
   
   const musicRef = useRef<HTMLAudioElement>(null);
+  
+  // Аналітика для відстеження входу клієнтів
+  const { trackClick } = useAnalytics();
 
 
 
@@ -333,6 +337,17 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
   const handleEnter = async () => {
     setIsPressed(true);
     
+    console.log('🎬 WelcomeScreen: handleEnter викликано, buttonText:', settings.buttonText);
+    
+    // 📊 АНАЛІТИКА: Відстежуємо вхід клієнта (це головна метрика входу)
+    const clickTitle = `Client Entry - ${settings.buttonText || 'Почати'}`;
+    console.log('📊 WelcomeScreen: Викликаємо trackClick з параметрами:', {
+      url: '#welcome-enter-button',
+      title: clickTitle
+    });
+    
+    trackClick('#welcome-enter-button', clickTitle, 'welcome-entry');
+    
     // Запускаємо музику в фоні без блокування UI
     // Власна музика Welcome сторінки
     if (settings.hasMusic && settings.musicUrl && musicRef.current) {
@@ -345,6 +360,7 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
     
     // Негайно переходимо далі без очікування музики
     setTimeout(() => {
+      console.log('🎬 WelcomeScreen: Перехід до MainScreen через 150ms');
       onComplete();
       setIsPressed(false);
     }, 150);
@@ -654,7 +670,21 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
           }}
         >
           <button
-            onClick={handleEnter}
+            onClick={(e) => {
+              console.log('🖱️ WelcomeScreen: onClick викликано', {
+                clientX: e.clientX,
+                clientY: e.clientY,
+                target: e.target,
+                pointerType: (e as any).pointerType || 'unknown'
+              });
+              handleEnter();
+            }}
+            onTouchStart={() => {
+              console.log('📱 WelcomeScreen: onTouchStart (мобільний дотик)');
+            }}
+            onTouchEnd={() => {
+              console.log('📱 WelcomeScreen: onTouchEnd (мобільний дотик завершено)');
+            }}
             disabled={!isReady}
             className={`
               relative px-8 py-4 rounded-full font-medium
