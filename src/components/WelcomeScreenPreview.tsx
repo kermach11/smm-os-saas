@@ -83,10 +83,10 @@ interface WelcomeSettings {
 }
 
 const defaultSettings: WelcomeSettings = {
-  title: "SMM OS",
-  subtitle: "Welcome",
-  description: "Everything you need for your SMM\nin one place",
-  buttonText: "Enter",
+  title: undefined,               // 🔴 Контролюється конструктором!
+  subtitle: undefined,            // 🔴 Контролюється конструктором!
+  description: undefined,         // 🔴 Контролюється конструктором!
+  buttonText: undefined,          // 🔴 Контролюється конструктором!
   hintText: "Tap to enter and start music",
   backgroundType: 'gradient',
   backgroundColor: '#f9fafb',
@@ -94,11 +94,11 @@ const defaultSettings: WelcomeSettings = {
   gradientTo: '#f7f8fa',
   backgroundImage: '',
   backgroundVideo: '',
-  textColor: '#111111',
-  subtitleColor: '#333333',
-  descriptionColor: '#666666',
-  buttonColor: '#4a4b57',
-  buttonTextColor: '#ffffff',
+  textColor: undefined,           // 🎨 Контролюється конструктором!
+  subtitleColor: undefined,       // 🎨 Контролюється конструктором!
+  descriptionColor: undefined,    // 🎨 Контролюється конструктором!
+  buttonColor: undefined,         // 🎨 Контролюється конструктором!
+  buttonTextColor: undefined,     // 🎨 Контролюється конструктором!
   logoUrl: '',
   showLogo: true,
   hasMusic: false,
@@ -110,49 +110,38 @@ const defaultSettings: WelcomeSettings = {
   particleColor: '#ffffff',
   animationSpeed: 'normal',
   // Дефолтні анімації
-  titleAnimation: 'fadeIn',
-  subtitleAnimation: 'slideUp',
-  descriptionAnimation: 'fadeIn',
-  titleExitAnimation: 'fadeOut',
-  subtitleExitAnimation: 'slideDown',
-  descriptionExitAnimation: 'fadeOut',
-  animationDuration: 800,
-  animationDelay: 200,
+  titleAnimation: undefined,      // 🔴 Контролюється конструктором!
+  subtitleAnimation: undefined,   // 🔴 Контролюється конструктором!
+  descriptionAnimation: undefined, // 🔴 Контролюється конструктором!
+  titleExitAnimation: undefined,  // 🔴 Контролюється конструктором!
+  subtitleExitAnimation: undefined, // 🔴 Контролюється конструктором!
+  descriptionExitAnimation: undefined, // 🔴 Контролюється конструктором!
+  animationDuration: undefined,   // 🔴 Контролюється конструктором!
+  animationDelay: undefined,      // 🔴 Контролюється конструктором!
   // Default typography settings
-  titleFontSize: 32,
-  subtitleFontSize: 20,
-  descriptionFontSize: 14,
-  titleFontFamily: 'Inter',
-  subtitleFontFamily: 'Inter',
-  descriptionFontFamily: 'Inter',
-  titleFontWeight: 300,
-  subtitleFontWeight: 300,
-  descriptionFontWeight: 400,
-  titleFontStyle: 'normal',
-  subtitleFontStyle: 'normal',
-  descriptionFontStyle: 'normal',
-  // Тіні та ефекти
-  titleShadowIntensity: 0,
-  subtitleShadowIntensity: 0,
-  descriptionShadowIntensity: 0,
-  titleShadowColor: '#000000',
-  subtitleShadowColor: '#000000',
-  descriptionShadowColor: '#000000',
-  title3DDepth: 0,
-  subtitle3DDepth: 0,
-  description3DDepth: 0,
-  splineSettings: {
-    enabled: true,
-    sceneUrl: "https://prod.spline.design/Li0xtQwxHAu6qXGd/scene.splinecode",
-    embedCode: "",
-    localFile: "",
-    position: 'background',
-    opacity: 1,
-    scale: 1,
-    autoplay: true,
-    controls: false,
-    method: 'component'
-  }
+  titleFontSize: undefined,       // 🔴 Контролюється конструктором!
+  subtitleFontSize: undefined,    // 🔴 Контролюється конструктором!
+  descriptionFontSize: undefined, // 🔴 Контролюється конструктором!
+  titleFontFamily: undefined,     // 🔴 Контролюється конструктором!
+  subtitleFontFamily: undefined,  // 🔴 Контролюється конструктором!
+  descriptionFontFamily: undefined, // 🔴 Контролюється конструктором!
+  titleFontWeight: undefined,     // 🔴 Контролюється конструктором!
+  subtitleFontWeight: undefined,  // 🔴 Контролюється конструктором!
+  descriptionFontWeight: undefined, // 🔴 Контролюється конструктором!
+  titleFontStyle: undefined,      // 🔴 Контролюється конструктором!
+  subtitleFontStyle: undefined,   // 🔴 Контролюється конструктором!
+  descriptionFontStyle: undefined, // 🔴 Контролюється конструктором!
+  // Тіні та ефекти - контролюються конструктором
+  titleShadowIntensity: undefined,    // 🌟 Контролюється конструктором!
+  subtitleShadowIntensity: undefined, // 🌟 Контролюється конструктором!
+  descriptionShadowIntensity: undefined, // 🌟 Контролюється конструктором!
+  titleShadowColor: undefined,        // 🌟 Контролюється конструктором!
+  subtitleShadowColor: undefined,     // 🌟 Контролюється конструктором!
+  descriptionShadowColor: undefined,  // 🌟 Контролюється конструктором!
+  title3DDepth: undefined,            // 🌟 Контролюється конструктором!
+  subtitle3DDepth: undefined,         // 🌟 Контролюється конструктором!
+  description3DDepth: undefined,      // 🌟 Контролюється конструктором!
+  splineSettings: undefined             // 🌐 Контролюється конструктором!
 };
 
 const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
@@ -256,18 +245,35 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
       color: element === 'title' ? settings.textColor : 
              element === 'subtitle' ? settings.subtitleColor : 
              settings.descriptionColor,
-      fontFamily: settings[`${element}FontFamily`] || 'Inter',
-      fontWeight: settings[`${element}FontWeight`] || (element === 'description' ? 400 : 300),
-      fontStyle: settings[`${element}FontStyle`] || 'normal',
-      fontSize: element === 'title' ? responsiveFontSize(settings.titleFontSize || 32) :
-                element === 'subtitle' ? `${settings.subtitleFontSize || 20}px` :
-                `${settings.descriptionFontSize || 14}px`
     };
 
-    // Додавання тіней
-    const shadowIntensity = settings[`${element}ShadowIntensity`] || 0;
-    const shadowColor = settings[`${element}ShadowColor`] || '#000000';
-    const depth3D = settings[`${element}3DDepth`] || 0;
+    // 🔴 ТІЛЬКИ ЯКЩО ЗАДАНО В КОНСТРУКТОРІ!
+    if (settings[`${element}FontFamily`]) {
+      baseStyle.fontFamily = settings[`${element}FontFamily`];
+    }
+    
+    if (settings[`${element}FontWeight`]) {
+      baseStyle.fontWeight = settings[`${element}FontWeight`];
+    }
+    
+    if (settings[`${element}FontStyle`]) {
+      baseStyle.fontStyle = settings[`${element}FontStyle`];
+    }
+    
+    if (settings[`${element}FontSize`]) {
+      if (element === 'title') {
+        baseStyle.fontSize = responsiveFontSize(settings.titleFontSize);
+      } else if (element === 'subtitle') {
+        baseStyle.fontSize = `${settings.subtitleFontSize}px`;
+      } else {
+        baseStyle.fontSize = `${settings.descriptionFontSize}px`;
+      }
+    }
+
+    // Додавання тіней - 🔴 ТІЛЬКИ ЯКЩО ЗАДАНО В КОНСТРУКТОРІ!
+    const shadowIntensity = settings[`${element}ShadowIntensity`] ?? 0;
+    const shadowColor = settings[`${element}ShadowColor`] ?? '#000000';
+    const depth3D = settings[`${element}3DDepth`] ?? 0;
 
 
 
@@ -317,8 +323,8 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
                          element === 'subtitle' ? settings.subtitleExitAnimation :
                          settings.descriptionExitAnimation;
 
-    const duration = (settings.animationDuration || 800) / 1000;
-    const delay = (settings.animationDelay || 200) / 1000;
+    const duration = settings.animationDuration ? settings.animationDuration / 1000 : 0.8;
+    const delay = settings.animationDelay ? settings.animationDelay / 1000 : 0.2;
 
     const variants: any = {
       hidden: { opacity: 0 },
@@ -462,8 +468,8 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
                 alt="Logo" 
                 className="w-auto h-auto object-contain"
                 style={{ 
-                  maxWidth: `${settings.logoSize || 96}px`, 
-                  maxHeight: `${settings.logoSize || 96}px`,
+                  maxWidth: settings.logoSize ? `${settings.logoSize}px` : '96px', 
+                  maxHeight: settings.logoSize ? `${settings.logoSize}px` : '96px',
                   width: 'auto',
                   height: 'auto'
                 }}
@@ -500,12 +506,12 @@ const WelcomeScreenPreview = ({ className }: WelcomeScreenPreviewProps) => {
             style={getTextStyle('description')}
             {...getAnimationVariants('description')}
           >
-            {settings.description.split('\n').map((line, index) => (
+            {settings.description ? settings.description.split('\n').map((line, index) => (
               <span key={index}>
                 {line}
                 {index < settings.description.split('\n').length - 1 && <br />}
               </span>
-            ))}
+            )) : ''}
           </motion.p>
         </div>
 

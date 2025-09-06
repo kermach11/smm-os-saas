@@ -316,19 +316,8 @@ const defaultSettings: PreviewSettings = {
   particleColor: "#ffffff",
   animationSpeed: 'normal',
   
-  // 3D Анімації (Spline)
-  splineSettings: {
-    enabled: true,
-    sceneUrl: "https://prod.spline.design/Li0xtQwxHAu6qXGd/scene.splinecode",
-    embedCode: "",
-    localFile: "",
-    position: 'background',
-    opacity: 1,
-    scale: 1,
-    autoplay: true,
-    controls: false,
-    method: 'component'
-  }
+  // 3D Анімації (Spline) - контролюється конструктором
+  splineSettings: undefined             // 🌐 Контролюється конструктором!
 };
 
 type DeviceType = 'mobile' | 'tablet' | 'desktop';
@@ -381,8 +370,79 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
           };
           setSettings(safeSettings);
           
-          // Синхронізуємо з WelcomeScreen форматом
+          // 🔄 АВТОМАТИЧНА СИНХРОНІЗАЦІЯ ПРИ ЗАВАНТАЖЕННІ!
+          // Конвертуємо та зберігаємо налаштування для WelcomeScreenPreview
+          const adaptiveSettings = safeSettings[deviceType];
           const welcomeSettings = {
+            title: safeSettings.titleText,
+            subtitle: safeSettings.subtitleText,
+            description: safeSettings.descriptionText,
+            buttonText: safeSettings.buttonText,
+            hintText: "Тапніть щоб увійти та запустити музику",
+            backgroundType: safeSettings.backgroundType,
+            backgroundColor: safeSettings.backgroundColor,
+            gradientFrom: safeSettings.gradientFrom,
+            gradientTo: safeSettings.gradientTo,
+            backgroundImage: safeSettings.backgroundImage,
+            backgroundVideo: safeSettings.backgroundVideo,
+            textColor: safeSettings.textColor,
+            subtitleColor: safeSettings.textColor,
+            descriptionColor: safeSettings.textColor,
+            buttonColor: safeSettings.brandColor,
+            buttonTextColor: '#ffffff',
+            logoUrl: safeSettings.logoUrl,
+            logoSize: safeSettings.logoSize,
+            showLogo: !!safeSettings.logoUrl,
+            hasMusic: safeSettings.audioSettings.backgroundMusic.enabled,
+            musicUrl: safeSettings.audioSettings.backgroundMusic.url,
+            musicVolume: safeSettings.audioSettings.backgroundMusic.volume,
+            musicLoop: safeSettings.audioSettings.backgroundMusic.loop,
+            autoPlay: safeSettings.audioSettings.backgroundMusic.autoPlay,
+            showParticles: safeSettings.showParticles,
+            particleColor: safeSettings.particleColor,
+            animationSpeed: safeSettings.animationSpeed,
+            // Налаштування типографіки
+            titleFontSize: adaptiveSettings.titleFontSize,
+            subtitleFontSize: adaptiveSettings.subtitleFontSize,
+            descriptionFontSize: adaptiveSettings.descriptionFontSize,
+            titleFontFamily: safeSettings.titleFontFamily,
+            subtitleFontFamily: safeSettings.subtitleFontFamily,
+            descriptionFontFamily: safeSettings.descriptionFontFamily,
+            titleFontWeight: safeSettings.titleFontWeight,
+            subtitleFontWeight: safeSettings.subtitleFontWeight,
+            descriptionFontWeight: safeSettings.descriptionFontWeight,
+            titleFontStyle: safeSettings.titleFontStyle,
+            subtitleFontStyle: safeSettings.subtitleFontStyle,
+            descriptionFontStyle: safeSettings.descriptionFontStyle,
+            // Налаштування анімацій
+            titleAnimation: safeSettings.titleAnimation,
+            subtitleAnimation: safeSettings.subtitleAnimation,
+            descriptionAnimation: safeSettings.descriptionAnimation,
+            titleExitAnimation: safeSettings.titleExitAnimation,
+            subtitleExitAnimation: safeSettings.subtitleExitAnimation,
+            descriptionExitAnimation: safeSettings.descriptionExitAnimation,
+            animationDuration: safeSettings.animationDuration,
+            animationDelay: safeSettings.animationDelay,
+            // Налаштування тіней
+            titleShadowIntensity: safeSettings.titleShadowIntensity,
+            subtitleShadowIntensity: safeSettings.subtitleShadowIntensity,
+            descriptionShadowIntensity: safeSettings.descriptionShadowIntensity,
+            titleShadowColor: safeSettings.titleShadowColor,
+            subtitleShadowColor: safeSettings.subtitleShadowColor,
+            descriptionShadowColor: safeSettings.descriptionShadowColor,
+            title3DDepth: safeSettings.title3DDepth,
+            subtitle3DDepth: safeSettings.subtitle3DDepth,
+            description3DDepth: safeSettings.description3DDepth,
+            // 3D налаштування
+            splineSettings: safeSettings.splineSettings
+          };
+          
+          // Зберігаємо конвертовані налаштування для WelcomeScreenPreview
+          await indexedDBService.saveSettings('welcomeSettings', welcomeSettings, 'project');
+          console.log('🔄 PreviewCustomizer: Налаштування синхронізовано з WelcomeScreenPreview при завантаженні');
+          
+          // Синхронізуємо з WelcomeScreen форматом
+          const welcomeEvent = {
             title: safeSettings.titleText,
             subtitle: safeSettings.subtitleText,
             description: safeSettings.descriptionText,
