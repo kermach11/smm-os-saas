@@ -206,9 +206,9 @@ const defaultCarouselItems: CarouselItem[] = [
 ];
 
 const defaultSettings: MainPageSettings = {
-  headerTitle: "Усе що треба",
-  headerSubtitle: "для твого SMM",
-  headerDescription: "Професійні інструменти в одному місці",
+  headerTitle: "",
+  headerSubtitle: "",
+  headerDescription: "",
   // Налаштування шрифтів та розмірів
   headerTitleFontSize: 48,
   headerSubtitleFontSize: 36,
@@ -217,9 +217,9 @@ const defaultSettings: MainPageSettings = {
   headerSubtitleFontFamily: 'Inter',
   headerDescriptionFontFamily: 'Inter',
   // Нові налаштування стилю шрифтів
-  headerTitleFontWeight: 700,
-  headerSubtitleFontWeight: 600,
-  headerDescriptionFontWeight: 400,
+  headerTitleFontWeight: undefined,
+  headerSubtitleFontWeight: undefined,
+  headerDescriptionFontWeight: undefined,
   headerTitleFontStyle: 'normal',
   headerSubtitleFontStyle: 'normal',
   headerDescriptionFontStyle: 'normal',
@@ -314,9 +314,9 @@ const defaultSettings: MainPageSettings = {
     method: 'component'
   },
   mobile: {
-    headerTitleFontSize: 36,
-    headerSubtitleFontSize: 24,
-    headerDescriptionFontSize: 16,
+    headerTitleFontSize: 0,
+    headerSubtitleFontSize: 0,
+    headerDescriptionFontSize: 0,
     headerTitleMarginBottom: 16,
     headerSubtitleMarginBottom: 12,
     headerDescriptionMarginBottom: 8,
@@ -331,9 +331,9 @@ const defaultSettings: MainPageSettings = {
     headerContainerMarginBottom: 24
   },
   tablet: {
-    headerTitleFontSize: 48,
-    headerSubtitleFontSize: 36,
-    headerDescriptionFontSize: 20,
+    headerTitleFontSize: 0,
+    headerSubtitleFontSize: 0,
+    headerDescriptionFontSize: 0,
     headerTitleMarginBottom: 16,
     headerSubtitleMarginBottom: 12,
     headerDescriptionMarginBottom: 8,
@@ -348,9 +348,9 @@ const defaultSettings: MainPageSettings = {
     headerContainerMarginBottom: 24
   },
   desktop: {
-    headerTitleFontSize: 60,
-    headerSubtitleFontSize: 48,
-    headerDescriptionFontSize: 24,
+    headerTitleFontSize: 0,
+    headerSubtitleFontSize: 0,
+    headerDescriptionFontSize: 0,
     headerTitleMarginBottom: 16,
     headerSubtitleMarginBottom: 12,
     headerDescriptionMarginBottom: 8,
@@ -1590,21 +1590,21 @@ const MainPageCustomizer: React.FC = () => {
     
     const baseStyle: React.CSSProperties = {
       color: settings.textColor,
-      fontFamily: element === 'title' ? settings.headerTitleFontFamily :
-                  element === 'subtitle' ? settings.headerSubtitleFontFamily :
-                  settings.headerDescriptionFontFamily,
-      // Використовуємо адаптивні розміри шрифтів
-      fontSize: element === 'title' ? `${adaptiveSettings.headerTitleFontSize}px` :
-               element === 'subtitle' ? `${adaptiveSettings.headerSubtitleFontSize}px` :
-               `${adaptiveSettings.headerDescriptionFontSize}px`,
+      fontFamily: element === 'title' ? (settings.headerTitleFontFamily || 'Inter') :
+                  element === 'subtitle' ? (settings.headerSubtitleFontFamily || 'Inter') :
+                  (settings.headerDescriptionFontFamily || 'Inter'),
+      // Використовуємо адаптивні розміри шрифтів з поточного девайсу
+      fontSize: element === 'title' ? (adaptiveSettings.headerTitleFontSize ? `${adaptiveSettings.headerTitleFontSize}px` : '32px') :
+               element === 'subtitle' ? (adaptiveSettings.headerSubtitleFontSize ? `${adaptiveSettings.headerSubtitleFontSize}px` : '24px') :
+               (adaptiveSettings.headerDescriptionFontSize ? `${adaptiveSettings.headerDescriptionFontSize}px` : '16px'),
       // Додаємо товщину шрифту
       fontWeight: element === 'title' ? settings.headerTitleFontWeight :
                   element === 'subtitle' ? settings.headerSubtitleFontWeight :
                   settings.headerDescriptionFontWeight,
       // Додаємо стиль шрифту
-      fontStyle: element === 'title' ? settings.headerTitleFontStyle :
-                 element === 'subtitle' ? settings.headerSubtitleFontStyle :
-                 settings.headerDescriptionFontStyle,
+      fontStyle: element === 'title' ? (settings.headerTitleFontStyle || 'normal') :
+                 element === 'subtitle' ? (settings.headerSubtitleFontStyle || 'normal') :
+                 (settings.headerDescriptionFontStyle || 'normal'),
       // Додаємо адаптивні відступи знизу
       marginBottom: element === 'title' ? `${adaptiveSettings.headerTitleMarginBottom}px` :
                    element === 'subtitle' ? `${adaptiveSettings.headerSubtitleMarginBottom}px` :
@@ -4336,20 +4336,20 @@ const MainPageCustomizer: React.FC = () => {
                   {/* Title */}
                   <motion.h1
                     key={getPreviewElementKey('title')}
-                    className="font-bold mb-6"
+                    className="mb-6"
                     style={getPreviewTextStyle('title')}
                     {...getPreviewAnimationVariants('title')}
                   >
-                    <span className="font-light block">{settings.headerTitle}</span>
+                    <span className="block">{settings.headerTitle}</span>
                   </motion.h1>
 
                   <motion.h2
                     key={getPreviewElementKey('subtitle')}
-                    className="font-bold mb-6"
+                    className="mb-6"
                     style={getPreviewTextStyle('subtitle')}
                     {...getPreviewAnimationVariants('subtitle')}
                   >
-                    <span className="font-bold block">{settings.headerSubtitle}</span>
+                    <span className="block">{settings.headerSubtitle}</span>
                   </motion.h2>
 
                   {/* Description */}
