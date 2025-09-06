@@ -297,6 +297,7 @@ interface HeaderTextBoxProps extends Omit<BaseBoxProps, 'children'> {
     onClick?: () => void;
   };
   children?: ReactNode; // Опційні children для header text
+  onMouseEnter?: () => void; // Обробник для hover звуків
 }
 
 export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
@@ -310,6 +311,7 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
   subtitleProps = {},
   descriptionProps = {},
   className = '',
+  onMouseEnter, // Додаю пропс для звукових ефектів з MainScreen
   ...props
 }) => {
   const { deviceType: hookDeviceType, boxStyles, boxClasses } = useResponsiveBox('headerTextBox');
@@ -366,6 +368,8 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
         }}
         whileHover={{ scale: 1.025 }}
         whileTap={{ scale: 0.975 }}
+        // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
+        onMouseEnter={onMouseEnter || titleProps.onMouseEnter}
       >
         {title}
       </motion.h1>
@@ -398,6 +402,8 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
         }}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
+        // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
+        onMouseEnter={onMouseEnter || subtitleProps.onMouseEnter}
       >
         {subtitle}
       </motion.h2>
@@ -429,6 +435,8 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
         }}
         whileHover={{ scale: 1.015 }}
         whileTap={{ scale: 0.985 }}
+        // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
+        onMouseEnter={onMouseEnter || descriptionProps.onMouseEnter}
       >
         {description}
       </motion.p>
