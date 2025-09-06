@@ -171,14 +171,6 @@ export const SmartLogoBox: React.FC<LogoBoxProps> = ({
             }}
           />
         </motion.div>
-      ) : showFallback ? (
-        fallbackContent || (
-          <div className="flex items-center space-x-2 lg:space-x-3">
-            <span className="text-base lg:text-lg xl:text-xl font-semibold text-[#111111] sf-text">
-              <span className="font-light">SMM</span> <span className="font-semibold">OS</span>
-            </span>
-          </div>
-        )
       ) : null}
     </ConstructorWrapper>
   );

@@ -4305,23 +4305,22 @@ const MainPageCustomizer: React.FC = () => {
                 {/* Header */}
                 <div className="absolute top-6 left-0 right-0 flex justify-center px-6 z-20">
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center rounded-full px-6 py-3 bg-white/95 backdrop-blur-sm shadow-lg border border-white/20">
-                      <div className="flex items-center space-x-3">
-                        {settings.logoUrl ? (
-                          <img src={settings.logoUrl} alt="Logo" className="w-8 h-8 object-contain" />
-                        ) : (
-                          <div 
-                            className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm"
-                            style={{ backgroundColor: settings.brandColor }}
-                          >
-                            <div className="w-3 h-3 rounded-full bg-white"></div>
-                          </div>
-                        )}
-                        <span className="text-xl font-bold text-slate-800">
-                          <span className="font-light">SMM</span> <span className="font-bold">OS</span>
-                        </span>
+                    {/* Логотип - тільки якщо є URL з конструктора */}
+                    {settings.logoUrl && (
+                      <div className="flex items-center justify-center">
+                        <img 
+                          src={settings.logoUrl} 
+                          alt="Logo" 
+                          className="object-contain" 
+                          style={{
+                            width: `${(settings.logoSize || 64) * 0.5}px`,
+                            height: `${(settings.logoSize || 64) * 0.5}px`,
+                            maxWidth: '100px',
+                            maxHeight: '100px'
+                          }}
+                        />
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
