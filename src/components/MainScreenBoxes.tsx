@@ -334,6 +334,83 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
     return headerTextSettings?.[key] ?? fallback;
   };
 
+  // 🎭 Функція для отримання варіантів анімацій (аналогічно MainPageCustomizer)
+  const getAnimationVariants = (element: 'title' | 'subtitle' | 'description') => {
+    const enterAnimation = element === 'title' ? getHeaderSetting('headerTitleAnimation', 'none') :
+                          element === 'subtitle' ? getHeaderSetting('headerSubtitleAnimation', 'none') :
+                          getHeaderSetting('headerDescriptionAnimation', 'none');
+    
+    // 🚨 ДЕБАГ: Детальна перевірка що повертається
+    console.log(`🎭 SmartHeaderTextBox ПОВНИЙ ЛОГ для ${element}:`, {
+      enterAnimation,
+      willBeStatic: !enterAnimation || enterAnimation === 'none'
+    });
+    
+    // Якщо анімація не задана або 'none', повертаємо статичну анімацію
+    if (!enterAnimation || enterAnimation === 'none') {
+      return {
+        initial: { opacity: 1 },
+        animate: { opacity: 1 },
+        transition: { duration: 0 }
+      };
+    }
+
+    const duration = getHeaderSetting('headerAnimationDuration', 800) / 1000;
+    const delay = getHeaderSetting('headerAnimationDelay', 200) / 1000;
+
+    // Варіанти анімацій появи
+    const enterVariants: any = {
+      fadeIn: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
+      slideUp: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
+      slideDown: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
+      slideLeft: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
+      slideRight: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
+      zoomIn: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
+      zoomOut: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
+      rotateIn: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
+      bounce: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
+      typewriter: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
+      glow: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 }
+    };
+
+    // Початкові стани
+    const initialVariants: any = {
+      fadeIn: { opacity: 0, x: 0, y: 0, scale: 1, rotate: 0 },
+      slideUp: { opacity: 0, x: 0, y: 50, scale: 1, rotate: 0 },
+      slideDown: { opacity: 0, x: 0, y: -50, scale: 1, rotate: 0 },
+      slideLeft: { opacity: 0, x: -50, y: 0, scale: 1, rotate: 0 },
+      slideRight: { opacity: 0, x: 50, y: 0, scale: 1, rotate: 0 },
+      zoomIn: { opacity: 0, x: 0, y: 0, scale: 0.5, rotate: 0 },
+      zoomOut: { opacity: 0, x: 0, y: 0, scale: 1.5, rotate: 0 },
+      rotateIn: { opacity: 0, x: 0, y: 0, scale: 1, rotate: -180 },
+      bounce: { opacity: 0, x: 0, y: -100, scale: 1, rotate: 0 },
+      typewriter: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
+      glow: { opacity: 0, x: 0, y: 0, scale: 1, rotate: 0 }
+    };
+
+    const result = {
+      initial: initialVariants[enterAnimation],
+      animate: enterVariants[enterAnimation],
+      transition: {
+        duration,
+        delay: delay * (element === 'title' ? 0 : element === 'subtitle' ? 1 : 2),
+        type: enterAnimation === 'bounce' ? 'spring' : 'tween',
+        stiffness: enterAnimation === 'bounce' ? 300 : undefined,
+        damping: enterAnimation === 'bounce' ? 20 : undefined
+      }
+    };
+    
+    // 🚨 ДЕБАГ: Показуємо що повертаємо з реальними значеннями
+    console.log(`🎭 SmartHeaderTextBox РЕЗУЛЬТАТ для ${element}:`, {
+      animation_type: enterAnimation,
+      initial_exact: JSON.stringify(result.initial),
+      animate_exact: JSON.stringify(result.animate),
+      transition_exact: JSON.stringify(result.transition)
+    });
+    
+    return result;
+  };
+
   return (
     <ConstructorWrapper
       boxName="headerTextBox"
@@ -343,7 +420,6 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
     >
       {/* Заголовок */}
       <motion.h1 
-        {...titleProps}
         className={`leading-tight tracking-tight text-balance cursor-pointer select-none font-bold text-center mb-4 ${titleProps.className || ''}`}
         style={{
           fontSize: adaptiveSettings ? `${getAdaptiveValue('headerTitleFontSize')}px` : 
@@ -366,18 +442,20 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
           pointerEvents: 'auto',
           ...titleProps.style
         }}
+        // 🎭 ДОДАЄМО АНІМАЦІЇ ВХОДУ (МАЄ БУТИ ПЕРШИМ!)
+        {...getAnimationVariants('title')}
         whileHover={{ scale: 1.025 }}
         whileTap={{ scale: 0.975 }}
-        // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
-        onMouseEnter={onMouseEnter || titleProps.onMouseEnter}
+        // ЧИСТО БЕЗ КОНФЛІКТІВ - АНАЛОГІЧНО ПІДЗАГОЛОВКУ ТА ОПИСУ
+        onMouseEnter={onMouseEnter}
+        onClick={titleProps.onClick}
       >
         {title}
       </motion.h1>
 
       {/* Підзаголовок */}
       <motion.h2 
-        {...subtitleProps}
-        className={`font-bold cursor-pointer select-none text-center mb-6 ${subtitleProps.className || ''}`}
+        className={`leading-tight tracking-tight text-balance cursor-pointer select-none font-bold text-center mb-4 ${subtitleProps.className || ''}`}
         style={{
           fontSize: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleFontSize')}px` : 
                    (currentDeviceType === 'mobile' ? '20px' : 
@@ -391,8 +469,7 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
           letterSpacing: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleLetterSpacing')}px` : 
                         (currentDeviceType === 'mobile' ? '0px' : 
                          currentDeviceType === 'tablet' ? '0px' : '0px'),
-          marginTop: '16px',
-          marginBottom: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleMarginBottom')}px` : '12px',
+          marginBottom: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleMarginBottom')}px` : '16px',
           color: getHeaderSetting('textColor', '#ffffff'),
           // Додаємо тінь для підзаголовка
           textShadow: `0 2px 4px rgba(0,0,0,${getHeaderSetting('headerSubtitleShadowIntensity', 0.3)})`,
@@ -400,18 +477,20 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
           pointerEvents: 'auto',
           ...subtitleProps.style
         }}
+        // 🎭 ДОДАЄМО АНІМАЦІЇ ВХОДУ (МАЄ БУТИ ПЕРШИМ!)
+        {...getAnimationVariants('subtitle')}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
-        // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
-        onMouseEnter={onMouseEnter || subtitleProps.onMouseEnter}
+        // ЧИСТО БЕЗ КОНФЛІКТІВ - АНАЛОГІЧНО ЗАГОЛОВКУ
+        onMouseEnter={onMouseEnter}
+        onClick={subtitleProps.onClick}
       >
         {subtitle}
       </motion.h2>
 
       {/* Опис */}
       <motion.p 
-        {...descriptionProps}
-        className={`font-light max-w-4xl mx-auto text-balance cursor-pointer select-none text-center ${descriptionProps.className || ''}`}
+        className={`leading-tight tracking-tight text-balance cursor-pointer select-none font-light text-center ${descriptionProps.className || ''}`}
         style={{
           fontSize: adaptiveSettings ? `${getAdaptiveValue('headerDescriptionFontSize')}px` : 
                    (currentDeviceType === 'mobile' ? '14px' : 
@@ -425,7 +504,6 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
           letterSpacing: adaptiveSettings ? `${getAdaptiveValue('headerDescriptionLetterSpacing')}px` : 
                         (currentDeviceType === 'mobile' ? '0.2px' : 
                          currentDeviceType === 'tablet' ? '0.1px' : '0px'),
-          marginTop: '16px',
           color: getHeaderSetting('textColor', '#ffffff'),
           // Додаємо тінь для опису
           textShadow: `0 1px 2px rgba(0,0,0,${getHeaderSetting('headerDescriptionShadowIntensity', 0.3)})`,
@@ -433,10 +511,13 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
           pointerEvents: 'auto',
           ...descriptionProps.style
         }}
+        // 🎭 ДОДАЄМО АНІМАЦІЇ ВХОДУ (МАЄ БУТИ ПЕРШИМ!)
+        {...getAnimationVariants('description')}
         whileHover={{ scale: 1.015 }}
         whileTap={{ scale: 0.985 }}
-        // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
-        onMouseEnter={onMouseEnter || descriptionProps.onMouseEnter}
+        // ЧИСТО БЕЗ КОНФЛІКТІВ - АНАЛОГІЧНО ЗАГОЛОВКУ
+        onMouseEnter={onMouseEnter}
+        onClick={descriptionProps.onClick}
       >
         {description}
       </motion.p>

@@ -1317,7 +1317,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
               title={headerTitle}
               subtitle={headerSubtitle}
               description={headerDescription}
-              className="text-center max-w-5xl w-full mb-4 lg:mb-6 xl:mb-8"
+              className="text-center w-full mb-4 lg:mb-6 xl:mb-8"
               // Передаємо адаптивні налаштування з адмін панелі
               adaptiveSettings={adaptiveSettings}
               headerTextSettings={headerTextSettings}
