@@ -36,7 +36,15 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
   const { language } = useLanguage();
   
   // Отримуємо реальні дані аналітики замість фейкових
-  const { analyticsData, clearAnalytics, exportAnalytics, cleanupRemovedCarouselItems, currentSession, trackClick } = useAnalytics();
+  const { analyticsData, clearAnalytics, exportAnalytics, cleanupRemovedCarouselItems, currentSession, trackClick, forceRefresh } = useAnalytics();
+  
+  // Примусово оновлюємо дані при першому рендері панелі
+  React.useEffect(() => {
+    if (forceRefresh) {
+      console.log('📊 AnalyticsPanel: Викликаємо forceRefresh при відкритті панелі');
+      forceRefresh();
+    }
+  }, [forceRefresh]);
   
   // Функція для показу дебаг інформації
   const showDebugInfo = () => {

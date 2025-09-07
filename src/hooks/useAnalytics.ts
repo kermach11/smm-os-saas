@@ -345,7 +345,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     };
   }, [currentSession, saveSessionToStorage]);
 
-  // Завантаження даних з localStorage
+  // Завантаження даних з localStorage ТІЛЬКИ при першій ініціалізації
   const loadAnalyticsData = useCallback(() => {
     console.log('📤 Analytics: loadAnalyticsData викликано');
     
@@ -369,9 +369,39 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     }
   }, []);
 
+  // Завантажуємо дані ТІЛЬКИ один раз при ініціалізації
+  const [isInitialized, setIsInitialized] = useState(false);
+  
   useEffect(() => {
-    loadAnalyticsData();
-  }, [loadAnalyticsData]);
+    if (!isInitialized) {
+      loadAnalyticsData();
+      setIsInitialized(true);
+    }
+  }, [loadAnalyticsData, isInitialized]);
+
+  // Додаємо періодичне оновлення даних для синхронізації з реальними змінами
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const refreshData = () => {
+      console.log('🔄 Analytics: Періодичне оновлення даних...');
+      
+      // Оновлюємо дані з актуальними сесіями та кліками
+      const allClicks = getStoredClicks();
+      const allSessions = getStoredSessions();
+      
+      // Перераховуємо всі метрики
+      updateTotalViews();
+      if (allClicks.length > 0) {
+        updateAnalyticsAfterClick(allClicks);
+      }
+    };
+
+    // Оновлюємо дані кожні 5 секунд для стабільності
+    const interval = setInterval(refreshData, 5000);
+    
+    return () => clearInterval(interval);
+  }, [isInitialized, getStoredClicks, updateTotalViews, updateAnalyticsAfterClick]);
 
   const trackClick = useCallback((url: string, title: string, clickType: ClickEvent['clickType'] = 'other') => {
     console.log('🎯 Analytics: trackClick викликано:', { url, title, clickType, hasSession: !!currentSession, trackClicks: finalConfig.trackClicks });
@@ -544,6 +574,20 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     URL.revokeObjectURL(url);
   }, [analyticsData]);
 
+  // Функція для примусового оновлення даних (викликається при відкритті панелі)
+  const forceRefresh = useCallback(() => {
+    console.log('🔄 Analytics: Примусове оновлення даних...');
+    
+    const allClicks = getStoredClicks();
+    const allSessions = getStoredSessions();
+    
+    // Перераховуємо всі метрики заново
+    updateTotalViews();
+    if (allClicks.length > 0) {
+      updateAnalyticsAfterClick(allClicks);
+    }
+  }, [getStoredClicks, updateTotalViews, updateAnalyticsAfterClick]);
+
   return {
     analyticsData: {
       ...analyticsData,
@@ -553,6 +597,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     clearAnalytics,
     cleanupRemovedCarouselItems,
     exportAnalytics,
-    currentSession
+    currentSession,
+    forceRefresh // Додаємо функцію примусового оновлення
   };
 }; 
