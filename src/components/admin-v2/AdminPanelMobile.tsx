@@ -79,9 +79,9 @@ const AdminPanelMobile: React.FC<AdminPanelMobileProps> = ({
                 <div className="flex items-center gap-2 lg:gap-2">
                   <button
                     onClick={onLogout}
-                    className="px-3 py-2 lg:px-3 lg:py-1.5 text-white/90 hover:text-white hover:bg-white/20 rounded-lg transition-all duration-200 text-sm lg:text-sm touch-manipulation"
+                    className="hidden md:flex px-3 py-2 lg:px-3 lg:py-1.5 text-white/90 hover:text-white hover:bg-white/20 rounded-lg transition-all duration-200 text-sm lg:text-sm touch-manipulation"
                   >
-                    🚪 <span className="hidden sm:inline">{t('admin.logout')}</span>
+                    🚪 <span className="inline">{t('admin.logout')}</span>
                   </button>
                   <button
                     onClick={onClose}

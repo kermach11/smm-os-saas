@@ -298,10 +298,10 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
       <div className="flex-1 overflow-y-auto p-1.5 lg:p-4 space-y-2 lg:space-y-4">
         {/* Modern Metrics Cards - мобільна сітка */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 lg:gap-4">
-          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-md lg:rounded-2xl p-2 lg:p-6 border border-blue-100 shadow-sm">
+          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-md lg:rounded-2xl p-2 lg:p-6 border border-emerald-100 shadow-sm">
             <div className="flex items-center gap-1 lg:gap-3 mb-2 lg:mb-4">
-              <div className="w-4 h-4 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-md lg:rounded-xl flex items-center justify-center">
-                <Users className="w-2 h-2 lg:w-5 lg:h-5 text-white" />
+              <div className="w-4 h-4 lg:w-10 lg:h-10 bg-gradient-to-br from-emerald-500 to-green-500 rounded-md lg:rounded-xl flex items-center justify-center">
+                <MousePointer className="w-2 h-2 lg:w-5 lg:h-5 text-white" />
               </div>
               <div>
                 <h3 className="text-xs lg:text-sm font-semibold text-slate-600 hidden lg:block">{t('analytics.pageviews')}</h3>
@@ -311,10 +311,10 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
             <p className="text-xs text-slate-500 mt-1 lg:mt-2 hidden lg:block">{t('analytics.users')}</p>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-md lg:rounded-2xl p-2 lg:p-6 border border-emerald-100 shadow-sm">
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-md lg:rounded-2xl p-2 lg:p-6 border border-blue-100 shadow-sm">
             <div className="flex items-center gap-1 lg:gap-3 mb-2 lg:mb-4">
-              <div className="w-4 h-4 lg:w-10 lg:h-10 bg-gradient-to-br from-emerald-500 to-green-500 rounded-md lg:rounded-xl flex items-center justify-center">
-                <MousePointer className="w-2 h-2 lg:w-5 lg:h-5 text-white" />
+              <div className="w-4 h-4 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-md lg:rounded-xl flex items-center justify-center">
+                <Users className="w-2 h-2 lg:w-5 lg:h-5 text-white" />
               </div>
               <div>
                 <h3 className="text-xs lg:text-sm font-semibold text-slate-600 hidden lg:block">{t('analytics.visits')}</h3>

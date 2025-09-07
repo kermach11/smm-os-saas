@@ -79,7 +79,7 @@ const AdminPanelDesktop: React.FC<AdminPanelDesktopProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={onLogout}
-                  className="px-3 py-1.5 text-white/90 hover:text-white hover:bg-white/20 rounded-lg transition-all duration-200 text-sm"
+                  className="hidden md:flex px-3 py-1.5 text-white/90 hover:text-white hover:bg-white/20 rounded-lg transition-all duration-200 text-sm"
                 >
                   🚪 <span>{t('admin.logout')}</span>
                 </button>
