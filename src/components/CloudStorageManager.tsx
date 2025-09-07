@@ -20,7 +20,7 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
   allowedTypes = ['image', 'video', 'audio']
 }) => {
   const { t } = useTranslation();
-  const [activeProvider, setActiveProvider] = useState<StorageProvider>('auto');
+  const [activeProvider, setActiveProvider] = useState<StorageProvider>('pocketbase');
 
   // Обробник завантаження з автоматичним перемиканням
   const handleAutoUpload = async (files: File[]) => {
@@ -102,7 +102,8 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
         </p>
       </div>
 
-      {/* Вкладки провайдерів */}
+      {/* ПРИХОВАНО: Вкладки провайдерів - тепер показуємо тільки PocketBase */}
+      {/*
       <div className="flex flex-wrap justify-center gap-2 p-2 bg-slate-50 rounded-xl">
         {(['auto', 'supabase', 'pocketbase'] as StorageProvider[]).map((provider) => (
           <button
@@ -120,9 +121,12 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
           </button>
         ))}
       </div>
+      */}
 
       {/* Контент провайдерів */}
       <AnimatePresence mode="wait">
+        {/* ПРИХОВАНО: Автоматичний вибір - логіка залишена для стабільності */}
+        {/*
         {activeProvider === 'auto' && (
           <motion.div
             key="auto"
@@ -142,7 +146,6 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
               </p>
             </div>
             
-            {/* Тут буде компонент для автоматичного завантаження */}
             <AutoUploader 
               onUpload={handleAutoUpload}
               allowedTypes={allowedTypes}
@@ -151,7 +154,10 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
             />
           </motion.div>
         )}
+        */}
 
+        {/* ПРИХОВАНО: Supabase Storage - логіка залишена для стабільності */}
+        {/*
         {activeProvider === 'supabase' && (
           <motion.div
             key="supabase"
@@ -168,6 +174,7 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
             />
           </motion.div>
         )}
+        */}
 
         {activeProvider === 'pocketbase' && (
           <motion.div

@@ -1633,12 +1633,12 @@ const ContentManager: React.FC<ContentManagerProps> = ({
               onClick={() => setActiveTab('cloud')}
               className={`px-2 lg:px-6 py-1 lg:py-3 rounded-md lg:rounded-xl font-medium transition-all duration-200 text-xs lg:text-base min-h-[36px] touch-manipulation ${
                 activeTab === 'cloud'
-                  ? 'bg-purple-500 text-white shadow-lg'
-                  : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                  ? 'bg-green-500 text-white shadow-lg'
+                  : 'bg-green-100 text-green-700 hover:bg-green-200'
               }`}
             >
-              <span className="hidden lg:inline">🌐 {t('content.manager.cloud')}</span>
-              <span className="lg:hidden">🌐 {t('content.manager.cloud')}</span>
+              <span className="hidden lg:inline">⬆️ {t('content.manager.upload.new')}</span>
+              <span className="lg:hidden">⬆️ {t('content.manager.upload.new')}</span>
             </button>
           </div>
           
