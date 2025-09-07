@@ -100,7 +100,8 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
   const [isConstructorUpdate, setIsConstructorUpdate] = useState(false);
   
   // 🚀 ОПТИМІЗАЦІЯ: Стан для lazy loading важкого контенту
-  const [isHeavyContentReady, setIsHeavyContentReady] = useState(false);
+  // ВИПРАВЛЕННЯ: Починаємо з true щоб уникнути конфліктів з каруселлю
+  const [isHeavyContentReady, setIsHeavyContentReady] = useState(true);
 
   // ВИДАЛЕНО: Базові налаштування без агресивних фіксів - не заважаємо адмін панелі
   // Тепер браузер сам керує всіма body стилями без нашого втручання
