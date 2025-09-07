@@ -157,6 +157,9 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
   const [isSettingsLoaded, setIsSettingsLoaded] = useState(!!propsSettings);
   const [animationKey, setAnimationKey] = useState(0);
   
+  // 🚀 ОПТИМІЗАЦІЯ: Стан для плейсхолдера (не впливає на існуючу логіку)
+  const [isContentReady, setIsContentReady] = useState(!!propsSettings);
+  
   const musicRef = useRef<HTMLAudioElement>(null);
   
   // Аналітика для відстеження входу клієнтів
@@ -261,11 +264,15 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
         
         // Завжди встановлюємо isSettingsLoaded в true після спроби завантаження
         setIsSettingsLoaded(true);
+        // 🚀 ОПТИМІЗАЦІЯ: Контент готовий до показу
+        setIsContentReady(true);
       } catch (error) {
         console.error('❌ WelcomeScreen: Помилка завантаження налаштувань:', error);
         // Навіть у випадку помилки, встановлюємо налаштування за замовчуванням
         setSettings(minimalDefaultSettings);
         setIsSettingsLoaded(true);
+        // 🚀 ОПТИМІЗАЦІЯ: Контент готовий до показу (навіть при помилці)
+        setIsContentReady(true);
       }
     };
 

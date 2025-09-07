@@ -98,6 +98,9 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [isConstructorUpdate, setIsConstructorUpdate] = useState(false);
+  
+  // 🚀 ОПТИМІЗАЦІЯ: Стан для lazy loading важкого контенту
+  const [isHeavyContentReady, setIsHeavyContentReady] = useState(false);
 
   // ВИДАЛЕНО: Базові налаштування без агресивних фіксів - не заважаємо адмін панелі
   // Тепер браузер сам керує всіма body стилями без нашого втручання
@@ -714,6 +717,9 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
     } catch (error) {
       console.error('❌ MainScreen: Помилка завантаження налаштувань:', error);
     }
+    
+    // 🚀 ОПТИМІЗАЦІЯ: Важкий контент готовий до показу
+    setIsHeavyContentReady(true);
   };
 
   // Обробники подій
@@ -1216,7 +1222,8 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
       }}
     >
       {/* Фонове відео якщо вибрано */}
-      {backgroundSettings.backgroundType === 'video' && backgroundSettings.backgroundVideo && (
+      {/* 🚀 ОПТИМІЗАЦІЯ: Показуємо відео тільки після завантаження */}
+      {isHeavyContentReady && backgroundSettings.backgroundType === 'video' && backgroundSettings.backgroundVideo && (
         <video
           autoPlay
           muted

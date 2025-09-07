@@ -432,12 +432,32 @@ const Index = () => {
     const initializeAllMedia = async () => {
       console.log('🎬 UnifiedPage: Початок централізованої ініціалізації медіа');
       
-      // Завантажуємо всі налаштування одночасно
-      const [welcomeSettings, introSettings, mainSettings] = await Promise.all([
-        indexedDBService.loadSettings('welcomeSettings'),
-        indexedDBService.loadSettings('introSettings'), 
-        indexedDBService.loadSettings('mainPageSettings')
-      ]);
+      // 🚀 ОПТИМІЗАЦІЯ: Завантажуємо налаштування поетапно замість одночасно
+      // Зберігаємо старий код як резерв, але використовуємо новий підхід
+      let welcomeSettings, introSettings, mainSettings;
+      
+      // Завантажуємо тільки налаштування поточного екрана
+      if (screenState === 'welcome') {
+        console.log('⚡ Оптимізація: Завантажуємо тільки Welcome налаштування');
+        welcomeSettings = await indexedDBService.loadSettings('welcomeSettings');
+      } else if (screenState === 'intro') {
+        console.log('⚡ Оптимізація: Завантажуємо тільки Intro налаштування');
+        introSettings = await indexedDBService.loadSettings('introSettings');
+      } else if (screenState === 'main') {
+        console.log('⚡ Оптимізація: Завантажуємо тільки Main налаштування');
+        mainSettings = await indexedDBService.loadSettings('mainPageSettings');
+      } else {
+        // Резервний варіант: якщо щось пішло не так, завантажуємо все як раніше
+        console.log('🔄 Резерв: Завантажуємо всі налаштування одночасно');
+        const [welcomeRes, introRes, mainRes] = await Promise.all([
+          indexedDBService.loadSettings('welcomeSettings'),
+          indexedDBService.loadSettings('introSettings'), 
+          indexedDBService.loadSettings('mainPageSettings')
+        ]);
+        welcomeSettings = welcomeRes;
+        introSettings = introRes;
+        mainSettings = mainRes;
+      }
       
       const mediaPromises: Promise<void>[] = [];
       
@@ -486,7 +506,7 @@ const Index = () => {
     
     // Запускаємо ініціалізацію після монтування компонента
     initializeAllMedia();
-  }, []);
+  }, [screenState]); // 🚀 ОПТИМІЗАЦІЯ: Додаємо screenState для поетапного завантаження
   
   // Функція для попереднього завантаження відео
   const preloadVideo = async (videoUrl: string, context: string): Promise<void> => {

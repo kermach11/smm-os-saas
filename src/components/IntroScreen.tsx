@@ -277,6 +277,9 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
   const [isTextExiting, setIsTextExiting] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  
+  // 🚀 ОПТИМІЗАЦІЯ: Стан для плейсхолдера (не впливає на існуючу логіку)
+  const [isContentReady, setIsContentReady] = useState(false);
 
 
 
@@ -589,6 +592,9 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
     } catch (error) {
       console.error('❌ IntroScreen: Помилка завантаження налаштувань:', error);
     }
+    
+    // 🚀 ОПТИМІЗАЦІЯ: Контент готовий до показу (завжди в кінці)
+    setIsContentReady(true);
   };
 
   const getBackgroundStyle = () => {
