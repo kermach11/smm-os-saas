@@ -119,38 +119,56 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
 
   const updateTotalViews = useCallback(() => {
     const sessions = getStoredSessions();
+    const clicks = getStoredClicks();
     
-    // ЗАВЕРШЕНІ СЕСІЇ = ті що мають endTime
-    const completedSessions = sessions.filter(s => s.endTime);
+    // ВІДВІДУВАННЯ = унікальні сесії з Welcome кліками
+    const welcomeClicks = clicks.filter(click => click.clickType === 'welcome-entry');
+    const uniqueWelcomeSessions = new Set(welcomeClicks.map(click => click.sessionId));
+    const totalVisits = uniqueWelcomeSessions.size;
+    
+    // ЗАВЕРШЕНІ СЕСІЇ = тільки ті що мають endTime ТА мають Welcome клік
+    const completedSessions = sessions.filter(s => s.endTime && uniqueWelcomeSessions.has(s.id));
     const totalSessions = completedSessions.length;
     
-    // АКТИВНІ СЕСІЇ = ті що не мають endTime і створені менше ніж 5 хв тому (реальний час)
+    // АКТИВНІ СЕСІЇ = тільки ті що НЕ мають endTime, створені менше 5 хв тому ТА мають Welcome клік
     const now = Date.now();
     const fiveMinutesAgo = now - (5 * 60 * 1000);
-    const activeSessions = sessions.filter(s => !s.endTime && s.startTime > fiveMinutesAgo).length;
+    const activeSessions = sessions.filter(s => 
+      !s.endTime && 
+      s.startTime > fiveMinutesAgo && 
+      uniqueWelcomeSessions.has(s.id)
+    ).length;
     
-    // СЕРЕДНЯ СЕСІЯ = тільки з завершених сесій
+    // СЕРЕДНЯ СЕСІЯ = тільки з завершених сесій що мають Welcome клік
     const averageSessionDuration = completedSessions
       .filter(s => s.duration)
       .reduce((acc, s) => acc + (s.duration || 0), 0) / totalSessions || 0;
 
     console.log('📈 Analytics: updateTotalViews:', {
       allSessions: sessions.length,
+      totalVisits: totalVisits,
       completedSessions: totalSessions,
       activeSessions: activeSessions,
       avgDuration: Math.round(averageSessionDuration / 1000),
+      welcomeSessionIds: Array.from(uniqueWelcomeSessions),
+      validation: {
+        activeSessionsLEQTotalVisits: activeSessions <= totalVisits,
+        message: activeSessions <= totalVisits ? '✅ Валідація пройшла' : '❌ Активних більше ніж відвідувань!'
+      },
       sessionsData: sessions.map(s => ({
         id: s.id.slice(0, 8),
         startTime: new Date(s.startTime).toLocaleString(),
         endTime: s.endTime ? new Date(s.endTime).toLocaleString() : 'ongoing',
         clicks: s.clicks,
-        isActive: !s.endTime && s.startTime > fiveMinutesAgo
+        hasWelcome: uniqueWelcomeSessions.has(s.id),
+        isActive: !s.endTime && s.startTime > fiveMinutesAgo && uniqueWelcomeSessions.has(s.id)
       }))
     });
 
     setAnalyticsData(prev => {
       const newData = {
         ...prev,
+        totalVisits,
         totalSessions,
         activeSessions,
         averageSessionDuration: Math.round(averageSessionDuration / 1000), // в секундах
@@ -183,11 +201,11 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     
     console.log('📈 Analytics: Метрики по типах кліків:', {
       totalPageViews: totalPageViews,
-      totalVisits: totalVisits,
       carouselCardClicks: carouselCardClicks.length,
       welcomeClicks: welcomeClicks.length,
       uniqueWelcomeSessions: uniqueWelcomeSessions.size,
-      allClicks: allClicks.length
+      allClicks: allClicks.length,
+      note: 'totalVisits обчислюється в updateTotalViews()'
     });
     
     // Підрахунок топ посилань (тільки картки каруселі)
@@ -217,9 +235,9 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
 
     const updatedData = {
       totalPageViews,
-      totalVisits,
       topClickedLinks,
       recentClicks
+      // Видаляємо totalVisits звідси, бо він обчислюється в updateTotalViews
     };
     
     console.log('📊 Analytics: updateAnalyticsAfterClick - оновлення:', updatedData);
