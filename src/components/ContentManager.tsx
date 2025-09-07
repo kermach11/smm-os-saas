@@ -1615,6 +1615,8 @@ const ContentManager: React.FC<ContentManagerProps> = ({
               <span className="hidden lg:inline">📚 {t('content.manager.gallery')} ({files.length})</span>
               <span className="lg:hidden">📚 {t('content.manager.gallery')} ({files.length})</span>
             </button>
+            {/* ПРИХОВАНО: Зелена кнопка завантаження - логіка залишена для стабільності проекту */}
+            {/*
             <button
               onClick={() => setActiveTab('upload')}
               className={`px-2 lg:px-6 py-1 lg:py-3 rounded-md lg:rounded-xl font-medium transition-all duration-200 text-xs lg:text-base min-h-[36px] touch-manipulation ${
@@ -1626,6 +1628,7 @@ const ContentManager: React.FC<ContentManagerProps> = ({
               <span className="hidden lg:inline">⬆️ {t('content.manager.upload.btn')}</span>
               <span className="lg:hidden">⬆️ {t('content.manager.upload.btn')}</span>
             </button>
+            */}
             <button
               onClick={() => setActiveTab('cloud')}
               className={`px-2 lg:px-6 py-1 lg:py-3 rounded-md lg:rounded-xl font-medium transition-all duration-200 text-xs lg:text-base min-h-[36px] touch-manipulation ${

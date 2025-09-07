@@ -239,6 +239,8 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
             >
               <Download className="w-2 h-2 lg:w-3 lg:h-3" />
             </button>
+            {/* ПРИХОВАНО: Кнопки дебагу, тестування та очищення - логіка залишена для стабільності проекту */}
+            {/* 
             <button
               onClick={showDebugInfo}
               className="px-1 lg:px-2 py-1 lg:py-1.5 bg-blue-500/80 hover:bg-blue-600 text-white rounded-md lg:rounded-lg transition-all duration-200 text-xs min-h-[24px] lg:min-h-[32px] touch-manipulation"
@@ -277,6 +279,7 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ className }) => {
             >
               🧹
             </button>
+            */}
             <button
               onClick={() => {
                 clearAnalytics();
