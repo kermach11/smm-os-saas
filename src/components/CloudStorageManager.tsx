@@ -146,11 +146,11 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
               </p>
             </div>
             
-            <AutoUploader 
+            <AutoUploader
               onUpload={handleAutoUpload}
               allowedTypes={allowedTypes}
               maxFiles={10}
-              maxSize={50}
+              maxSize={800}
             />
           </motion.div>
         )}
@@ -166,11 +166,11 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
           >
-            <SupabaseUploader 
+            <SupabaseUploader
               onUpload={onSupabaseUpload}
               allowedTypes={allowedTypes}
               maxFiles={10}
-              maxSize={50}
+              maxSize={800}
             />
           </motion.div>
         )}
@@ -184,11 +184,11 @@ const CloudStorageManager: React.FC<CloudStorageManagerProps> = ({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
           >
-            <PocketBaseUploader 
+            <PocketBaseUploader
               onUpload={onPocketBaseUpload}
               allowedTypes={allowedTypes}
               maxFiles={10}
-              maxSize={50}
+              maxSize={800}
             />
           </motion.div>
         )}
@@ -318,7 +318,7 @@ const AutoUploader: React.FC<AutoUploaderProps> = ({
           </div>
           
           <div className="text-xs text-slate-500">
-            Підтримуються: {allowedTypes.join(', ')} • Максимум {maxFiles} файлів • До {maxSize}MB кожен
+            Підтримуються: {allowedTypes.join(', ')} • Максимум {maxFiles} файлів • До {maxSize}MB кожен • Відео: до 11 сек
           </div>
         </div>
       </div>

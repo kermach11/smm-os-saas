@@ -16,7 +16,7 @@ const SupabaseUploader: React.FC<SupabaseUploaderProps> = ({
   onUpload,
   allowedTypes = ['image', 'video', 'audio'],
   maxFiles = 10,
-  maxSize = 50
+  maxSize = 800
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -78,8 +78,15 @@ const SupabaseUploader: React.FC<SupabaseUploaderProps> = ({
   const handleFiles = async (files: File[]) => {
     setError(null);
     
-    // Валідація файлів
-    const validFiles = files.filter(file => validateFile(file));
+    // Асинхронна валідація файлів
+    const validFiles: File[] = [];
+    
+    for (const file of files) {
+      const isValid = await validateFile(file);
+      if (isValid) {
+        validFiles.push(file);
+      }
+    }
     
     if (validFiles.length === 0) {
       setError('Не вибрано жодного валідного файлу');
@@ -94,7 +101,7 @@ const SupabaseUploader: React.FC<SupabaseUploaderProps> = ({
     await uploadFiles(validFiles);
   };
 
-  const validateFile = (file: File): boolean => {
+  const validateFile = async (file: File): Promise<boolean> => {
     // Перевірка розміру
     if (file.size > maxSize * 1024 * 1024) {
       setError(`Файл ${file.name} перевищує максимальний розмір ${maxSize}MB`);
@@ -108,7 +115,46 @@ const SupabaseUploader: React.FC<SupabaseUploaderProps> = ({
       return false;
     }
 
+    // 🎬 Перевірка тривалості відео (до 11 секунд)
+    if (fileType === 'video') {
+      try {
+        const duration = await getVideoDuration(file);
+        if (duration > 11) {
+          setError(`Відео ${file.name} занадто довге (${duration.toFixed(1)} сек). Максимум: 11 секунд`);
+          return false;
+        }
+        console.log(`✅ Відео ${file.name} пройшло перевірку: ${duration.toFixed(1)} секунд`);
+      } catch (error) {
+        console.error('Помилка перевірки тривалості відео:', error);
+        setError(`Не вдалося перевірити тривалість відео ${file.name}`);
+        return false;
+      }
+    }
+
     return true;
+  };
+
+  // Функція для отримання тривалості відео
+  const getVideoDuration = (file: File): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      const url = URL.createObjectURL(file);
+      
+      video.preload = 'metadata';
+      video.muted = true;
+      
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(url);
+        resolve(video.duration);
+      };
+      
+      video.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Не вдалося завантажити метадані відео'));
+      };
+      
+      video.src = url;
+    });
   };
 
   const getFileType = (file: File): 'image' | 'video' | 'audio' | 'document' => {
@@ -266,7 +312,7 @@ const SupabaseUploader: React.FC<SupabaseUploaderProps> = ({
         </label>
         
         <p className="text-xs text-gray-500 mt-2">
-          Максимум {maxFiles} файлів, до {maxSize}MB кожен
+          Максимум {maxFiles} файлів, до {maxSize}MB кожен • Відео: до 11 секунд
         </p>
         <p className="text-xs text-gray-500">
           Підтримувані типи: {allowedTypes.join(', ')}

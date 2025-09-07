@@ -12,7 +12,7 @@ import { UploadedFile } from '../services/SupabaseStorageService';
 const ContentManager: React.FC<ContentManagerProps> = ({
   className = '',
   onFileSelect,
-  maxFileSize = 10 * 1024 * 1024, // 10MB за замовчуванням
+  maxFileSize = 800 * 1024 * 1024, // 800MB за замовчуванням
   allowedTypes = ['image', 'audio', 'video']
 }) => {
   const { t } = useTranslation();
