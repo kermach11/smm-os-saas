@@ -1,0 +1,20 @@
+[33m30448c96[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m  FIXED: Complete Analytics System Overhaul v2.1.0
+[33m446c9efd[m Hover Effects & Sound Fix Complete - v2.9.0
+[33mb35be0c2[m Text Color & Hover Effects Complete Fix - v2.8.0
+[33mbfcfffb7[m  Font Weight Reactivity Fix - MainPageCustomizer Preview Complete
+[33m3241bfe2[m  Logo Display Fix - Clean Transparent Placeholder
+[33me507f855[m  Remove all default animations from preview constructor
+[33me5ff410b[m  Fix preview sync: Auto-sync PreviewCustomizer settings to WelcomeScreenPreview
+[33mbf4691f8[m  ВЕРСІЯ v1.8.0 - УСПІШНЕ ВИПРАВЛЕННЯ FONTWEIGHT: Видалено критичні дефолти fontWeight зі збереженням стабільності коду
+[33mf2b352b1[m  Major updates: PocketBase file deletion, URL auto-fix, UI improvements
+[33m89ea3cf0[m  CHECKPOINT: PocketBase Storage повністю інтегровано - працює ідентично до Supabase!
+[33m29d2b694[m  WORKING POCKETBASE INTEGRATION: Complete migration from Supabase to PocketBase
+[33m73170f87[m \Improve video thumbnail appearance in Smart Content Manager"
+[33mc796f4ff[m Fix transition animation timing - standardize to 300ms + improve async handling
+[33md5c64181[m  ФАЗА 3: Очищено V1 hooks - замінено на V2 (useSimpleAdminSession  useAdminPanelV2)
+[33m79647739[m  ФАЗА 2: Видалено всі V1 компоненти (AdminPanel.tsx, SimpleAdminPanel.tsx, admin-backup/)
+[33m613a3be9[m[33m ([m[1;33mtag: [m[1;33mpre-v1-removal-backup[m[33m)[m  BACKUP: Перед видаленням V1 компонентів - готовність до детального очищення
+[33m40a78f2c[m fix:  Остаточне оновлення GitHub Actions
+[33m4f0e678e[m trigger:  Redeploy з Supabase credentials
+[33ma6fbde9d[m fix:  Оновлено GitHub Actions до актуальних версій
+[33m91e8103f[m ci:  Додано GitHub Actions для автоматичного деплою

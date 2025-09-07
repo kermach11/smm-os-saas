@@ -124,10 +124,10 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     const completedSessions = sessions.filter(s => s.endTime);
     const totalSessions = completedSessions.length;
     
-    // АКТИВНІ СЕСІЇ = ті що не мають endTime і створені менше ніж 30 хв тому
+    // АКТИВНІ СЕСІЇ = ті що не мають endTime і створені менше ніж 5 хв тому (реальний час)
     const now = Date.now();
-    const thirtyMinutesAgo = now - (30 * 60 * 1000);
-    const activeSessions = sessions.filter(s => !s.endTime && s.startTime > thirtyMinutesAgo).length;
+    const fiveMinutesAgo = now - (5 * 60 * 1000);
+    const activeSessions = sessions.filter(s => !s.endTime && s.startTime > fiveMinutesAgo).length;
     
     // СЕРЕДНЯ СЕСІЯ = тільки з завершених сесій
     const averageSessionDuration = completedSessions
@@ -144,7 +144,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
         startTime: new Date(s.startTime).toLocaleString(),
         endTime: s.endTime ? new Date(s.endTime).toLocaleString() : 'ongoing',
         clicks: s.clicks,
-        isActive: !s.endTime && s.startTime > thirtyMinutesAgo
+        isActive: !s.endTime && s.startTime > fiveMinutesAgo
       }))
     });
 
@@ -176,15 +176,17 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     const carouselCardClicks = allClicks.filter(click => click.clickType === 'carousel-card');
     const totalPageViews = carouselCardClicks.length;
     
-    // ВІДВІДУВАННЯ = кліки Welcome кнопки
+    // ВІДВІДУВАННЯ = унікальні сесії з Welcome кліками (не просто кліки, а унікальні входи)
     const welcomeClicks = allClicks.filter(click => click.clickType === 'welcome-entry');
-    const totalVisits = welcomeClicks.length;
+    const uniqueWelcomeSessions = new Set(welcomeClicks.map(click => click.sessionId));
+    const totalVisits = uniqueWelcomeSessions.size;
     
     console.log('📈 Analytics: Метрики по типах кліків:', {
       totalPageViews: totalPageViews,
       totalVisits: totalVisits,
       carouselCardClicks: carouselCardClicks.length,
       welcomeClicks: welcomeClicks.length,
+      uniqueWelcomeSessions: uniqueWelcomeSessions.size,
       allClicks: allClicks.length
     });
     
@@ -290,7 +292,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     }
   }, [finalConfig.trackSessions, saveSessionToStorage, updateTotalViews]);
 
-  // Завершення сесії при закритті сторінки
+  // Завершення сесії при закритті сторінки та через видимість
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (currentSession) {
@@ -300,11 +302,29 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
           duration: Date.now() - currentSession.startTime
         };
         saveSessionToStorage(updatedSession);
+        console.log('📊 Analytics: Сесія завершена через beforeunload:', updatedSession.id);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && currentSession && !currentSession.endTime) {
+        const updatedSession = {
+          ...currentSession,
+          endTime: Date.now(),
+          duration: Date.now() - currentSession.startTime
+        };
+        saveSessionToStorage(updatedSession);
+        console.log('📊 Analytics: Сесія завершена через приховування вкладки:', updatedSession.id);
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [currentSession, saveSessionToStorage]);
 
   // Завантаження даних з localStorage
