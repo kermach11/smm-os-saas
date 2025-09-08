@@ -759,15 +759,7 @@ const Carousel3D = ({
                           >
                             {/* Card content */}
                             <div className="w-full h-full relative overflow-hidden rounded-[20px]">
-                              {/* Placeholder/Loading state */}
-                              {!isImageLoaded(item.imageUrl) && !hasImageError(item.imageUrl) && (
-                                <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center transition-all duration-500 ease-out">
-                                  <div className="text-center text-gray-500">
-                                    <div className="w-8 h-8 border-2 border-gray-400 border-t-blue-500 rounded-full animate-spin mx-auto mb-3 transition-all duration-300"></div>
-                                    <div className="text-sm font-medium opacity-80 animate-pulse">Завантаження зображення...</div>
-                                  </div>
-                                </div>
-                              )}
+                              {/* Placeholder/Loading state - ВИДАЛЕНО для швидшого відображення */}
                               
                               {/* Error state */}
                               {hasImageError(item.imageUrl) && (

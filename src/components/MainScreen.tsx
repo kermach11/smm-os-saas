@@ -492,10 +492,12 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
 
   // Функції для відтворення звуків
   const playHoverSound = useCallback(() => {
+    console.log('🎵 MainScreen: playHoverSound викликано з налаштуваннями:', audioSettings.hoverSounds);
     playSound(audioSettings.hoverSounds);
   }, [audioSettings.hoverSounds]);
 
   const playClickSound = useCallback(() => {
+    console.log('🎵 MainScreen: playClickSound викликано з налаштуваннями:', audioSettings.clickSounds);
     playSound(audioSettings.clickSounds);
   }, [audioSettings.clickSounds]);
 
@@ -510,6 +512,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
   }, [audioSettings.carouselSounds]);
 
   const playCarouselHoverSound = useCallback(() => {
+    console.log('🎵 MainScreen: playCarouselHoverSound викликано з налаштуваннями:', audioSettings.carouselSounds);
     if (audioSettings.carouselSounds.enabled && audioSettings.carouselSounds.hoverUrl) {
       playSound({
         enabled: audioSettings.carouselSounds.enabled,
@@ -520,6 +523,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
   }, [audioSettings.carouselSounds]);
 
   const playCarouselClickSound = useCallback(() => {
+    console.log('🎵 MainScreen: playCarouselClickSound викликано з налаштуваннями:', audioSettings.carouselSounds);
     if (audioSettings.carouselSounds.enabled && audioSettings.carouselSounds.clickUrl) {
       playSound({
         enabled: audioSettings.carouselSounds.enabled,
@@ -890,10 +894,19 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
       if (settings.audioSettings) {
         const newAudioSettings = settings.audioSettings as any;
         console.log('🔄 MainScreen: Оновлюємо аудіо налаштування з конструктора:', newAudioSettings);
-        setAudioSettings(prev => ({
-          ...prev,
-          ...(newAudioSettings as typeof audioSettings)
-        }));
+        console.log('🎵 MainScreen: Попередні аудіо налаштування:', audioSettings);
+        console.log('🎵 MainScreen: Нові hoverSounds.volume:', newAudioSettings.hoverSounds?.volume);
+        console.log('🎵 MainScreen: Нові clickSounds.volume:', newAudioSettings.clickSounds?.volume);
+        console.log('🎵 MainScreen: Нові carouselSounds.volume:', newAudioSettings.carouselSounds?.volume);
+        
+        setAudioSettings(prev => {
+          const updated = {
+            ...prev,
+            ...(newAudioSettings as typeof audioSettings)
+          };
+          console.log('🎵 MainScreen: Фінальні аудіо налаштування після оновлення:', updated);
+          return updated;
+        });
       }
 
       // Оновлюємо налаштування шрифтів та тексту
