@@ -530,6 +530,19 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
   }, [audioSettings.carouselSounds]);
 
   // Завантаження даних з IndexedDB
+  // Функція для попереднього завантаження зображень каруселі
+  const preloadCarouselImages = (items: CarouselItem[]) => {
+    console.log('🖼️ MainScreen: Попереднє завантаження зображень каруселі');
+    items.forEach((item, index) => {
+      if (item.imageUrl) {
+        const img = new Image();
+        img.onload = () => console.log(`✅ Зображення ${index + 1} завантажено:`, item.imageUrl);
+        img.onerror = () => console.warn(`⚠️ Помилка завантаження зображення ${index + 1}:`, item.imageUrl);
+        img.src = item.imageUrl;
+      }
+    });
+  };
+
   const loadDataFromStorage = async () => {
     try {
       console.log('🔄 MainScreen: Завантаження налаштувань через IndexedDBService...');
@@ -703,17 +716,23 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
           if (settings.carouselItems.length > 0) {
             setActiveItem(settings.carouselItems[0]);
           }
+          // Попереднє завантаження зображень для кешування
+          preloadCarouselImages(settings.carouselItems);
         } else {
           // Використовуємо defaultItems тільки якщо немає збережених даних
           console.log('ℹ️ MainScreen: Використовуємо defaultItems як fallback');
           setCarouselItems(defaultItems);
           setActiveItem(defaultItems[0]);
+          // Попереднє завантаження зображень для кешування
+          preloadCarouselImages(defaultItems);
         }
       } else {
         // Якщо немає налаштувань взагалі, використовуємо defaultItems
         console.log('ℹ️ MainScreen: Немає збережених налаштувань, використовуємо defaultItems');
         setCarouselItems(defaultItems);
         setActiveItem(defaultItems[0]);
+        // Попереднє завантаження зображень для кешування
+        preloadCarouselImages(defaultItems);
       }
     } catch (error) {
       console.error('❌ MainScreen: Помилка завантаження налаштувань:', error);
@@ -1236,8 +1255,13 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
           style={{ pointerEvents: 'none' }}
           onPlay={() => console.log('🎬 MainScreen: Відео запустилося успішно')}
           onError={(e) => console.error('❌ MainScreen: Помилка відео:', e)}
+          onLoadStart={() => console.log('🎬 MainScreen: Відео почало завантажуватися')}
+          onCanPlay={() => console.log('🎬 MainScreen: Відео готове до відтворення')}
+          onLoadedData={() => console.log('🎬 MainScreen: Відео дані завантажені')}
+          onCanPlayThrough={() => console.log('🎬 MainScreen: Відео може відтворюватися повністю')}
         >
           <source src={backgroundSettings.backgroundVideo} type="video/mp4" />
+          Your browser does not support the video tag.
         </video>
       )}
 

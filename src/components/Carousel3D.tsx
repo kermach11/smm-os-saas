@@ -786,7 +786,7 @@ const Carousel3D = ({
                                 className={`w-full h-full object-cover transition-all duration-700 ease-out ${
                                   isImageLoaded(item.imageUrl) ? 'opacity-100' : 'opacity-0'
                                 }`}
-                                loading="lazy"
+                                loading="eager"
                                 style={{
                                   filter: isActive ? 'brightness(1.05)' : 'brightness(0.95)',
                                   transform: isImageLoaded(item.imageUrl) ? 'scale(1)' : 'scale(1.02)',
