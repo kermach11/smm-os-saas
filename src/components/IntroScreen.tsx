@@ -143,9 +143,9 @@ interface IntroSettings {
 }
 
 const defaultSettings: IntroSettings = {
-  title: "Beyond",
-  subtitle: "Reality",
-  description: "Travel through time and space in the exciting universe of the future.",
+  title: "",
+  subtitle: "",
+  description: "",
   buttonText: "Start Journey",
   buttonUrl: "#start",
   brandColor: "#4a4b57",
@@ -333,7 +333,7 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
         titleFontFamily: extendedSettings.titleFontFamily || defaultSettings.titleFontFamily,
         subtitleFontFamily: extendedSettings.subtitleFontFamily || defaultSettings.subtitleFontFamily,
         descriptionFontFamily: extendedSettings.descriptionFontFamily || defaultSettings.descriptionFontFamily,
-        titleFontWeight: extendedSettings.titleFontWeight || defaultSettings.titleFontWeight,
+        titleFontWeight: extendedSettings.titleFontWeight !== undefined ? extendedSettings.titleFontWeight : defaultSettings.titleFontWeight,
         subtitleFontWeight: extendedSettings.subtitleFontWeight || defaultSettings.subtitleFontWeight,
         descriptionFontWeight: extendedSettings.descriptionFontWeight || defaultSettings.descriptionFontWeight,
         titleFontStyle: extendedSettings.titleFontStyle || defaultSettings.titleFontStyle,
@@ -424,9 +424,9 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
         
         // Конвертуємо розширений формат в базовий для IntroScreen
         const convertedSettings = {
-          title: indexedDBSettings.title || defaultSettings.title,
-          subtitle: indexedDBSettings.subtitle || defaultSettings.subtitle,
-          description: indexedDBSettings.description || defaultSettings.description,
+          title: indexedDBSettings.title !== undefined ? indexedDBSettings.title : defaultSettings.title,
+          subtitle: indexedDBSettings.subtitle !== undefined ? indexedDBSettings.subtitle : defaultSettings.subtitle,
+          description: indexedDBSettings.description !== undefined ? indexedDBSettings.description : defaultSettings.description,
           buttonText: indexedDBSettings.buttonText || defaultSettings.buttonText,
           buttonUrl: indexedDBSettings.buttonUrl || defaultSettings.buttonUrl,
           brandColor: indexedDBSettings.brandColor || defaultSettings.brandColor,
@@ -450,7 +450,7 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
           titleFontFamily: indexedDBSettings.titleFontFamily || defaultSettings.titleFontFamily,
           subtitleFontFamily: indexedDBSettings.subtitleFontFamily || defaultSettings.subtitleFontFamily,
           descriptionFontFamily: indexedDBSettings.descriptionFontFamily || defaultSettings.descriptionFontFamily,
-          titleFontWeight: indexedDBSettings.titleFontWeight || defaultSettings.titleFontWeight,
+          titleFontWeight: indexedDBSettings.titleFontWeight !== undefined ? indexedDBSettings.titleFontWeight : defaultSettings.titleFontWeight,
           subtitleFontWeight: indexedDBSettings.subtitleFontWeight || defaultSettings.subtitleFontWeight,
           descriptionFontWeight: indexedDBSettings.descriptionFontWeight || defaultSettings.descriptionFontWeight,
           titleFontStyle: indexedDBSettings.titleFontStyle || defaultSettings.titleFontStyle,
@@ -544,7 +544,7 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
           titleFontFamily: settings.titleFontFamily || defaultSettings.titleFontFamily,
           subtitleFontFamily: settings.subtitleFontFamily || defaultSettings.subtitleFontFamily,
           descriptionFontFamily: settings.descriptionFontFamily || defaultSettings.descriptionFontFamily,
-          titleFontWeight: settings.titleFontWeight || defaultSettings.titleFontWeight,
+          titleFontWeight: settings.titleFontWeight !== undefined ? settings.titleFontWeight : defaultSettings.titleFontWeight,
           subtitleFontWeight: settings.subtitleFontWeight || defaultSettings.subtitleFontWeight,
           descriptionFontWeight: settings.descriptionFontWeight || defaultSettings.descriptionFontWeight,
           titleFontStyle: settings.titleFontStyle || defaultSettings.titleFontStyle,
@@ -1059,11 +1059,11 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
               {/* Title */}
               <motion.h1 
                 key={`title-${animationKey}`}
-                className="text-4xl md:text-5xl font-light mb-6 text-center leading-tight"
+                className="text-4xl md:text-5xl mb-6 text-center leading-tight"
                 style={getTextStyle('title')}
                 {...getAnimationVariants('title')}
               >
-                <span className="font-light">{introSettings.title}</span>
+                <span>{introSettings.title}</span>
               </motion.h1>
               
               {/* Subtitle */}
@@ -1086,15 +1086,17 @@ const IntroScreen = ({ visible, onComplete }: IntroScreenProps) => {
                 {introSettings.description}
               </motion.p>
               
-              {/* Decorative line */}
-              <motion.div
-                key={`line-${animationKey}`}
-                className="w-[80px] h-[3px] rounded-full mt-8 mb-1"
-                style={{ 
-                  background: `linear-gradient(to right, ${introSettings.textColor}, ${introSettings.textColor}70)` 
-                }}
-                {...getAnimationVariants('description')}
-              />
+              {/* Decorative line - показується тільки коли є опис */}
+              {introSettings.description && (
+                <motion.div
+                  key={`line-${animationKey}`}
+                  className="w-[80px] h-[3px] rounded-full mt-8 mb-1"
+                  style={{ 
+                    background: `linear-gradient(to right, ${introSettings.textColor}, ${introSettings.textColor}70)` 
+                  }}
+                  {...getAnimationVariants('description')}
+                />
+              )}
             </div>
           </div>
         </div>
