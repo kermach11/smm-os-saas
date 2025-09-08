@@ -128,15 +128,15 @@ const SettingsTab: React.FC<{ deviceType: DeviceType }> = ({ deviceType }) => {
     autoLogout: true
   });
 
-  // SEO налаштування
+  // SEO налаштування (початкові значення порожні - завантажуються з localStorage)
   const [seoSettings, setSeoSettings] = useState({
-    siteTitle: 'SMM OS - Професійні SMM послуги',
-    siteDescription: 'Створюємо якісний контент для соціальних мереж. SMM послуги, дизайн, стратегія.',
+    siteTitle: '',
+    siteDescription: '',
     ogImage: '',
     favicon: '',
-    siteName: 'SMM OS',
-    siteUrl: 'https://smm11.netlify.app',
-    twitterHandle: '@smmOS'
+    siteName: '',
+    siteUrl: '',
+    twitterHandle: ''
   });
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -235,65 +235,110 @@ const SettingsTab: React.FC<{ deviceType: DeviceType }> = ({ deviceType }) => {
     }
   };
 
-  const updateMetaTags = () => {
+  const updateMetaTagsWithSettings = (settings: any) => {
+    console.log('🔍 Початок оновлення мета-тегів з налаштуваннями:', settings);
+    
     // Оновлюємо title сторінки
-    document.title = seoSettings.siteTitle;
+    if (settings.siteTitle) {
+      document.title = settings.siteTitle;
+      console.log(`🔄 Оновлено title: ${settings.siteTitle}`);
+    }
     
     // Функція для оновлення або створення мета-тегу
     const updateMetaTag = (property: string, content: string) => {
-      let metaTag = document.querySelector(`meta[property="${property}"]`) || 
-                   document.querySelector(`meta[name="${property}"]`);
+      if (!content) return; // Пропускаємо порожні значення
+      
+      // Twitter теги використовують name, а не property
+      const useNameAttribute = property.startsWith('twitter:') || property === 'description';
+      const attributeName = useNameAttribute ? 'name' : 'property';
+      
+      let metaTag = document.querySelector(`meta[${attributeName}="${property}"]`);
       
       if (!metaTag) {
         metaTag = document.createElement('meta');
-        if (property.startsWith('og:') || property.startsWith('twitter:')) {
-          metaTag.setAttribute('property', property);
-        } else {
-          metaTag.setAttribute('name', property);
-        }
+        metaTag.setAttribute(attributeName, property);
         document.head.appendChild(metaTag);
+        console.log(`✅ Створено новий мета-тег: ${property}`);
       }
       
       metaTag.setAttribute('content', content);
+      console.log(`🔄 Оновлено мета-тег ${property}: ${content}`);
     };
 
     // Оновлюємо Open Graph теги
-    updateMetaTag('og:title', seoSettings.siteTitle);
-    updateMetaTag('og:description', seoSettings.siteDescription);
-    updateMetaTag('og:site_name', seoSettings.siteName);
-    updateMetaTag('og:url', seoSettings.siteUrl);
+    updateMetaTag('og:title', settings.siteTitle);
+    updateMetaTag('og:description', settings.siteDescription);
+    updateMetaTag('og:site_name', settings.siteName);
+    updateMetaTag('og:url', settings.siteUrl);
     updateMetaTag('og:type', 'website');
     
-    if (seoSettings.ogImage) {
-      updateMetaTag('og:image', seoSettings.ogImage);
+    if (settings.ogImage) {
+      updateMetaTag('og:image', settings.ogImage);
       updateMetaTag('og:image:width', '1200');
       updateMetaTag('og:image:height', '630');
     }
 
     // Оновлюємо Twitter Card теги
     updateMetaTag('twitter:card', 'summary_large_image');
-    updateMetaTag('twitter:title', seoSettings.siteTitle);
-    updateMetaTag('twitter:description', seoSettings.siteDescription);
-    if (seoSettings.ogImage) {
-      updateMetaTag('twitter:image', seoSettings.ogImage);
+    updateMetaTag('twitter:title', settings.siteTitle);
+    updateMetaTag('twitter:description', settings.siteDescription);
+    if (settings.ogImage) {
+      updateMetaTag('twitter:image', settings.ogImage);
     }
-    if (seoSettings.twitterHandle) {
-      updateMetaTag('twitter:site', seoSettings.twitterHandle);
+    if (settings.twitterHandle) {
+      updateMetaTag('twitter:site', settings.twitterHandle);
     }
 
     // Оновлюємо базові мета-теги
-    updateMetaTag('description', seoSettings.siteDescription);
+    updateMetaTag('description', settings.siteDescription);
     
     // Оновлюємо favicon
-    if (seoSettings.favicon) {
+    if (settings.favicon) {
       let faviconLink = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
       if (!faviconLink) {
         faviconLink = document.createElement('link');
         faviconLink.rel = 'icon';
+        faviconLink.setAttribute('type', 'image/x-icon');
         document.head.appendChild(faviconLink);
+        console.log('✅ Створено новий favicon link');
       }
-      faviconLink.href = seoSettings.favicon;
+      faviconLink.href = settings.favicon;
+      console.log(`🔄 Оновлено favicon: ${settings.favicon}`);
     }
+    
+    console.log('✅ Завершено оновлення всіх мета-тегів!');
+  };
+
+  const updateMetaTags = () => {
+    updateMetaTagsWithSettings(seoSettings);
+  };
+
+  const showCurrentMetaTags = () => {
+    console.log('📋 Поточні мета-теги на сторінці:');
+    console.log('Title:', document.title);
+    
+    const metaTags = [
+      'og:title', 'og:description', 'og:site_name', 'og:url', 'og:type', 'og:image',
+      'twitter:card', 'twitter:title', 'twitter:description', 'twitter:image', 'twitter:site',
+      'description'
+    ];
+    
+    metaTags.forEach(tag => {
+      const useNameAttribute = tag.startsWith('twitter:') || tag === 'description';
+      const attributeName = useNameAttribute ? 'name' : 'property';
+      const metaTag = document.querySelector(`meta[${attributeName}="${tag}"]`);
+      
+      if (metaTag) {
+        console.log(`${tag}:`, metaTag.getAttribute('content'));
+      } else {
+        console.log(`${tag}:`, '❌ Не знайдено');
+      }
+    });
+    
+    const faviconLink = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+    console.log('Favicon:', faviconLink ? faviconLink.href : '❌ Не знайдено');
+    
+    alert('🔍 Поточні мета-теги виведено в консоль браузера (F12)');
   };
 
   // Завантаження наявних налаштувань при старті
@@ -331,7 +376,22 @@ const SettingsTab: React.FC<{ deviceType: DeviceType }> = ({ deviceType }) => {
         const parsed = JSON.parse(seoData);
         setSeoSettings(parsed);
         // Оновлюємо мета-теги при завантаженні
-        setTimeout(() => updateMetaTags(), 100);
+        setTimeout(() => {
+          // Використовуємо parsed дані для негайного оновлення
+          const tempSettings = {
+            siteTitle: parsed.siteTitle || '',
+            siteDescription: parsed.siteDescription || '',
+            siteName: parsed.siteName || '',
+            siteUrl: parsed.siteUrl || '',
+            twitterHandle: parsed.twitterHandle || '',
+            ogImage: parsed.ogImage || '',
+            favicon: parsed.favicon || ''
+          };
+          updateMetaTagsWithSettings(tempSettings);
+        }, 100);
+      } else {
+        // Якщо немає збережених налаштувань, не встановлюємо мета-теги
+        console.log('🔍 SEO налаштування не знайдено - мета-теги залишаються порожніми');
       }
     } catch (error) {
       console.error('Помилка завантаження налаштувань:', error);
@@ -710,7 +770,7 @@ const SettingsTab: React.FC<{ deviceType: DeviceType }> = ({ deviceType }) => {
             </div>
           </div>
 
-          <div className="mt-2 lg:mt-6 flex gap-2 lg:gap-4">
+          <div className="mt-2 lg:mt-6 flex gap-2 lg:gap-4 flex-wrap">
             <button
               onClick={saveSeoSettings}
               className="px-3 lg:px-6 py-2 lg:py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-md lg:rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-1 lg:gap-2 text-sm lg:text-base min-h-[36px] touch-manipulation"
@@ -722,6 +782,12 @@ const SettingsTab: React.FC<{ deviceType: DeviceType }> = ({ deviceType }) => {
               className="px-3 lg:px-6 py-2 lg:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-md lg:rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-1 lg:gap-2 text-sm lg:text-base min-h-[36px] touch-manipulation"
             >
               {t('seo.update.tags')}
+            </button>
+            <button
+              onClick={showCurrentMetaTags}
+              className="px-3 lg:px-6 py-2 lg:py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-md lg:rounded-xl hover:from-orange-600 hover:to-red-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-1 lg:gap-2 text-sm lg:text-base min-h-[36px] touch-manipulation"
+            >
+              🔍 Показати поточні
             </button>
           </div>
 
