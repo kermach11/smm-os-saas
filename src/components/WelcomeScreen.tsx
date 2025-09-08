@@ -713,7 +713,6 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
                 </>
               ) : (
                 <>
-                  <span className="text-lg">🎵</span>
                   {settings.buttonText || "Почати"}
                 </>
               )}

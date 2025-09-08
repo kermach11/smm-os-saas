@@ -14,29 +14,7 @@ import Carousel3D from '../components/Carousel3D';
 import { CarouselItem } from '../types/types';
 
 // Приклад даних для каруселі
-const sampleCarouselItems: CarouselItem[] = [
-  {
-    id: "1",
-    title: "LINKCORE",
-    description: "Мінімалістичний профіль-хаб",
-    imageUrl: "/photo/photo-1.png",
-    url: "#linkcore"
-  },
-  {
-    id: "2", 
-    title: "CASEMACHINE",
-    description: "Сайт-кейсбук для проєктів",
-    imageUrl: "/photo/photo-2.png",
-    url: "#casemachine"
-  },
-  {
-    id: "3",
-    title: "BOOKME", 
-    description: "Бронювання консультацій",
-    imageUrl: "/photo/photo-3.png",
-    url: "/bookme"
-  }
-];
+const sampleCarouselItems: CarouselItem[] = [];
 
 const ResponsiveMainExample: React.FC = () => {
   const { deviceType, isMobile, isTablet, isDesktop, config } = useResponsive();

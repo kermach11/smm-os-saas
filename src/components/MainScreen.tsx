@@ -709,12 +709,15 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
           setCarouselItems(settings.carouselItems);
           if (settings.carouselItems.length > 0) {
             setActiveItem(settings.carouselItems[0]);
+            // Попереднє завантаження зображень для кешування
+            preloadCarouselImages(settings.carouselItems);
+          } else {
+            setActiveItem(null);
+            console.log('ℹ️ MainScreen: Карусель пуста (збережено користувачем)');
           }
-          // Попереднє завантаження зображень для кешування
-          preloadCarouselImages(settings.carouselItems);
         } else {
-          // Використовуємо defaultItems тільки якщо немає збережених даних
-          console.log('ℹ️ MainScreen: Використовуємо defaultItems як fallback');
+          // Використовуємо defaultItems тільки при першому запуску (коли carouselItems undefined)
+          console.log('ℹ️ MainScreen: Перший запуск - використовуємо defaultItems');
           setCarouselItems(defaultItems);
           setActiveItem(defaultItems[0]);
           // Попереднє завантаження зображень для кешування

@@ -406,7 +406,7 @@ const MainPageCustomizer: React.FC = () => {
           const safeSettings = {
             ...defaultSettings,
             ...loadedSettings,
-            carouselItems: Array.isArray(loadedSettings.carouselItems) ? loadedSettings.carouselItems : defaultSettings.carouselItems,
+            carouselItems: Array.isArray(loadedSettings.carouselItems) ? loadedSettings.carouselItems : (loadedSettings.carouselItems === undefined ? defaultSettings.carouselItems : []),
             // Забезпечуємо наявність адаптивних налаштувань
             mobile: {
               ...defaultSettings.mobile,
@@ -1134,7 +1134,12 @@ const MainPageCustomizer: React.FC = () => {
       setSettings(updatedSettings);
       setEditingItem(updatedItem);
       
-      // Зберігаємо синхронно
+      // Зберігаємо в IndexedDB (основне сховище)
+      indexedDBService.saveSettings('mainPageSettings', updatedSettings, 'project').catch(error => {
+        console.error('❌ MainPageCustomizer: Помилка збереження в IndexedDB:', error);
+      });
+      
+      // Зберігаємо синхронно в localStorage як резерв
       try {
         localStorage.setItem('mainPageSettings', JSON.stringify(updatedSettings));
         

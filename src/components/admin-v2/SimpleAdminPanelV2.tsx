@@ -31,25 +31,7 @@ const SimpleAdminPanelV2: React.FC<SimpleAdminPanelV2Props> = ({ isVisible, onCl
   const [activeTab, setActiveTab] = useState('content');
   
   // 📦 Стан даних (ідентичний оригінальному SimpleAdminPanel)
-  const [carouselItems, setCarouselItems] = useState<CarouselItem[]>([
-    {
-      title: "LINKCORE",
-      description: "Мінімалістичний профіль-хаб. Один лінк, що відкриває весь твій цифровий слід.",
-      image: "/photo/photo-1.png",
-      url: "#linkcore"
-    },
-    {
-      title: "CASEMACHINE", 
-      description: "Сайт-кейсбук: твої проєкти в деталях, цифри, візуали, відгуки.",
-      image: "/photo/photo-2.png",
-      url: "#casemachine"
-    },
-    {
-      title: "BOOKME",
-      description: "Інструмент бронювання консультацій. Години, оплата, зручність.",
-      image: "/photo/photo-3.png", 
-      url: "/bookme"
-    },
+  const [carouselItems, setCarouselItems] = useState<CarouselItem[]>([,
     {
       title: "ADLAND",
       description: "Посадкові сторінки під рекламу. Швидкі, точні, ефективні.",
@@ -138,7 +120,10 @@ const SimpleAdminPanelV2: React.FC<SimpleAdminPanelV2Props> = ({ isVisible, onCl
       const savedData = localStorage.getItem('immersiveExperienceData');
       if (savedData) {
         const data = JSON.parse(savedData);
+        
         if (data.carouselItems) setCarouselItems(data.carouselItems);
+        
+        
         if (data.introSettings) setIntroSettings(data.introSettings);
         if (data.adminSettings) {
           setAdminSettings({
