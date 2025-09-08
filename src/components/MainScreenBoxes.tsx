@@ -304,9 +304,9 @@ interface HeaderTextBoxProps extends Omit<BaseBoxProps, 'children'> {
 }
 
 export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
-  title = "Усе що треба",
-  subtitle = "для твого SMM",
-  description = "Професійні інструменти в одному місці",
+  title = "",
+  subtitle = "",
+  description = "",
   adaptiveSettings,
   headerTextSettings,
   deviceType: propDeviceType,
@@ -344,105 +344,111 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
       className={`${boxClasses} ${className}`}
       style={boxStyles}
     >
-      {/* Заголовок */}
-      <motion.h1 
-        {...titleProps}
-        className={`leading-tight tracking-tight text-balance cursor-pointer select-none font-bold text-center mb-4 ${titleProps.className || ''}`}
-        style={{
-          fontSize: adaptiveSettings ? `${getAdaptiveValue('headerTitleFontSize')}px` : 
-                   (currentDeviceType === 'mobile' ? '32px' : 
-                    currentDeviceType === 'tablet' ? '42px' : '56px'),
-          fontFamily: getHeaderSetting('headerTitleFontFamily', 'Inter'),
-          fontWeight: getHeaderSetting('headerTitleFontWeight', 700),
-          fontStyle: getHeaderSetting('headerTitleFontStyle', 'normal'),
-          lineHeight: adaptiveSettings ? getAdaptiveValue('headerTitleLineHeight') : 
-                     (currentDeviceType === 'mobile' ? 1.2 : 
-                      currentDeviceType === 'tablet' ? 1.3 : 1.4),
-          letterSpacing: adaptiveSettings ? `${getAdaptiveValue('headerTitleLetterSpacing')}px` : 
-                        (currentDeviceType === 'mobile' ? '-0.5px' : 
-                         currentDeviceType === 'tablet' ? '-0.3px' : '-0.5px'),
-          marginBottom: adaptiveSettings ? `${getAdaptiveValue('headerTitleMarginBottom')}px` : '16px',
-          color: getHeaderSetting('textColor', '#ffffff'),
-          // Додаємо тінь для заголовка
-          textShadow: `0 2px 4px rgba(0,0,0,${getHeaderSetting('headerTitleShadowIntensity', 0.5)})`,
-          // Увімкнути pointer events для hover ефектів
-          pointerEvents: 'auto',
-          ...titleProps.style
-        }}
-        whileHover={{ scale: 1.025 }}
-        whileTap={{ scale: 0.975 }}
-        // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
-        onMouseEnter={onMouseEnter || titleProps.onMouseEnter}
-      >
-        {title}
-      </motion.h1>
+      {/* Заголовок - показується тільки коли є текст */}
+      {title && (
+        <motion.h1 
+          {...titleProps}
+          className={`leading-tight tracking-tight text-balance cursor-pointer select-none font-bold text-center mb-4 ${titleProps.className || ''}`}
+          style={{
+            fontSize: adaptiveSettings ? `${getAdaptiveValue('headerTitleFontSize')}px` : 
+                     (currentDeviceType === 'mobile' ? '32px' : 
+                      currentDeviceType === 'tablet' ? '42px' : '56px'),
+            fontFamily: getHeaderSetting('headerTitleFontFamily', 'Inter'),
+            fontWeight: getHeaderSetting('headerTitleFontWeight', 700),
+            fontStyle: getHeaderSetting('headerTitleFontStyle', 'normal'),
+            lineHeight: adaptiveSettings ? getAdaptiveValue('headerTitleLineHeight') : 
+                       (currentDeviceType === 'mobile' ? 1.2 : 
+                        currentDeviceType === 'tablet' ? 1.3 : 1.4),
+            letterSpacing: adaptiveSettings ? `${getAdaptiveValue('headerTitleLetterSpacing')}px` : 
+                          (currentDeviceType === 'mobile' ? '-0.5px' : 
+                           currentDeviceType === 'tablet' ? '-0.3px' : '-0.5px'),
+            marginBottom: adaptiveSettings ? `${getAdaptiveValue('headerTitleMarginBottom')}px` : '16px',
+            color: getHeaderSetting('textColor', '#ffffff'),
+            // Додаємо тінь для заголовка
+            textShadow: `0 2px 4px rgba(0,0,0,${getHeaderSetting('headerTitleShadowIntensity', 0.5)})`,
+            // Увімкнути pointer events для hover ефектів
+            pointerEvents: 'auto',
+            ...titleProps.style
+          }}
+          whileHover={{ scale: 1.025 }}
+          whileTap={{ scale: 0.975 }}
+          // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
+          onMouseEnter={onMouseEnter || titleProps.onMouseEnter}
+        >
+          {title}
+        </motion.h1>
+      )}
 
-      {/* Підзаголовок */}
-      <motion.h2 
-        {...subtitleProps}
-        className={`font-bold cursor-pointer select-none text-center mb-6 ${subtitleProps.className || ''}`}
-        style={{
-          fontSize: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleFontSize')}px` : 
-                   (currentDeviceType === 'mobile' ? '20px' : 
-                    currentDeviceType === 'tablet' ? '28px' : '36px'),
-          fontFamily: getHeaderSetting('headerSubtitleFontFamily', 'Inter'),
-          fontWeight: getHeaderSetting('headerSubtitleFontWeight', 600),
-          fontStyle: getHeaderSetting('headerSubtitleFontStyle', 'normal'),
-          lineHeight: adaptiveSettings ? getAdaptiveValue('headerSubtitleLineHeight') : 
-                     (currentDeviceType === 'mobile' ? 1.3 : 
-                      currentDeviceType === 'tablet' ? 1.4 : 1.5),
-          letterSpacing: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleLetterSpacing')}px` : 
-                        (currentDeviceType === 'mobile' ? '0px' : 
-                         currentDeviceType === 'tablet' ? '0px' : '0px'),
-          marginTop: '16px',
-          marginBottom: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleMarginBottom')}px` : '12px',
-          color: getHeaderSetting('textColor', '#ffffff'),
-          // Додаємо тінь для підзаголовка
-          textShadow: `0 2px 4px rgba(0,0,0,${getHeaderSetting('headerSubtitleShadowIntensity', 0.3)})`,
-          // Увімкнути pointer events для hover ефектів
-          pointerEvents: 'auto',
-          ...subtitleProps.style
-        }}
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
-        // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
-        onMouseEnter={onMouseEnter || subtitleProps.onMouseEnter}
-      >
-        {subtitle}
-      </motion.h2>
+      {/* Підзаголовок - показується тільки коли є текст */}
+      {subtitle && (
+        <motion.h2 
+          {...subtitleProps}
+          className={`font-bold cursor-pointer select-none text-center mb-6 ${subtitleProps.className || ''}`}
+          style={{
+            fontSize: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleFontSize')}px` : 
+                     (currentDeviceType === 'mobile' ? '20px' : 
+                      currentDeviceType === 'tablet' ? '28px' : '36px'),
+            fontFamily: getHeaderSetting('headerSubtitleFontFamily', 'Inter'),
+            fontWeight: getHeaderSetting('headerSubtitleFontWeight', 600),
+            fontStyle: getHeaderSetting('headerSubtitleFontStyle', 'normal'),
+            lineHeight: adaptiveSettings ? getAdaptiveValue('headerSubtitleLineHeight') : 
+                       (currentDeviceType === 'mobile' ? 1.3 : 
+                        currentDeviceType === 'tablet' ? 1.4 : 1.5),
+            letterSpacing: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleLetterSpacing')}px` : 
+                          (currentDeviceType === 'mobile' ? '0px' : 
+                           currentDeviceType === 'tablet' ? '0px' : '0px'),
+            marginTop: '16px',
+            marginBottom: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleMarginBottom')}px` : '12px',
+            color: getHeaderSetting('textColor', '#ffffff'),
+            // Додаємо тінь для підзаголовка
+            textShadow: `0 2px 4px rgba(0,0,0,${getHeaderSetting('headerSubtitleShadowIntensity', 0.3)})`,
+            // Увімкнути pointer events для hover ефектів
+            pointerEvents: 'auto',
+            ...subtitleProps.style
+          }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
+          onMouseEnter={onMouseEnter || subtitleProps.onMouseEnter}
+        >
+          {subtitle}
+        </motion.h2>
+      )}
 
-      {/* Опис */}
-      <motion.p 
-        {...descriptionProps}
-        className={`font-light max-w-4xl mx-auto text-balance cursor-pointer select-none text-center ${descriptionProps.className || ''}`}
-        style={{
-          fontSize: adaptiveSettings ? `${getAdaptiveValue('headerDescriptionFontSize')}px` : 
-                   (currentDeviceType === 'mobile' ? '14px' : 
-                    currentDeviceType === 'tablet' ? '16px' : '20px'),
-          fontFamily: getHeaderSetting('headerDescriptionFontFamily', 'Inter'),
-          fontWeight: getHeaderSetting('headerDescriptionFontWeight', 400),
-          fontStyle: getHeaderSetting('headerDescriptionFontStyle', 'normal'),
-          lineHeight: adaptiveSettings ? getAdaptiveValue('headerDescriptionLineHeight') : 
-                     (currentDeviceType === 'mobile' ? 1.4 : 
-                      currentDeviceType === 'tablet' ? 1.5 : 1.6),
-          letterSpacing: adaptiveSettings ? `${getAdaptiveValue('headerDescriptionLetterSpacing')}px` : 
-                        (currentDeviceType === 'mobile' ? '0.2px' : 
-                         currentDeviceType === 'tablet' ? '0.1px' : '0px'),
-          marginTop: '16px',
-          color: getHeaderSetting('textColor', '#ffffff'),
-          // Додаємо тінь для опису
-          textShadow: `0 1px 2px rgba(0,0,0,${getHeaderSetting('headerDescriptionShadowIntensity', 0.3)})`,
-          // Увімкнути pointer events для hover ефектів
-          pointerEvents: 'auto',
-          ...descriptionProps.style
-        }}
-        whileHover={{ scale: 1.015 }}
-        whileTap={{ scale: 0.985 }}
-        // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
-        onMouseEnter={onMouseEnter || descriptionProps.onMouseEnter}
-      >
-        {description}
-      </motion.p>
+      {/* Опис - показується тільки коли є текст */}
+      {description && (
+        <motion.p 
+          {...descriptionProps}
+          className={`font-light max-w-4xl mx-auto text-balance cursor-pointer select-none text-center ${descriptionProps.className || ''}`}
+          style={{
+            fontSize: adaptiveSettings ? `${getAdaptiveValue('headerDescriptionFontSize')}px` : 
+                     (currentDeviceType === 'mobile' ? '14px' : 
+                      currentDeviceType === 'tablet' ? '16px' : '20px'),
+            fontFamily: getHeaderSetting('headerDescriptionFontFamily', 'Inter'),
+            fontWeight: getHeaderSetting('headerDescriptionFontWeight', 400),
+            fontStyle: getHeaderSetting('headerDescriptionFontStyle', 'normal'),
+            lineHeight: adaptiveSettings ? getAdaptiveValue('headerDescriptionLineHeight') : 
+                       (currentDeviceType === 'mobile' ? 1.4 : 
+                        currentDeviceType === 'tablet' ? 1.5 : 1.6),
+            letterSpacing: adaptiveSettings ? `${getAdaptiveValue('headerDescriptionLetterSpacing')}px` : 
+                          (currentDeviceType === 'mobile' ? '0.2px' : 
+                           currentDeviceType === 'tablet' ? '0.1px' : '0px'),
+            marginTop: '16px',
+            color: getHeaderSetting('textColor', '#ffffff'),
+            // Додаємо тінь для опису
+            textShadow: `0 1px 2px rgba(0,0,0,${getHeaderSetting('headerDescriptionShadowIntensity', 0.3)})`,
+            // Увімкнути pointer events для hover ефектів
+            pointerEvents: 'auto',
+            ...descriptionProps.style
+          }}
+          whileHover={{ scale: 1.015 }}
+          whileTap={{ scale: 0.985 }}
+          // ПРИНУДОВО ВИКОРИСТОВУЄМО onMouseEnter ПІСЛЯ ВСІХ ПРОПСІВ
+          onMouseEnter={onMouseEnter || descriptionProps.onMouseEnter}
+        >
+          {description}
+        </motion.p>
+      )}
     </ConstructorWrapper>
   );
 };

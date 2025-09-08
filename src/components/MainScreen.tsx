@@ -161,9 +161,9 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
 
   
   // Додаємо стан для заголовків
-  const [headerTitle, setHeaderTitle] = useState("Усе що треба");
-  const [headerSubtitle, setHeaderSubtitle] = useState("для твого SMM");
-  const [headerDescription, setHeaderDescription] = useState("Професійні інструменти в одному місці");
+  const [headerTitle, setHeaderTitle] = useState("");
+  const [headerSubtitle, setHeaderSubtitle] = useState("");
+  const [headerDescription, setHeaderDescription] = useState("");
 
   // Додаємо стан для адаптивних налаштувань
   const [adaptiveSettings, setAdaptiveSettings] = useState({
@@ -579,10 +579,10 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
       }
       
       if (settings) {
-        // Завантажуємо заголовки
-        if (settings.headerTitle) setHeaderTitle(settings.headerTitle);
-        if (settings.headerSubtitle) setHeaderSubtitle(settings.headerSubtitle);
-        if (settings.headerDescription) setHeaderDescription(settings.headerDescription);
+        // Завантажуємо заголовки (включаючи пусті рядки)
+        if (settings.headerTitle !== undefined) setHeaderTitle(settings.headerTitle);
+        if (settings.headerSubtitle !== undefined) setHeaderSubtitle(settings.headerSubtitle);
+        if (settings.headerDescription !== undefined) setHeaderDescription(settings.headerDescription);
         
         // Завантажуємо налаштування фону з окремих полів
         if (settings.backgroundType || settings.backgroundColor || settings.gradientFrom || settings.gradientTo || settings.backgroundImage || settings.backgroundVideo) {
@@ -847,7 +847,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
       // Позначаємо що це оновлення з конструктора
       setIsConstructorUpdate(true);
       
-      // Оновлюємо заголовки
+      // Оновлюємо заголовки (включаючи пусті рядки)
       if (settings.headerTitle !== undefined) {
         setHeaderTitle(settings.headerTitle as string);
       }
