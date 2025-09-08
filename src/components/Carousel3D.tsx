@@ -453,16 +453,7 @@ const Carousel3D = ({
       trackClick(item.url, `${item.title} - CTA Click`, 'carousel-card');
     }
     
-    if (item.title === "LINKCORE") {
-      // Navigate to LinkCore page
-      navigate("/linkcore");
-    } else if (item.title === "CASEMACHINE") {
-      // Navigate to CaseMachine page
-      navigate("/casemachine");
-    } else if (item.title === "BOOKME") {
-      // Navigate to BookMe page
-      navigate("/bookme");
-    } else {
+    {
       // Open external link for other items
       let fixedUrl = item.url;
       
@@ -554,9 +545,6 @@ const Carousel3D = ({
   };
 
   const ctaLabels: Record<string, string> = {
-    "LINKCORE": "Переглянути",
-    "CASEMACHINE": "Приклади",
-    "BOOKME": "Бронювати",
     "ADLAND": "Запустити",
     "SELLKIT": "Магазин"
   };
@@ -775,6 +763,7 @@ const Carousel3D = ({
                               <img
                                 src={item.imageUrl}
                                 alt={item.title}
+                                data-carousel-image={item.imageUrl}
                                 className={`w-full h-full object-cover transition-all duration-700 ease-out ${
                                   isImageLoaded(item.imageUrl) ? 'opacity-100' : 'opacity-0'
                                 }`}

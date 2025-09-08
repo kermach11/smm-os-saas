@@ -181,29 +181,7 @@ interface MainPageSettings {
   };
 }
 
-const defaultCarouselItems: CarouselItem[] = [
-  {
-    id: "1",
-    title: "LINKCORE",
-    description: "Мінімалістичний профіль-хаб. Один лінк, що відкриває весь твій цифровий слід.",
-    imageUrl: "/photo/photo-1.png",
-    url: "#linkcore"
-  },
-  {
-    id: "2",
-    title: "CASEMACHINE",
-    description: "Сайт-кейсбук: твої проєкти в деталях, цифри, візуали, відгуки.",
-    imageUrl: "/photo/photo-2.png",
-    url: "#casemachine"
-  },
-  {
-    id: "3",
-    title: "BOOKME",
-    description: "Інструмент бронювання консультацій. Години, оплата, зручність.",
-    imageUrl: "/photo/photo-3.png",
-    url: "/bookme"
-  }
-];
+const defaultCarouselItems: CarouselItem[] = [];
 
 const defaultSettings: MainPageSettings = {
   headerTitle: "",
@@ -4517,10 +4495,7 @@ const MainPageCustomizer: React.FC = () => {
                                         style={getCarouselPreviewStyles()}
                                       >
                                         <span className="font-semibold">
-                                          {item.title === "LINKCORE" ? "Переглянути" :
-                                           item.title === "CASEMACHINE" ? "Приклади" :
-                                           item.title === "BOOKME" ? "Бронювати" :
-                                           item.title === "ADLAND" ? "Запустити" :
+                                          {item.title === "ADLAND" ? "Запустити" :
                                            item.title === "SELLKIT" ? "Магазин" : "Дізнатися"}
                                         </span>
                                         <span className="ml-2">↗</span>

@@ -2,27 +2,6 @@ import { CarouselItem } from "../types/types";
 
 export const DEFAULT_CAROUSEL_ITEMS: CarouselItem[] = [
   {
-    id: "1",
-    title: "LINKCORE",
-    description: "Мінімалістичний профіль-хаб. Один лінк, що відкриває весь твій цифровий слід.",
-    imageUrl: "/photo/photo-1.png",
-    url: "#linkcore"
-  },
-  {
-    id: "2",
-    title: "CASEMACHINE",
-    description: "Сайт-кейсбук: твої проєкти в деталях, цифри, візуали, відгуки.",
-    imageUrl: "/photo/photo-2.png",
-    url: "#casemachine"
-  },
-  {
-    id: "3",
-    title: "BOOKME",
-    description: "Інструмент бронювання консультацій. Години, оплата, зручність.",
-    imageUrl: "/photo/photo-3.png",
-    url: "/bookme"
-  },
-  {
     id: "4",
     title: "ADLAND",
     description: "Посадкові сторінки під рекламу. Швидкі, точні, ефективні.",

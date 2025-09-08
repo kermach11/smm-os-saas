@@ -32,27 +32,6 @@ import {
 // Sample data for carousel with SMM products
 const defaultItems: CarouselItem[] = [
   {
-    id: "1",
-    title: "LINKCORE",
-    description: "Мінімалістичний профіль-хаб. Один лінк, що відкриває весь твій цифровий слід.",
-    imageUrl: "/photo/photo-1.png",
-    url: "#linkcore"
-  },
-  {
-    id: "2",
-    title: "CASEMACHINE",
-    description: "Сайт-кейсбук: твої проєкти в деталях, цифри, візуали, відгуки.",
-    imageUrl: "/photo/photo-2.png",
-    url: "#casemachine"
-  },
-  {
-    id: "3",
-    title: "BOOKME",
-    description: "Інструмент бронювання консультацій. Години, оплата, зручність.",
-    imageUrl: "/photo/photo-3.png",
-    url: "/bookme"
-  },
-  {
     id: "4",
     title: "ADLAND",
     description: "Посадкові сторінки під рекламу. Швидкі, точні, ефективні.",
@@ -540,8 +519,19 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
     items.forEach((item, index) => {
       if (item.imageUrl) {
         const img = new Image();
-        img.onload = () => console.log(`✅ Зображення ${index + 1} завантажено:`, item.imageUrl);
+        img.onload = () => {
+          console.log(`✅ Зображення ${index + 1} завантажено:`, item.imageUrl);
+          // Форсуємо оновлення DOM
+          const carouselElements = document.querySelectorAll(`[data-carousel-image="${item.imageUrl}"]`);
+          carouselElements.forEach(el => {
+            if (el instanceof HTMLImageElement) {
+              el.src = item.imageUrl; // Перезавантажуємо для оновлення
+            }
+          });
+        };
         img.onerror = () => console.warn(`⚠️ Помилка завантаження зображення ${index + 1}:`, item.imageUrl);
+        // Додаємо crossOrigin для кращої сумісності
+        img.crossOrigin = "anonymous";
         img.src = item.imageUrl;
       }
     });
@@ -820,6 +810,20 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
         setIsDataLoaded(true);
       });
     }
+  }, [isDataLoaded]);
+
+  // Додатковий ефект для агресивного завантаження зображень каруселі
+  useEffect(() => {
+    if (carouselItems.length > 0) {
+      // Невеликий таймаут щоб DOM встиг оновитися
+      setTimeout(() => {
+        preloadCarouselImages(carouselItems);
+      }, 100);
+    }
+  }, [carouselItems]);
+
+  // Ефект для оновлень з адмін панелі  
+  useEffect(() => {
     
     // Слухач для оновлень з адмін панелі
     const handleAdminDataUpdate = (event: CustomEvent<Record<string, unknown>>) => {
