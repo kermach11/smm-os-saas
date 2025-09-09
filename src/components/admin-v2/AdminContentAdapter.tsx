@@ -269,7 +269,9 @@ const SettingsTab: React.FC<{ deviceType: DeviceType }> = ({ deviceType }) => {
     updateMetaTag('og:title', settings.siteTitle);
     updateMetaTag('og:description', settings.siteDescription);
     updateMetaTag('og:site_name', settings.siteName);
-    updateMetaTag('og:url', settings.siteUrl);
+    // Додаємо timestamp для примусового оновлення кешу соціальних мереж
+    const urlWithTimestamp = settings.siteUrl ? `${settings.siteUrl}?v=${Date.now()}` : '';
+    updateMetaTag('og:url', urlWithTimestamp);
     updateMetaTag('og:type', 'website');
     
     if (settings.ogImage) {

@@ -29,11 +29,15 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Кешування HTML
+# Кешування HTML - з примусовим оновленням для соціальних мереж
 [[headers]]
   for = "/*.html"
   [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Pragma = "no-cache"
+    Expires = "0"
+    # Спеціальні заголовки для соціальних мереж
+    X-Robots-Tag = "index, follow"
 
 # Стиснення файлів
 [build.processing]

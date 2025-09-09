@@ -168,9 +168,9 @@ interface IntroSettings {
 
 const defaultSettings: IntroSettings = {
   // Основний контент
-  title: "Усе що треба",
-  subtitle: "для твого SMM",
-  description: "Професійні інструменти в одному місці",
+  title: "",
+  subtitle: "",
+  description: "",
   buttonText: "Почати роботу",
   buttonUrl: "#start",
   logoUrl: "",
