@@ -146,6 +146,7 @@ interface PreviewSettings {
       volume: number;
       loop: boolean;
       autoPlay: boolean;
+      singlePlay: boolean;
     };
     hoverSounds: {
       enabled: boolean;
@@ -297,7 +298,8 @@ const defaultSettings: PreviewSettings = {
       url: "",
       volume: 0.5,
       loop: true,
-      autoPlay: false
+      autoPlay: false,
+      singlePlay: false
     },
     hoverSounds: {
       enabled: false,
@@ -2383,6 +2385,31 @@ const PreviewCustomizer: React.FC<PreviewCustomizerProps> = ({ className }) => {
                             <span
                               className={`inline-block h-3 w-3 lg:h-4 lg:w-4 transform rounded-full bg-white transition-transform ${
                                 settings.audioSettings.backgroundMusic.autoPlay ? 'translate-x-4 lg:translate-x-6' : 'translate-x-0.5 lg:translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-2 lg:p-0">
+                          <label className="text-xs lg:text-sm font-semibold text-slate-700">{t('audio.singlePlay')}</label>
+                          <button
+                            onClick={() => updateSettings({ 
+                              audioSettings: { 
+                                ...settings.audioSettings, 
+                                backgroundMusic: { 
+                                  ...settings.audioSettings.backgroundMusic, 
+                                  singlePlay: !settings.audioSettings.backgroundMusic.singlePlay 
+                                } 
+                              } 
+                            })}
+                            disabled={!settings.audioSettings.backgroundMusic.autoPlay}
+                            className={`relative inline-flex h-4 w-8 lg:h-6 lg:w-11 items-center rounded-full transition-colors touch-manipulation ${
+                              settings.audioSettings.backgroundMusic.singlePlay && settings.audioSettings.backgroundMusic.autoPlay ? 'bg-green-600' : 'bg-gray-200'
+                            } ${!settings.audioSettings.backgroundMusic.autoPlay ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <span
+                              className={`inline-block h-3 w-3 lg:h-4 lg:w-4 transform rounded-full bg-white transition-transform ${
+                                settings.audioSettings.backgroundMusic.singlePlay && settings.audioSettings.backgroundMusic.autoPlay ? 'translate-x-4 lg:translate-x-6' : 'translate-x-0.5 lg:translate-x-1'
                               }`}
                             />
                           </button>

@@ -3,7 +3,6 @@ import { useTranslation } from '../hooks/useTranslation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CarouselItem } from '../types/types';
 import MediaSelector from './MediaSelector';
-import VideoDebugger from './VideoDebugger';
 import { FileItem } from '../types/contentManager';
 import indexedDBService from '../services/IndexedDBService';
 import syncService from '../services/SyncService';
@@ -124,6 +123,7 @@ interface MainPageSettings {
       volume: number;
       loop: boolean;
       autoPlay: boolean;
+      singlePlay: boolean;
       fileName?: string; // Додаємо ім'я файлу для ідентифікації
       autoStartAfterWelcome?: boolean; // НОВЕ: Автозапуск після Welcome
     };
@@ -245,6 +245,7 @@ const defaultSettings: MainPageSettings = {
       volume: 0.5,
       loop: true,
       autoPlay: false,
+      singlePlay: false,
       autoStartAfterWelcome: false
     },
     hoverSounds: {
@@ -3197,8 +3198,6 @@ const MainPageCustomizer: React.FC = () => {
                           </div>
                         </div>
                         
-                        {/* Діагностика відео */}
-                        <VideoDebugger videoUrl={settings.backgroundVideo} />
                       </div>
                     )}
 
@@ -3319,61 +3318,70 @@ const MainPageCustomizer: React.FC = () => {
 
                       {/* Додаткові налаштування */}
                       <div className="grid grid-cols-1 gap-1 lg:gap-4">
-                        <label className="flex items-center gap-1 lg:gap-2 p-1.5 lg:p-3 bg-white/60 rounded-sm lg:rounded-xl border border-green-100 cursor-pointer hover:bg-white/80 transition-all min-h-[40px] lg:min-h-[auto] touch-manipulation">
-                          <input
-                            type="checkbox"
-                            checked={settings.audioSettings.backgroundMusic.loop}
-                            onChange={(e) => updateSettings({ 
-                              audioSettings: { 
-                                ...settings.audioSettings, 
-                                backgroundMusic: { 
-                                  ...settings.audioSettings.backgroundMusic, 
-                                  loop: e.target.checked 
-                                } 
-                              } 
-                            })}
-                            className="w-3 h-3 lg:w-4 lg:h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
-                          />
+                        <div className="flex items-center justify-between p-1.5 lg:p-3 bg-white/60 rounded-sm lg:rounded-xl border border-green-100">
                           <span className="text-xs lg:text-sm font-medium text-slate-700">Повторювати</span>
-                        </label>
-                        <label className="flex items-center gap-1 lg:gap-2 p-1.5 lg:p-3 bg-white/60 rounded-sm lg:rounded-xl border border-green-100 cursor-pointer hover:bg-white/80 transition-all min-h-[40px] lg:min-h-[auto] touch-manipulation">
-                          <input
-                            type="checkbox"
-                            checked={settings.audioSettings.backgroundMusic.autoPlay}
-                            onChange={(e) => updateSettings({ 
-                              audioSettings: { 
-                                ...settings.audioSettings, 
-                                backgroundMusic: { 
-                                  ...settings.audioSettings.backgroundMusic, 
-                                  autoPlay: e.target.checked 
+                          <label className="relative inline-flex items-center cursor-pointer touch-manipulation">
+                            <input
+                              type="checkbox"
+                              checked={settings.audioSettings.backgroundMusic.loop}
+                              onChange={(e) => updateSettings({ 
+                                audioSettings: { 
+                                  ...settings.audioSettings, 
+                                  backgroundMusic: { 
+                                    ...settings.audioSettings.backgroundMusic, 
+                                    loop: e.target.checked 
+                                  } 
                                 } 
-                              } 
-                            })}
-                            className="w-3 h-3 lg:w-4 lg:h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
-                          />
+                              })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-8 h-4 lg:w-9 lg:h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-1 lg:peer-focus:ring-2 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 lg:after:h-4 lg:after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                          </label>
+                        </div>
+                        <div className="flex items-center justify-between p-1.5 lg:p-3 bg-white/60 rounded-sm lg:rounded-xl border border-green-100">
                           <span className="text-xs lg:text-sm font-medium text-slate-700">Автозапуск</span>
-                        </label>
-                        {/* НОВА ГАЛОЧКА: Автозапуск після Welcome */}
-                        <label className="flex items-center gap-1 lg:gap-2 p-1.5 lg:p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-sm lg:rounded-xl border border-purple-200 cursor-pointer hover:from-purple-100 hover:to-pink-100 transition-all min-h-[40px] lg:min-h-[auto] touch-manipulation">
-                          <input
-                            type="checkbox"
-                            checked={settings.audioSettings.backgroundMusic.autoStartAfterWelcome || false}
-                            onChange={(e) => updateSettings({ 
-                              audioSettings: { 
-                                ...settings.audioSettings, 
-                                backgroundMusic: { 
-                                  ...settings.audioSettings.backgroundMusic, 
-                                  autoStartAfterWelcome: e.target.checked 
+                          <label className="relative inline-flex items-center cursor-pointer touch-manipulation">
+                            <input
+                              type="checkbox"
+                              checked={settings.audioSettings.backgroundMusic.autoPlay}
+                              onChange={(e) => updateSettings({ 
+                                audioSettings: { 
+                                  ...settings.audioSettings, 
+                                  backgroundMusic: { 
+                                    ...settings.audioSettings.backgroundMusic, 
+                                    autoPlay: e.target.checked 
+                                  } 
                                 } 
-                              } 
-                            })}
-                            className="w-3 h-3 lg:w-4 lg:h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
-                          />
+                              })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-8 h-4 lg:w-9 lg:h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-1 lg:peer-focus:ring-2 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 lg:after:h-4 lg:after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                          </label>
+                        </div>
+                        {/* НОВА ГАЛОЧКА: Автозапуск після Welcome */}
+                        <div className="flex items-center justify-between p-1.5 lg:p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-sm lg:rounded-xl border border-purple-200">
                           <div className="flex flex-col">
                             <span className="text-xs lg:text-sm font-medium text-slate-700">🎵 Автозапуск після Welcome</span>
                             <span className="text-xs text-slate-500 hidden lg:block">Музика грає постійно після натискання кнопки Welcome</span>
                           </div>
-                        </label>
+                          <label className="relative inline-flex items-center cursor-pointer touch-manipulation">
+                            <input
+                              type="checkbox"
+                              checked={settings.audioSettings.backgroundMusic.autoStartAfterWelcome || false}
+                              onChange={(e) => updateSettings({ 
+                                audioSettings: { 
+                                  ...settings.audioSettings, 
+                                  backgroundMusic: { 
+                                    ...settings.audioSettings.backgroundMusic, 
+                                    autoStartAfterWelcome: e.target.checked 
+                                  } 
+                                } 
+                              })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-8 h-4 lg:w-9 lg:h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-1 lg:peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 lg:after:h-4 lg:after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
+                          </label>
+                        </div>
                       </div>
                     </div>
                   )}

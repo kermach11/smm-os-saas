@@ -139,6 +139,7 @@ interface IntroSettings {
       volume: number;
       loop: boolean;
       autoPlay: boolean;
+      singlePlay: boolean;
     };
     hoverSounds: {
       enabled: boolean;
@@ -294,7 +295,8 @@ const defaultSettings: IntroSettings = {
       url: "",
       volume: 0.5,
       loop: true,
-      autoPlay: false
+      autoPlay: false,
+      singlePlay: false
     },
     hoverSounds: {
       enabled: false,

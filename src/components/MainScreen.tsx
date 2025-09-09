@@ -271,6 +271,7 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
       volume: 0.5,
       loop: true,
       autoPlay: true,
+      singlePlay: false,
       autoStartAfterWelcome: false
     },
     hoverSounds: {
@@ -364,6 +365,12 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
   
   // Стан для фонової музики - ПРОСТА ЛОГІКА + МОБІЛЬНИЙ ФІX
   const [isBackgroundMusicEnabled, setIsBackgroundMusicEnabled] = useState(false);
+  const [hasSinglePlayExecuted, setHasSinglePlayExecuted] = useState(false); // 🎵 Флаг для single play
+
+  // 🎵 СКИДАЄМО ФЛАГ SINGLE PLAY ПРИ ЗМІНІ НАЛАШТУВАНЬ
+  useEffect(() => {
+    setHasSinglePlayExecuted(false);
+  }, [audioSettings.backgroundMusic.singlePlay, audioSettings.backgroundMusic.url]);
   
   // Стан для відстеження активного індексу каруселі
 
@@ -378,20 +385,54 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
         const success = await webAudioManager.loadAudio(audioSettings.backgroundMusic.url, 'background-music');
         
         if (success && isBackgroundMusicEnabled && !webAudioManager.isAudioPlaying('background-music')) {
+          // 🎵 ПЕРЕВІРКА SINGLE PLAY: Якщо singlePlay увімкнено і вже виконувався - не запускати
+          if (audioSettings.backgroundMusic.singlePlay && hasSinglePlayExecuted) {
+            console.log('🎵 initBackgroundMusic: Single play вже виконувався, пропускаємо запуск');
+            return;
+          }
+
           // Запускаємо тільки якщо музика увімкнена і не грає
+          // 🎵 ЛОГІКА SINGLE PLAY: Якщо автовідтворення + один повтор = без циклу
+          const shouldLoop = audioSettings.backgroundMusic.autoPlay && audioSettings.backgroundMusic.singlePlay 
+            ? false  // Один повтор - без циклу
+            : audioSettings.backgroundMusic.loop; // Інакше як налаштовано
+
           await webAudioManager.playAudio('background-music', {
-            loop: audioSettings.backgroundMusic.loop,
-            volume: audioSettings.backgroundMusic.volume
+            loop: shouldLoop,
+            volume: audioSettings.backgroundMusic.volume,
+            singlePlay: audioSettings.backgroundMusic.singlePlay
           });
+
+          // 🎵 ВСТАНОВЛЮЄМО ФЛАГ ДЛЯ SINGLE PLAY
+          if (audioSettings.backgroundMusic.singlePlay) {
+            setHasSinglePlayExecuted(true);
+          }
         }
         
         // Регістрируємо колбек для активації при взаємодії (тільки якщо увімкнена)
         webAudioManager.onActivation(() => {
           if (isBackgroundMusicEnabled && !webAudioManager.isAudioPlaying('background-music')) {
+            // 🎵 ПЕРЕВІРКА SINGLE PLAY: Якщо singlePlay увімкнено і вже виконувався - не запускати
+            if (audioSettings.backgroundMusic.singlePlay && hasSinglePlayExecuted) {
+              console.log('🎵 onActivation: Single play вже виконувався, пропускаємо запуск');
+              return;
+            }
+
+            // 🎵 ЛОГІКА SINGLE PLAY: Якщо автовідтворення + один повтор = без циклу
+            const shouldLoop = audioSettings.backgroundMusic.autoPlay && audioSettings.backgroundMusic.singlePlay 
+              ? false  // Один повтор - без циклу
+              : audioSettings.backgroundMusic.loop; // Інакше як налаштовано
+
             webAudioManager.playAudio('background-music', {
-              loop: audioSettings.backgroundMusic.loop,
-              volume: audioSettings.backgroundMusic.volume
+              loop: shouldLoop,
+              volume: audioSettings.backgroundMusic.volume,
+              singlePlay: audioSettings.backgroundMusic.singlePlay
             });
+
+            // 🎵 ВСТАНОВЛЮЄМО ФЛАГ ДЛЯ SINGLE PLAY
+            if (audioSettings.backgroundMusic.singlePlay) {
+              setHasSinglePlayExecuted(true);
+            }
           }
         });
       }
@@ -425,10 +466,27 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
         // Запускаємо музику автоматично
         if (!webAudioManager.isAudioPlaying('background-music')) {
           try {
+            // 🎵 ПЕРЕВІРКА SINGLE PLAY: Якщо singlePlay увімкнено і вже виконувався - не запускати
+            if (audioSettings.backgroundMusic.singlePlay && hasSinglePlayExecuted) {
+              console.log('🎵 MainScreen: Single play вже виконувався, пропускаємо запуск');
+              return;
+            }
+
+            // 🎵 ЛОГІКА SINGLE PLAY: Якщо автовідтворення + один повтор = без циклу
+            const shouldLoop = audioSettings.backgroundMusic.autoPlay && audioSettings.backgroundMusic.singlePlay 
+              ? false  // Один повтор - без циклу
+              : audioSettings.backgroundMusic.loop; // Інакше як налаштовано
+
             await webAudioManager.playAudio('background-music', {
-              loop: audioSettings.backgroundMusic.loop,
-              volume: audioSettings.backgroundMusic.volume
+              loop: shouldLoop,
+              volume: audioSettings.backgroundMusic.volume,
+              singlePlay: audioSettings.backgroundMusic.singlePlay
             });
+
+            // 🎵 ВСТАНОВЛЮЄМО ФЛАГ ДЛЯ SINGLE PLAY
+            if (audioSettings.backgroundMusic.singlePlay) {
+              setHasSinglePlayExecuted(true);
+            }
   
           } catch (error) {
   
@@ -1233,10 +1291,27 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
     if (newState) {
       // Включаємо музику (тільки якщо вона не грає)
       if (audioSettings.backgroundMusic.url && !webAudioManager.isAudioPlaying('background-music')) {
+        // 🎵 ПЕРЕВІРКА SINGLE PLAY: Якщо singlePlay увімкнено і вже виконувався - не запускати
+        if (audioSettings.backgroundMusic.singlePlay && hasSinglePlayExecuted) {
+          console.log('🎵 toggleBackgroundMusic: Single play вже виконувався, пропускаємо запуск');
+          return;
+        }
+
+        // 🎵 ЛОГІКА SINGLE PLAY: Якщо автовідтворення + один повтор = без циклу
+        const shouldLoop = audioSettings.backgroundMusic.autoPlay && audioSettings.backgroundMusic.singlePlay 
+          ? false  // Один повтор - без циклу
+          : audioSettings.backgroundMusic.loop; // Інакше як налаштовано
+
         webAudioManager.playAudio('background-music', {
-          loop: audioSettings.backgroundMusic.loop,
-          volume: audioSettings.backgroundMusic.volume
+          loop: shouldLoop,
+          volume: audioSettings.backgroundMusic.volume,
+          singlePlay: audioSettings.backgroundMusic.singlePlay
         });
+
+        // 🎵 ВСТАНОВЛЮЄМО ФЛАГ ДЛЯ SINGLE PLAY
+        if (audioSettings.backgroundMusic.singlePlay) {
+          setHasSinglePlayExecuted(true);
+        }
       }
     } else {
       // Виключаємо музику (тільки якщо вона грає)

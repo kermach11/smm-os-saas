@@ -337,6 +337,47 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
     return headerTextSettings?.[key] ?? fallback;
   };
 
+  // Функція для створення тіней та 3D ефектів
+  const getTextShadow = (element: 'title' | 'subtitle' | 'description') => {
+    const shadowIntensity = getHeaderSetting(`header${element.charAt(0).toUpperCase() + element.slice(1)}ShadowIntensity`, 0);
+    const shadowColor = getHeaderSetting(`header${element.charAt(0).toUpperCase() + element.slice(1)}ShadowColor`, '#000000');
+    const depth3D = getHeaderSetting(`header${element.charAt(0).toUpperCase() + element.slice(1)}3DDepth`, 0);
+
+    // Допоміжна функція для конвертації hex в rgb
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result 
+        ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
+        : '0, 0, 0';
+    };
+
+    // Створюємо тіні та 3D ефекти
+    if (depth3D > 0) {
+      // Створюємо багатошарову тінь для 3D ефекту
+      const shadows = [];
+      const maxLayers = Math.min(depth3D, 50); // Обмежуємо кількість шарів для продуктивності
+      
+      for (let i = 1; i <= maxLayers; i++) {
+        const opacity = Math.max(0.05, shadowIntensity - (i * 0.015));
+        const offsetX = Math.round(i * 0.5);
+        const offsetY = Math.round(i * 0.5);
+        shadows.push(`${offsetX}px ${offsetY}px 0px rgba(${hexToRgb(shadowColor)}, ${opacity})`);
+      }
+      
+      // Додаємо основну тінь для глибини
+      if (shadowIntensity > 0) {
+        shadows.push(`${Math.round(depth3D * 0.8)}px ${Math.round(depth3D * 0.8)}px ${Math.round(depth3D * 0.3)}px rgba(${hexToRgb(shadowColor)}, ${shadowIntensity * 0.3})`);
+      }
+      
+      return shadows.join(', ');
+    } else if (shadowIntensity > 0) {
+      // Звичайна тінь без 3D ефекту
+      return `2px 2px 8px rgba(${hexToRgb(shadowColor)}, ${shadowIntensity}), 0 0 16px rgba(${hexToRgb(shadowColor)}, ${shadowIntensity * 0.5})`;
+    }
+
+    return 'none';
+  };
+
   return (
     <ConstructorWrapper
       boxName="headerTextBox"
@@ -364,8 +405,8 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
                            currentDeviceType === 'tablet' ? '-0.3px' : '-0.5px'),
             marginBottom: adaptiveSettings ? `${getAdaptiveValue('headerTitleMarginBottom')}px` : '16px',
             color: getHeaderSetting('textColor', '#ffffff'),
-            // Додаємо тінь для заголовка
-            textShadow: `0 2px 4px rgba(0,0,0,${getHeaderSetting('headerTitleShadowIntensity', 0.5)})`,
+            // Додаємо тіні та 3D ефекти для заголовка
+            textShadow: getTextShadow('title'),
             // Увімкнути pointer events для hover ефектів
             pointerEvents: 'auto',
             ...titleProps.style
@@ -400,8 +441,8 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
             marginTop: '16px',
             marginBottom: adaptiveSettings ? `${getAdaptiveValue('headerSubtitleMarginBottom')}px` : '12px',
             color: getHeaderSetting('textColor', '#ffffff'),
-            // Додаємо тінь для підзаголовка
-            textShadow: `0 2px 4px rgba(0,0,0,${getHeaderSetting('headerSubtitleShadowIntensity', 0.3)})`,
+            // Додаємо тіні та 3D ефекти для підзаголовка
+            textShadow: getTextShadow('subtitle'),
             // Увімкнути pointer events для hover ефектів
             pointerEvents: 'auto',
             ...subtitleProps.style
@@ -435,8 +476,8 @@ export const SmartHeaderTextBox: React.FC<HeaderTextBoxProps> = ({
                            currentDeviceType === 'tablet' ? '0.1px' : '0px'),
             marginTop: '16px',
             color: getHeaderSetting('textColor', '#ffffff'),
-            // Додаємо тінь для опису
-            textShadow: `0 1px 2px rgba(0,0,0,${getHeaderSetting('headerDescriptionShadowIntensity', 0.3)})`,
+            // Додаємо тіні та 3D ефекти для опису
+            textShadow: getTextShadow('description'),
             // Увімкнути pointer events для hover ефектів
             pointerEvents: 'auto',
             ...descriptionProps.style

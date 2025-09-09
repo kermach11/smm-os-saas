@@ -132,6 +132,7 @@ interface IntroSettings {
       volume: number;
       loop: boolean;
       autoPlay: boolean;
+      singlePlay: boolean;
     };
     hoverSounds: {
       enabled: boolean;

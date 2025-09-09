@@ -121,6 +121,8 @@ const translations = {
     'audio.loop.description': 'Повторювати музику',
     'audio.autoplay.label': 'Автозапуск',
     'audio.autoplay.description': 'Грати автоматично',
+    'audio.singlePlay': 'Один повтор',
+    'audio.singlePlay.description': 'Грати тільки один раз при автозапуску',
     'audio.sound.effects': 'Звукові ефекти',
     'audio.sound.effects.description': 'Інтерактивні звуки для кнопок',
     'audio.hover.sounds': 'Звуки наведення',
@@ -1006,6 +1008,7 @@ const translations = {
     'main.audio.volume': 'Гучність',
     'main.audio.loop': 'Повторювати',
     'main.audio.autoplay': 'Автозапуск',
+    'main.audio.singlePlay': 'Один повтор',
     
     // Hover Sounds
     'main.audio.hover.title': 'Звуки наведення',
@@ -1207,6 +1210,8 @@ const translations = {
     'audio.loop.description': 'Repeat music',
     'audio.autoplay.label': 'Autoplay',
     'audio.autoplay.description': 'Play automatically',
+    'audio.singlePlay': 'Single play',
+    'audio.singlePlay.description': 'Play only once on autostart',
     'audio.sound.effects': 'Sound Effects',
     'audio.sound.effects.description': 'Interactive sounds for buttons',
     'audio.hover.sounds': 'Hover Sounds',
@@ -1592,6 +1597,7 @@ const translations = {
     'main.audio.volume': 'Volume',
     'main.audio.loop': 'Loop',
     'main.audio.autoplay': 'Autoplay',
+    'main.audio.singlePlay': 'Single play',
     
     // Hover Sounds
     'main.audio.hover.title': 'Hover Sounds',
@@ -2886,6 +2892,8 @@ const translations = {
     'audio.volume': 'Громкость',
     'audio.loop': 'Зациклить',
     'audio.autoplay': 'Автовоспроизведение',
+    'audio.singlePlay': 'Один повтор',
+    'audio.singlePlay.description': 'Играть только один раз при автозапуске',
     'audio.change': 'Изменить музыку',
     
     // Дополнительные недостающие переводы для preview

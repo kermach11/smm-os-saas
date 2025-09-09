@@ -46,7 +46,7 @@ export class WebAudioManager {
   }
 
   // Програвання аудіо
-  async playAudio(id: string, options: { loop?: boolean; volume?: number } = {}): Promise<boolean> {
+  async playAudio(id: string, options: { loop?: boolean; volume?: number; singlePlay?: boolean } = {}): Promise<boolean> {
     if (!this.audioContext || !this.audioBuffers.has(id)) {
       console.warn(`⚠️ WebAudioManager: Аудіо ${id} не знайдено`);
       return false;
@@ -79,11 +79,20 @@ export class WebAudioManager {
         source.connect(this.audioContext.destination);
       }
 
+      // 🎵 ДОДАЄМО СЛУХАЧ ДЛЯ SINGLE PLAY
+      if (options.singlePlay && !options.loop) {
+        source.onended = () => {
+          console.log(`🎵 WebAudioManager: [SINGLE PLAY] Аудіо ${id} закінчилося, зупиняємо і видаляємо`);
+          this.audioSources.delete(id);
+          // Додатково зупиняємо source (хоча він уже закінчився)
+        };
+      }
+
       // Запускаємо
       source.start(0);
       this.audioSources.set(id, source);
       
-      console.log(`✅ WebAudioManager: Аудіо ${id} запущено`);
+      console.log(`✅ WebAudioManager: Аудіо ${id} запущено${options.singlePlay ? ' [SINGLE PLAY MODE]' : ''}`);
       
       // 🎬 ДОМІНО ЕФЕКТ: Якщо звук запустився успішно, 
       // значить є user gesture - можемо запустити відео!
@@ -593,6 +602,7 @@ export const playWebAudio = async (url: string, options: {
   loop?: boolean; 
   volume?: number; 
   id?: string;
+  singlePlay?: boolean;
 } = {}) => {
   const id = options.id || `audio_${Date.now()}`;
   
