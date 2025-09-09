@@ -181,10 +181,10 @@ interface PreviewSettings {
 
 const defaultSettings: PreviewSettings = {
   // Основний контент
-  titleText: "Welcome",
-  subtitleText: "to our business",
-  descriptionText: "We create incredible solutions for your success",
-  buttonText: "Get Started",
+  titleText: "",
+  subtitleText: "",
+  descriptionText: "",
+  buttonText: "",
   logoUrl: "",
   logoSize: 96, // Розмір логотипа за замовчуванням
   

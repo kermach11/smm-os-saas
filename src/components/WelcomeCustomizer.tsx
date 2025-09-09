@@ -58,11 +58,11 @@ interface WelcomeSettings {
 }
 
 const defaultSettings: WelcomeSettings = {
-  title: "SMM OS",
-  subtitle: "Welcome",
-  description: "Everything you need for your SMM\nin one place",
-  buttonText: "Enter",
-  hintText: "Tap to enter and start music",
+  title: "",
+  subtitle: "",
+  description: "",
+  buttonText: "",
+  hintText: "",
   brandColor: "#3b82f6",
   accentColor: "#8b5cf6",
   textColor: "#111111",
