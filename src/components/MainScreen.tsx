@@ -92,14 +92,14 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
       if (event.ctrlKey && event.key === 'e') {
         event.preventDefault();
         toggleConstructorMode();
-        console.log('🎯 Конструктор переключено:', !isConstructorMode);
+        // Лог переключення конструктора видалено для оптимізації
       }
       
       // Ctrl + R - скинути всі позиції (тільки в режимі конструктора)
       if (event.ctrlKey && event.key === 'r' && isConstructorMode) {
         event.preventDefault();
         resetAllPositions().then(() => {
-          console.log('🎯 Позиції скинуто');
+          // Лог скидання позицій видалено для оптимізації
         }).catch(error => {
           console.error('❌ Помилка скидання позицій:', error);
         });
@@ -1351,9 +1351,9 @@ const MainScreen = ({ visible, userInteracted = false }: MainScreenProps) => {
           onPlay={() => console.log('🎬 MainScreen: Відео запустилося успішно')}
           onError={(e) => console.error('❌ MainScreen: Помилка відео:', e)}
           onLoadStart={() => console.log('🎬 MainScreen: Відео почало завантажуватися')}
-          onCanPlay={() => console.log('🎬 MainScreen: Відео готове до відтворення')}
+          onCanPlay={() => {/* Відео готове */}}
           onLoadedData={() => console.log('🎬 MainScreen: Відео дані завантажені')}
-          onCanPlayThrough={() => console.log('🎬 MainScreen: Відео може відтворюватися повністю')}
+          onCanPlayThrough={() => {/* Відео готове повністю */}}
         >
           <source src={backgroundSettings.backgroundVideo} type="video/mp4" />
           Your browser does not support the video tag.

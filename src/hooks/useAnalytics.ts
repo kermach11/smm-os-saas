@@ -37,15 +37,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
       }
       
       const sessions = JSON.parse(stored);
-      console.log('📊 Analytics: Завантажено сесій з localStorage:', {
-        total: sessions.length,
-        sessions: sessions.map((s: SessionData) => ({
-          id: s.id.slice(0, 8),
-          startTime: new Date(s.startTime).toLocaleString(),
-          endTime: s.endTime ? new Date(s.endTime).toLocaleString() : 'ongoing',
-          clicks: s.clicks
-        }))
-      });
+      // Логи видалено для оптимізації
       
       return sessions;
     } catch (error) {
@@ -63,15 +55,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
       }
       
       const clicks = JSON.parse(stored);
-      console.log('🖱️ Analytics: Завантажено кліків з localStorage:', {
-        total: clicks.length,
-        recentClicks: clicks.slice(-5).map((c: ClickEvent) => ({
-          id: c.id.slice(0, 8),
-          timestamp: new Date(c.timestamp).toLocaleString(),
-          url: c.url,
-          title: c.title.slice(0, 30) + '...'
-        }))
-      });
+      // Логи видалено для оптимізації
       
       return clicks;
     } catch (error) {
@@ -81,35 +65,24 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
   }, []);
 
   const saveSessionToStorage = useCallback((session: SessionData) => {
-    console.log('💾 Analytics: saveSessionToStorage викликано для сесії:', session.id);
+    // Лог викликів видалено для оптимізації
     
     try {
       const sessions = getStoredSessions();
       const existingIndex = sessions.findIndex(s => s.id === session.id);
       
-      console.log('📊 Analytics: Поточні сесії в localStorage:', {
-        total: sessions.length,
-        existingIndex,
-        sessionIds: sessions.map(s => ({ id: s.id.slice(0, 8), startTime: new Date(s.startTime).toLocaleString() }))
-      });
+      // Логи сесій видалено для оптимізації
       
       if (existingIndex >= 0) {
         console.log('🔄 Analytics: Оновлюємо існуючу сесію');
         sessions[existingIndex] = session;
       } else {
-        console.log('➕ Analytics: Додаємо нову сесію');
+        // Додаємо нову сесію
         sessions.push(session);
       }
       
       localStorage.setItem('analyticsSessions', JSON.stringify(sessions));
-      console.log('✅ Analytics: Сесія збережена в localStorage. Всього сесій:', sessions.length);
-      
-      // Перевіряємо чи дійсно збереглося
-      const verification = localStorage.getItem('analyticsSessions');
-      if (verification) {
-        const parsed = JSON.parse(verification);
-        console.log('✓ Analytics: Верифікація збереження:', { savedSessions: parsed.length });
-      }
+      // Логи збереження видалено для оптимізації
       
     } catch (error) {
       console.error('❌ Analytics: Помилка збереження сесії:', error);
@@ -144,26 +117,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
       .filter(s => s.duration)
       .reduce((acc, s) => acc + (s.duration || 0), 0) / totalSessions || 0;
 
-    console.log('📈 Analytics: updateTotalViews:', {
-      allSessions: sessions.length,
-      totalVisits: totalVisits,
-      completedSessions: totalSessions,
-      activeSessions: activeSessions,
-      avgDuration: Math.round(averageSessionDuration / 1000),
-      welcomeSessionIds: Array.from(uniqueWelcomeSessions),
-      validation: {
-        activeSessionsLEQTotalVisits: activeSessions <= totalVisits,
-        message: activeSessions <= totalVisits ? '✅ Валідація пройшла' : '❌ Активних більше ніж відвідувань!'
-      },
-      sessionsData: sessions.map(s => ({
-        id: s.id.slice(0, 8),
-        startTime: new Date(s.startTime).toLocaleString(),
-        endTime: s.endTime ? new Date(s.endTime).toLocaleString() : 'ongoing',
-        clicks: s.clicks,
-        hasWelcome: uniqueWelcomeSessions.has(s.id),
-        isActive: !s.endTime && s.startTime > fiveMinutesAgo && uniqueWelcomeSessions.has(s.id)
-      }))
-    });
+    // Логи метрик видалено для оптимізації
 
     setAnalyticsData(prev => {
       const newData = {
@@ -178,7 +132,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
       // ⚠️ КРИТИЧНО: Зберігаємо оновлені дані в localStorage
       try {
         localStorage.setItem('analyticsData', JSON.stringify(newData));
-        console.log('💾 Analytics: Дані аналітики збережено в localStorage після оновлення переглядів');
+        // Лог збереження видалено для оптимізації
       } catch (error) {
         console.error('❌ Analytics: Помилка збереження даних аналітики після переглядів:', error);
       }
@@ -188,7 +142,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
   }, [getStoredSessions]);
 
   const updateAnalyticsAfterClick = useCallback((allClicks: ClickEvent[]) => {
-    console.log('📊 Analytics: updateAnalyticsAfterClick викликано з кліками:', allClicks.length);
+    // Лог викликів видалено для оптимізації
     
     // ПЕРЕГЛЯДИ СТОРІНОК = тільки кліки по картках каруселі (посилання)
     const carouselCardClicks = allClicks.filter(click => click.clickType === 'carousel-card');
@@ -199,14 +153,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     const uniqueWelcomeSessions = new Set(welcomeClicks.map(click => click.sessionId));
     const totalVisits = uniqueWelcomeSessions.size;
     
-    console.log('📈 Analytics: Метрики по типах кліків:', {
-      totalPageViews: totalPageViews,
-      carouselCardClicks: carouselCardClicks.length,
-      welcomeClicks: welcomeClicks.length,
-      uniqueWelcomeSessions: uniqueWelcomeSessions.size,
-      allClicks: allClicks.length,
-      note: 'totalVisits обчислюється в updateTotalViews()'
-    });
+    // Метрики по типах кліків обчислено
     
     // Підрахунок топ посилань (тільки картки каруселі)
     const linkCounts = carouselCardClicks.reduce((acc, click) => {
@@ -240,7 +187,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
       // Видаляємо totalVisits звідси, бо він обчислюється в updateTotalViews
     };
     
-    console.log('📊 Analytics: updateAnalyticsAfterClick - оновлення:', updatedData);
+    // Лог оновлення видалено для оптимізації
     
     setAnalyticsData(prev => {
       const newData = {
@@ -251,7 +198,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
       // ⚠️ КРИТИЧНО: Зберігаємо оновлені дані в localStorage
       try {
         localStorage.setItem('analyticsData', JSON.stringify(newData));
-        console.log('💾 Analytics: Дані аналітики збережено в localStorage після оновлення кліків');
+        // Лог збереження видалено для оптимізації
       } catch (error) {
         console.error('❌ Analytics: Помилка збереження даних аналітики після кліків:', error);
       }
@@ -262,25 +209,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
 
   // Ініціалізація сесії
   useEffect(() => {
-    console.log('🔍 Analytics: Ініціалізація сесії...', { 
-      trackSessions: finalConfig.trackSessions,
-      device: {
-        isMobile: /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent),
-        userAgent: navigator.userAgent.slice(0, 100),
-        platform: navigator.platform,
-        cookieEnabled: navigator.cookieEnabled
-      },
-      localStorage: {
-        available: typeof Storage !== 'undefined',
-        quota: (() => {
-          try {
-            return navigator.storage?.estimate ? 'supported' : 'not supported';
-          } catch {
-            return 'error';
-          }
-        })()
-      }
-    });
+    // Ініціалізація сесії
     
     if (finalConfig.trackSessions) {
       const session: SessionData = {
@@ -294,11 +223,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
         referrer: document.referrer
       };
       
-      console.log('📊 Analytics: Створено нову сесію:', {
-        sessionId: session.id,
-        startTime: new Date(session.startTime).toLocaleString(),
-        userAgent: session.userAgent.slice(0, 50) + '...'
-      });
+      // Нова сесія створена
       
       setCurrentSession(session);
       saveSessionToStorage(session);
@@ -306,7 +231,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
       // Оновлюємо загальну статистику
       updateTotalViews();
       
-      console.log('✅ Analytics: Сесія збережена та статистика оновлена');
+      // Сесія збережена та статистика оновлена
     }
   }, [finalConfig.trackSessions, saveSessionToStorage, updateTotalViews]);
 
@@ -384,7 +309,7 @@ export const useAnalytics = (config: Partial<AnalyticsConfig> = {}) => {
     if (!isInitialized) return;
 
     const refreshData = () => {
-      console.log('🔄 Analytics: Періодичне оновлення даних...');
+      // Лог періодичного оновлення видалено для оптимізації
       
       // Оновлюємо дані з актуальними сесіями та кліками
       const allClicks = getStoredClicks();

@@ -505,22 +505,11 @@ const IntroScreenPreview = ({ className }: IntroScreenPreviewProps) => {
                          element === 'subtitle' ? introSettings.subtitleExitAnimation :
                          introSettings.descriptionExitAnimation;
     
-    console.log(`🎭 IntroScreenPreview: getAnimationVariants для ${element}:`, {
-      enterAnimation,
-      exitAnimation,
-      settingsAnimations: {
-        titleAnimation: introSettings.titleAnimation,
-        subtitleAnimation: introSettings.subtitleAnimation,
-        descriptionAnimation: introSettings.descriptionAnimation,
-        titleExitAnimation: introSettings.titleExitAnimation,
-        subtitleExitAnimation: introSettings.subtitleExitAnimation,
-        descriptionExitAnimation: introSettings.descriptionExitAnimation
-      }
-    });
+    // Анімаційні варіанти обчислено
 
     // Якщо анімація 'none' або не задана, повертаємо статичну анімацію
     if (!enterAnimation || enterAnimation === 'none') {
-      console.log(`🎭 IntroScreenPreview: No animation for ${element}, returning static`);
+      // Статична анімація для елемента
       return {
         initial: { opacity: 1 },
         animate: { opacity: 1 },
@@ -653,7 +642,7 @@ const IntroScreenPreview = ({ className }: IntroScreenPreviewProps) => {
       }
     };
 
-    console.log(`🎭 IntroScreenPreview: Animation config for ${element}:`, animationConfig);
+    // Анімаційна конфігурація створена
     
     return animationConfig;
   };

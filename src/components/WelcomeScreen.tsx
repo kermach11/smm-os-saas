@@ -214,7 +214,7 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
 
     const loadSettings = async () => {
       try {
-        console.log('🔄 WelcomeScreen: Завантаження налаштувань через IndexedDBService...');
+        // Лог завантаження налаштувань видалено для оптимізації
         
         // Спочатку пробуємо завантажити з IndexedDB
         const indexedDBSettings = await indexedDBService.loadSettings('welcomeSettings');
@@ -367,7 +367,7 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
     
     // Негайно переходимо далі без очікування музики
     setTimeout(() => {
-      console.log('🎬 WelcomeScreen: Перехід до MainScreen через 150ms');
+      // Лог переходу видалено для оптимізації
       onComplete();
       setIsPressed(false);
     }, 150);
@@ -442,18 +442,11 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
                           element === 'subtitle' ? settings.subtitleAnimation :
                           settings.descriptionAnimation;
     
-    console.log(`🎭 WelcomeScreen: getAnimationVariants для ${element}:`, {
-      enterAnimation,
-      settingsAnimations: {
-        titleAnimation: settings.titleAnimation,
-        subtitleAnimation: settings.subtitleAnimation,
-        descriptionAnimation: settings.descriptionAnimation
-      }
-    });
+    // Анімаційні варіанти обчислено
 
     // Якщо анімація 'none' або не задана, повертаємо статичну анімацію
     if (!enterAnimation || enterAnimation === 'none') {
-      console.log(`🎭 WelcomeScreen: No animation for ${element}, returning static`);
+      // Статична анімація для елемента
       return {
         initial: { opacity: 1 },
         animate: { opacity: 1 },
@@ -545,7 +538,7 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
       }
     };
 
-    console.log(`🎭 WelcomeScreen: Animation config for ${element}:`, animationConfig);
+    // Лог конфігурації анімації видалено для оптимізації
     
     return animationConfig;
   };
@@ -687,10 +680,10 @@ const WelcomeScreen = ({ visible, onComplete, isAudioLoaded, settings: propsSett
               handleEnter();
             }}
             onTouchStart={() => {
-              console.log('📱 WelcomeScreen: onTouchStart (мобільний дотик)');
+              // Лог дотиків видалено для оптимізації
             }}
             onTouchEnd={() => {
-              console.log('📱 WelcomeScreen: onTouchEnd (мобільний дотик завершено)');
+              // Лог дотиків видалено для оптимізації
             }}
             disabled={!isReady}
             className={`

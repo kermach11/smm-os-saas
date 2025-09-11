@@ -67,7 +67,7 @@ class BackendService {
         return false;
       }
       
-      console.log(`💾 BackendService: Збереження ${settingsType} для сайту ${this.siteId}`);
+      // Збереження налаштувань
       
       const response = await fetch(`${this.baseUrl}/save-settings`, {
         method: 'POST',
@@ -86,7 +86,7 @@ class BackendService {
       }
 
       const result = await response.json();
-      console.log(`✅ BackendService: ${settingsType} збережено успішно`);
+      // Налаштування збережено успішно
       return result.success;
 
     } catch (error) {
@@ -104,7 +104,7 @@ class BackendService {
         return null;
       }
 
-      console.log(`🔄 BackendService: Завантаження ${settingsType} для сайту ${this.siteId}`);
+      // Завантаження налаштувань
       
       const response = await fetch(
         `${this.baseUrl}/load-settings?siteId=${this.siteId}&settingsType=${settingsType}`
@@ -117,7 +117,7 @@ class BackendService {
       const result = await response.json();
       
       if (result.success && result.data) {
-        console.log(`✅ BackendService: ${settingsType} завантажено успішно`);
+        // Налаштування завантажено успішно
         return result.data;
       } else {
         console.log(`ℹ️ BackendService: ${settingsType} не знайдено на сервері`);

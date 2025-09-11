@@ -232,7 +232,7 @@ class IndexedDBService {
 
       request.onsuccess = () => {
         const files = request.result || [];
-        console.log(`📂 IndexedDBService: Завантажено ${files.length} файлів`);
+        // Лог завантаження файлів видалено для оптимізації
         resolve(files);
       };
 
@@ -484,7 +484,7 @@ class IndexedDBService {
       const request = store.put(settingsData);
 
       request.onsuccess = () => {
-        console.log(`💾 IndexedDBService: Налаштування збережено локально: ${settingsKey}`);
+        // Лог збереження налаштувань видалено для оптимізації
         resolve();
       };
 
@@ -510,7 +510,7 @@ class IndexedDBService {
         
         const success = await backendService.saveSettings(settingsKey, filteredData);
         if (success) {
-          console.log(`☁️ IndexedDBService: ${settingsKey} збережено на сервері`);
+          // Налаштування збережено на сервері
         } else {
           throw new Error('Backend повернув помилку');
         }
@@ -567,7 +567,7 @@ class IndexedDBService {
       if (serverData) {
         // Якщо є серверні дані, зберігаємо їх локально і повертаємо
         await this.saveSettingsLocal(settingsKey, serverData);
-        console.log(`☁️ IndexedDBService: ${settingsKey} завантажено з сервера`);
+        // Налаштування завантажено з сервера
         return serverData;
       }
     } catch (error) {

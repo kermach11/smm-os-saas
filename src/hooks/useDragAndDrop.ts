@@ -945,12 +945,12 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
 
   const loadPositions = useCallback(async () => {
     try {
-      console.log('🔍 ЗАГРУЗКА ПОЗИЦИЙ - начало');
+      // Завантаження позицій боксів
       
       // Используем IndexedDB точно так же, как для фона
       const positions = await indexedDBService.loadSettings('boxPositions');
       
-      console.log('🔍 ЗАГРУЗКА ПОЗИЦИЙ - данные из IndexedDB:', positions);
+      // Дані з IndexedDB завантажено
       console.log('🔍 Текущий deviceType:', deviceType);
       
       if (positions) {
@@ -1021,9 +1021,9 @@ export const useDragAndDrop = (deviceType: 'mobile' | 'tablet' | 'desktop'): Use
         }
         
         setBoxPositions(positions);
-        console.log('✅ ЗАГРУЗКА ПОЗИЦИЙ - успешно:', positions);
+        // Позиції успішно завантажено
       } else {
-        console.log('ℹ️ ЗАГРУЗКА ПОЗИЦИЙ - данные не найдены в IndexedDB');
+        // Дані не знайдено в IndexedDB
       }
     } catch (error) {
       console.error('❌ ЗАГРУЗКА ПОЗИЦИЙ - ошибка:', error);
