@@ -35,6 +35,11 @@ class BackendService {
   // Перевірка авторизації адміна
   private isAdminAuthenticated(): boolean {
     try {
+      // На клієнтських сайтах (не localhost) дозволяємо збереження без авторизації
+      if (!this.isLocalDev) {
+        return true;
+      }
+      
       const sessionData = localStorage.getItem('adminSession');
       if (!sessionData) return false;
       

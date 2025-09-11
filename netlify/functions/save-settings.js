@@ -1,7 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
-
 exports.handler = async (event, context) => {
-  // CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -13,25 +10,12 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    console.log('🔄 save-settings: Function started');
+    console.log('🚀 save-settings: Function started');
     console.log('📦 save-settings: Event body:', event.body);
     
-    // Перевіряємо environment variables
-    console.log('🔍 save-settings: SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
-    console.log('🔍 save-settings: SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY);
-    
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-      throw new Error('Missing Supabase environment variables');
-    }
+    const pocketbaseUrl = process.env.VITE_POCKETBASE_URL || 'https://api.pocketbasemax.cc';
+    console.log('🚀 save-settings: Using PocketBase URL:', pocketbaseUrl);
 
-    // Ініціалізація Supabase
-    console.log('🚀 save-settings: Initializing Supabase client');
-    const supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_ANON_KEY
-    );
-
-    console.log('📝 save-settings: Parsing request body');
     const { settingsType, data, siteId } = JSON.parse(event.body);
     
     console.log('📊 save-settings: Request data:', {
@@ -40,24 +24,63 @@ exports.handler = async (event, context) => {
       dataSize: JSON.stringify(data).length
     });
     
-    // Зберігаємо налаштування для конкретного сайту
-    console.log('💾 save-settings: Upserting to site_settings table');
-    const { error } = await supabase
-      .from('site_settings')
-      .upsert({
-        site_id: siteId,
-        settings_type: settingsType,
-        data: data
-      }, {
-        onConflict: 'site_id,settings_type'
-      });
+    // Перевіряємо чи існує запис (правильний синтаксис PocketBase фільтрів)
+    const filterQuery = `site_id='${siteId}' && settings_type='${settingsType}'`;
+    console.log('🔍 save-settings: Filter query:', filterQuery);
+    
+    const checkResponse = await fetch(`${pocketbaseUrl}/api/collections/site_settings/records?filter=${encodeURIComponent(filterQuery)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
 
-    if (error) {
-      console.error('❌ save-settings: Supabase error:', error);
-      throw error;
+    const existingRecords = await checkResponse.json();
+    
+    let saveResponse;
+    
+    if (existingRecords.items && existingRecords.items.length > 0) {
+      // Оновлюємо існуючий запис
+      const recordId = existingRecords.items[0].id;
+      console.log('🔄 save-settings: Updating existing record:', recordId);
+      
+      saveResponse = await fetch(`${pocketbaseUrl}/api/collections/site_settings/records/${recordId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          data: data
+        })
+      });
+    } else {
+      // Створюємо новий запис
+      console.log('➕ save-settings: Creating new record');
+      
+      saveResponse = await fetch(`${pocketbaseUrl}/api/collections/site_settings/records`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          site_id: siteId,
+          settings_type: settingsType,
+          data: data
+        })
+      });
     }
 
-    console.log('✅ save-settings: Successfully saved settings');
+    console.log('✅ save-settings: PocketBase save response status:', saveResponse.status);
+
+    if (!saveResponse.ok) {
+      const errorBody = await saveResponse.text();
+      console.error('❌ save-settings: PocketBase save error:', errorBody);
+      throw new Error(`HTTP error! status: ${saveResponse.status}, body: ${errorBody}`);
+    }
+
+    const result = await saveResponse.json();
+    console.log('📦 save-settings: Save result:', result);
+
     return {
       statusCode: 200,
       headers,
@@ -65,14 +88,16 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('❌ save-settings: Function error:', error);
+    console.error('❌ save-settings: Error:', error);
+    console.error('❌ save-settings: Error stack:', error.stack);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ 
-        error: error.message,
-        details: error.toString()
+      body: JSON.stringify({
+        error: 'Internal server error',
+        message: error.message,
+        stack: error.stack
       })
     };
   }
-}; 
+};
